@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Codex Theme Upgrade Demo</title>
+    <meta
+      name="description"
+      content="Upgrade frontend themes in minutes with Codex skills, MCP, and a clean CLI workflow."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="backdrop">
+      <span class="glow glow-orange"></span>
+      <span class="glow glow-teal"></span>
+      <span class="glow glow-ink"></span>
+      <div class="grid"></div>
+    </div>
+
+    <main>
+      <header class="hero">
+        <div class="badge">Codex Skills + Theme</div>
+        <h1>Upgrade your frontend theme in 60 seconds.</h1>
+        <p class="lead">
+          A public skills hub plus a tiny CLI that turns a raw UI into a clean, curated
+          look with a single command. No design debt. No guessing.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#demo">Run the demo</a>
+          <a class="btn ghost" href="#flow">See the flow</a>
+        </div>
+        <div class="hero-meta">
+          <span>Works on static HTML + Next.js + shadcn/ui</span>
+          <span>Clean diffs + exportable tokens</span>
+        </div>
+      </header>
+
+      <section id="flow" class="flow">
+        <div class="section-title">
+          <h2>What happens under the hood</h2>
+          <p>Detect the stack, propose 3 directions, apply the winner, export tokens.</p>
+        </div>
+        <div class="flow-grid">
+          <article class="card step">
+            <div class="step-index">01</div>
+            <h3>Detect stack</h3>
+            <p>Static, Next.js, shadcn, Tailwind. We read your CSS and find existing tokens.</p>
+          </article>
+          <article class="card step">
+            <div class="step-index">02</div>
+            <h3>Propose 3 styles</h3>
+            <p>Minimal dark, luxury dark, neon. You pick or auto apply.</p>
+          </article>
+          <article class="card step">
+            <div class="step-index">03</div>
+            <h3>Apply + export</h3>
+            <p>CSS variables, Tailwind mapping, clean diff, and a shareable export.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="directions">
+        <div class="section-title">
+          <h2>Pick a direction in seconds</h2>
+          <p>Curated themes mapped to real product vibes.</p>
+        </div>
+        <div class="direction-grid">
+          <article class="card direction">
+            <div class="swatches">
+              <span style="--swatch:#0b0f19"></span>
+              <span style="--swatch:#2e1065"></span>
+              <span style="--swatch:#6d28d9"></span>
+              <span style="--swatch:#a78bfa"></span>
+            </div>
+            <h3>Luxury dark</h3>
+            <p>Midnight violet, premium feel, calm surfaces.</p>
+            <span class="tag">midnight</span>
+          </article>
+          <article class="card direction">
+            <div class="swatches">
+              <span style="--swatch:#0b0b0d"></span>
+              <span style="--swatch:#1f2328"></span>
+              <span style="--swatch:#4b5563"></span>
+              <span style="--swatch:#f8fafc"></span>
+            </div>
+            <h3>Minimal dark</h3>
+            <p>Obsidian neutral, pro contrast, zero noise.</p>
+            <span class="tag">obsidian</span>
+          </article>
+          <article class="card direction">
+            <div class="swatches">
+              <span style="--swatch:#0b0c1f"></span>
+              <span style="--swatch:#4c1d95"></span>
+              <span style="--swatch:#a855f7"></span>
+              <span style="--swatch:#22d3ee"></span>
+            </div>
+            <h3>Neon</h3>
+            <p>Cyber accents, high energy, bold UI.</p>
+            <span class="tag">neon</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="demo" class="terminal">
+        <div class="section-title">
+          <h2>Demo script</h2>
+          <p>Copy, paste, watch the diff land.</p>
+        </div>
+        <div class="terminal-grid">
+          <div class="card code-block">
+            <div class="code-head">
+              <span>Install skill</span>
+              <button class="copy" data-copy="npx --yes git+ssh://git@github.com/iluxu/codex-skill.git install codex-theme --registry https://raw.githubusercontent.com/iluxu/codex-skills-registry/main/index.json --to ~/.codex/skills">Copy</button>
+            </div>
+            <pre><code>npx --yes git+ssh://git@github.com/iluxu/codex-skill.git install codex-theme \
+  --registry https://raw.githubusercontent.com/iluxu/codex-skills-registry/main/index.json \
+  --to ~/.codex/skills</code></pre>
+          </div>
+          <div class="card code-block">
+            <div class="code-head">
+              <span>Upgrade</span>
+              <button class="copy" data-copy="npx codex-theme upgrade --goal \"more premium\" --apply">Copy</button>
+            </div>
+            <pre><code>npm i -D @codex-theme/cli
+npx codex-theme upgrade --goal "more premium" --apply</code></pre>
+          </div>
+          <div class="card code-block">
+            <div class="code-head">
+              <span>Export tokens</span>
+              <button class="copy" data-copy="npx codex-theme export --format css --out ./site/styles/codex-theme.css">Copy</button>
+            </div>
+            <pre><code>npx codex-theme export --format css --out ./site/styles/codex-theme.css</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <section class="diff">
+        <div class="section-title">
+          <h2>Clean diff, no drama</h2>
+          <p>Codex injects a single block and keeps your CSS readable.</p>
+        </div>
+        <div class="card code-block">
+          <div class="code-head">
+            <span>globals.css</span>
+          </div>
+          <pre><code>- :root { /* old tokens */ }
++ /* @codex-theme:start */
++ @layer base {
++   :root {
++     --background: 240 30% 8%;
++     --foreground: 210 40% 98%;
++     --primary: 262 85% 68%;
++   }
++   .dark {
++     --background: 240 30% 8%;
++     --foreground: 210 40% 98%;
++   }
++ }
++ /* @codex-theme:end */</code></pre>
+        </div>
+      </section>
+
+      <section class="stack">
+        <div class="section-title">
+          <h2>The hub stack</h2>
+          <p>Registry + MCP + CLI. Build once, install anywhere.</p>
+        </div>
+        <div class="stack-row">
+          <div class="chip">codex-skills-registry</div>
+          <div class="arrow">→</div>
+          <div class="chip">codex-skills-mcp</div>
+          <div class="arrow">→</div>
+          <div class="chip">codex-skill CLI</div>
+          <div class="arrow">→</div>
+          <div class="chip">codex-theme</div>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <div>
+          <strong>Ready to ship a wow?</strong>
+          <p>Install, upgrade, export. Repeat on every project.</p>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/iluxu/codex-skill" target="_blank" rel="noreferrer">CLI</a>
+          <a href="https://github.com/iluxu/codex-skills-registry" target="_blank" rel="noreferrer">Registry</a>
+          <a href="https://github.com/iluxu/codex-skills-mcp" target="_blank" rel="noreferrer">MCP</a>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+      const buttons = document.querySelectorAll(".copy");
+      buttons.forEach((button) => {
+        button.addEventListener("click", async () => {
+          const text = button.getAttribute("data-copy");
+          if (!text) return;
+          try {
+            await navigator.clipboard.writeText(text);
+            button.textContent = "Copied";
+            setTimeout(() => (button.textContent = "Copy"), 1500);
+          } catch (err) {
+            button.textContent = "Copy failed";
+            setTimeout(() => (button.textContent = "Copy"), 1500);
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
