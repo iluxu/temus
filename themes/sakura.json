@@ -1,0 +1,50 @@
+{
+  "name": "sakura",
+  "author": "Codex Theme",
+  "description": "Soft sakura pinks with clean contrast.",
+  "palette": ["#fff1f2", "#fecdd3", "#fb7185", "#be123c", "#1f2937"],
+  "modes": {
+    "light": {
+      "background": "340 50% 97%",
+      "foreground": "330 20% 16%",
+      "card": "340 50% 97%",
+      "card-foreground": "330 20% 16%",
+      "popover": "340 50% 97%",
+      "popover-foreground": "330 20% 16%",
+      "primary": "330 70% 55%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "340 35% 93%",
+      "secondary-foreground": "330 20% 16%",
+      "muted": "340 35% 93%",
+      "muted-foreground": "330 15% 45%",
+      "accent": "340 35% 93%",
+      "accent-foreground": "330 20% 16%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "340 25% 88%",
+      "input": "340 25% 88%",
+      "ring": "330 70% 55%"
+    },
+    "dark": {
+      "background": "330 30% 10%",
+      "foreground": "210 40% 98%",
+      "card": "330 30% 10%",
+      "card-foreground": "210 40% 98%",
+      "popover": "330 30% 10%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "330 80% 70%",
+      "primary-foreground": "330 30% 12%",
+      "secondary": "330 22% 18%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "330 22% 18%",
+      "muted-foreground": "330 12% 70%",
+      "accent": "330 22% 18%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "330 22% 18%",
+      "input": "330 22% 18%",
+      "ring": "330 80% 70%"
+    }
+  }
+}

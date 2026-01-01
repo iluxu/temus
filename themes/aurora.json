@@ -1,0 +1,50 @@
+{
+  "name": "aurora",
+  "author": "Codex Theme",
+  "description": "Subtle aurora glow with teal highlights.",
+  "palette": ["#0f172a", "#0ea5e9", "#22d3ee", "#a855f7", "#f1f5f9"],
+  "modes": {
+    "light": {
+      "background": "220 30% 98%",
+      "foreground": "230 20% 14%",
+      "card": "220 30% 98%",
+      "card-foreground": "230 20% 14%",
+      "popover": "220 30% 98%",
+      "popover-foreground": "230 20% 14%",
+      "primary": "190 80% 45%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "220 25% 94%",
+      "secondary-foreground": "230 20% 14%",
+      "muted": "220 25% 94%",
+      "muted-foreground": "220 12% 45%",
+      "accent": "220 25% 94%",
+      "accent-foreground": "230 20% 14%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "220 20% 88%",
+      "input": "220 20% 88%",
+      "ring": "190 80% 45%"
+    },
+    "dark": {
+      "background": "230 35% 9%",
+      "foreground": "210 40% 98%",
+      "card": "230 35% 9%",
+      "card-foreground": "210 40% 98%",
+      "popover": "230 35% 9%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "190 90% 60%",
+      "primary-foreground": "230 30% 12%",
+      "secondary": "230 25% 18%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "230 25% 18%",
+      "muted-foreground": "220 12% 70%",
+      "accent": "230 25% 18%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "230 25% 18%",
+      "input": "230 25% 18%",
+      "ring": "190 90% 60%"
+    }
+  }
+}

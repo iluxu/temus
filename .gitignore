@@ -1,0 +1,8 @@
+node_modules/
+dist/
+repos/
+codex-skill/
+codex-skills-registry/
+*.tgz
+*.skill
+npm-debug.log*

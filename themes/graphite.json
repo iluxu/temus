@@ -1,0 +1,50 @@
+{
+  "name": "graphite",
+  "author": "Codex Theme",
+  "description": "Professional graphite grayscale with tight contrast.",
+  "palette": ["#0f172a", "#1f2937", "#6b7280", "#d1d5db", "#f8fafc"],
+  "modes": {
+    "light": {
+      "background": "210 10% 98%",
+      "foreground": "210 10% 14%",
+      "card": "210 10% 98%",
+      "card-foreground": "210 10% 14%",
+      "popover": "210 10% 98%",
+      "popover-foreground": "210 10% 14%",
+      "primary": "210 10% 20%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "210 10% 94%",
+      "secondary-foreground": "210 10% 14%",
+      "muted": "210 10% 94%",
+      "muted-foreground": "210 6% 45%",
+      "accent": "210 10% 94%",
+      "accent-foreground": "210 10% 14%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "210 8% 90%",
+      "input": "210 8% 90%",
+      "ring": "210 10% 20%"
+    },
+    "dark": {
+      "background": "210 10% 8%",
+      "foreground": "210 40% 98%",
+      "card": "210 10% 8%",
+      "card-foreground": "210 40% 98%",
+      "popover": "210 10% 8%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "210 15% 80%",
+      "primary-foreground": "210 10% 12%",
+      "secondary": "210 10% 16%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "210 10% 16%",
+      "muted-foreground": "210 8% 70%",
+      "accent": "210 10% 16%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "210 10% 16%",
+      "input": "210 10% 16%",
+      "ring": "210 15% 80%"
+    }
+  }
+}

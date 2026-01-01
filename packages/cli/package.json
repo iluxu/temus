@@ -1,0 +1,20 @@
+{
+  "name": "@codex-theme/cli",
+  "version": "0.1.1-alpha.0",
+  "description": "CLI to install and apply Codex Theme presets.",
+  "type": "module",
+  "bin": {
+    "codex-theme": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist",
+    "lint": "echo 'lint pending'"
+  },
+  "dependencies": {
+    "@codex-theme/core": "0.1.1-alpha.0",
+    "@codex-theme/shadcn": "0.1.1-alpha.0",
+    "commander": "^11.1.0",
+    "diff": "^5.2.0"
+  }
+}

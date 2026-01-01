@@ -1,0 +1,50 @@
+{
+  "name": "parchment",
+  "author": "Codex Theme",
+  "description": "Paper-like editorial warmth with sepia accents.",
+  "palette": ["#fefce8", "#fde68a", "#d97706", "#92400e", "#1f2937"],
+  "modes": {
+    "light": {
+      "background": "40 40% 96%",
+      "foreground": "30 20% 18%",
+      "card": "40 40% 96%",
+      "card-foreground": "30 20% 18%",
+      "popover": "40 40% 96%",
+      "popover-foreground": "30 20% 18%",
+      "primary": "30 30% 30%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "40 30% 92%",
+      "secondary-foreground": "30 20% 18%",
+      "muted": "40 30% 92%",
+      "muted-foreground": "30 12% 45%",
+      "accent": "40 30% 92%",
+      "accent-foreground": "30 20% 18%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "35 25% 86%",
+      "input": "35 25% 86%",
+      "ring": "30 30% 30%"
+    },
+    "dark": {
+      "background": "30 20% 12%",
+      "foreground": "210 40% 98%",
+      "card": "30 20% 12%",
+      "card-foreground": "210 40% 98%",
+      "popover": "30 20% 12%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "40 60% 75%",
+      "primary-foreground": "30 20% 14%",
+      "secondary": "30 18% 20%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "30 18% 20%",
+      "muted-foreground": "30 12% 70%",
+      "accent": "30 18% 20%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "30 18% 20%",
+      "input": "30 18% 20%",
+      "ring": "40 60% 75%"
+    }
+  }
+}

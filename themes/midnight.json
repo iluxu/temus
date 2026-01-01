@@ -1,0 +1,50 @@
+{
+  "name": "midnight",
+  "author": "Codex Theme",
+  "description": "Dark premium violet with cool surfaces.",
+  "palette": ["#0b0f19", "#2e1065", "#6d28d9", "#a78bfa", "#e2e8f0"],
+  "modes": {
+    "light": {
+      "background": "240 20% 98%",
+      "foreground": "230 20% 12%",
+      "card": "240 20% 98%",
+      "card-foreground": "230 20% 12%",
+      "popover": "240 20% 98%",
+      "popover-foreground": "230 20% 12%",
+      "primary": "262 83% 58%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "245 30% 95%",
+      "secondary-foreground": "230 20% 12%",
+      "muted": "245 30% 95%",
+      "muted-foreground": "240 10% 45%",
+      "accent": "245 30% 95%",
+      "accent-foreground": "230 20% 12%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "240 18% 90%",
+      "input": "240 18% 90%",
+      "ring": "262 83% 58%"
+    },
+    "dark": {
+      "background": "240 30% 8%",
+      "foreground": "210 40% 98%",
+      "card": "240 30% 8%",
+      "card-foreground": "210 40% 98%",
+      "popover": "240 30% 8%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "262 85% 68%",
+      "primary-foreground": "240 30% 12%",
+      "secondary": "240 20% 18%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "240 20% 18%",
+      "muted-foreground": "240 10% 70%",
+      "accent": "240 20% 18%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "240 20% 18%",
+      "input": "240 20% 18%",
+      "ring": "262 85% 68%"
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "obsidian",
+  "author": "Codex Theme",
+  "description": "Neutral obsidian palette with minimal contrast shifts.",
+  "palette": ["#0b0b0d", "#1f2328", "#4b5563", "#9ca3af", "#f8fafc"],
+  "modes": {
+    "light": {
+      "background": "210 10% 98%",
+      "foreground": "220 10% 12%",
+      "card": "210 10% 98%",
+      "card-foreground": "220 10% 12%",
+      "popover": "210 10% 98%",
+      "popover-foreground": "220 10% 12%",
+      "primary": "220 15% 20%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "220 10% 94%",
+      "secondary-foreground": "220 10% 12%",
+      "muted": "220 10% 94%",
+      "muted-foreground": "220 6% 45%",
+      "accent": "220 10% 94%",
+      "accent-foreground": "220 10% 12%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "220 8% 90%",
+      "input": "220 8% 90%",
+      "ring": "220 15% 20%"
+    },
+    "dark": {
+      "background": "220 12% 6%",
+      "foreground": "210 40% 98%",
+      "card": "220 12% 6%",
+      "card-foreground": "210 40% 98%",
+      "popover": "220 12% 6%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "220 15% 80%",
+      "primary-foreground": "220 10% 10%",
+      "secondary": "220 10% 16%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "220 10% 16%",
+      "muted-foreground": "220 8% 70%",
+      "accent": "220 10% 16%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "220 10% 16%",
+      "input": "220 10% 16%",
+      "ring": "220 15% 80%"
+    }
+  }
+}

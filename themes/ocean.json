@@ -1,0 +1,50 @@
+{
+  "name": "ocean",
+  "author": "Codex Theme",
+  "description": "Vibrant ocean blues with modern contrast.",
+  "palette": ["#0f172a", "#1e3a8a", "#2563eb", "#38bdf8", "#e0f2fe"],
+  "modes": {
+    "light": {
+      "background": "210 50% 98%",
+      "foreground": "210 30% 16%",
+      "card": "210 50% 98%",
+      "card-foreground": "210 30% 16%",
+      "popover": "210 50% 98%",
+      "popover-foreground": "210 30% 16%",
+      "primary": "204 85% 45%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "210 40% 94%",
+      "secondary-foreground": "210 30% 16%",
+      "muted": "210 40% 94%",
+      "muted-foreground": "210 15% 45%",
+      "accent": "210 40% 94%",
+      "accent-foreground": "210 30% 16%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "210 30% 88%",
+      "input": "210 30% 88%",
+      "ring": "204 85% 45%"
+    },
+    "dark": {
+      "background": "210 40% 10%",
+      "foreground": "210 40% 98%",
+      "card": "210 40% 10%",
+      "card-foreground": "210 40% 98%",
+      "popover": "210 40% 10%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "200 90% 60%",
+      "primary-foreground": "210 35% 12%",
+      "secondary": "210 30% 18%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "210 30% 18%",
+      "muted-foreground": "210 15% 70%",
+      "accent": "210 30% 18%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "210 30% 18%",
+      "input": "210 30% 18%",
+      "ring": "200 90% 60%"
+    }
+  }
+}

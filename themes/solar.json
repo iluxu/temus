@@ -1,0 +1,50 @@
+{
+  "name": "solar",
+  "author": "Codex Theme",
+  "description": "Warm solar tones with creamy backgrounds.",
+  "palette": ["#fef3c7", "#fcd34d", "#f59e0b", "#b45309", "#1c1917"],
+  "modes": {
+    "light": {
+      "background": "38 52% 96%",
+      "foreground": "28 20% 18%",
+      "card": "38 52% 96%",
+      "card-foreground": "28 20% 18%",
+      "popover": "38 52% 96%",
+      "popover-foreground": "28 20% 18%",
+      "primary": "24 82% 45%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "38 40% 92%",
+      "secondary-foreground": "28 20% 18%",
+      "muted": "38 40% 92%",
+      "muted-foreground": "28 15% 45%",
+      "accent": "38 40% 92%",
+      "accent-foreground": "28 20% 18%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "35 30% 86%",
+      "input": "35 30% 86%",
+      "ring": "24 82% 45%"
+    },
+    "dark": {
+      "background": "24 34% 12%",
+      "foreground": "210 40% 98%",
+      "card": "24 34% 12%",
+      "card-foreground": "210 40% 98%",
+      "popover": "24 34% 12%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "35 95% 62%",
+      "primary-foreground": "24 30% 14%",
+      "secondary": "24 25% 20%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "24 25% 20%",
+      "muted-foreground": "28 15% 70%",
+      "accent": "24 25% 20%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "24 25% 20%",
+      "input": "24 25% 20%",
+      "ring": "35 95% 62%"
+    }
+  }
+}

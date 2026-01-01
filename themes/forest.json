@@ -1,0 +1,50 @@
+{
+  "name": "forest",
+  "author": "Codex Theme",
+  "description": "Deep forest greens with natural surfaces.",
+  "palette": ["#0f172a", "#14532d", "#16a34a", "#86efac", "#f0fdf4"],
+  "modes": {
+    "light": {
+      "background": "120 20% 97%",
+      "foreground": "120 20% 14%",
+      "card": "120 20% 97%",
+      "card-foreground": "120 20% 14%",
+      "popover": "120 20% 97%",
+      "popover-foreground": "120 20% 14%",
+      "primary": "142 45% 35%",
+      "primary-foreground": "0 0% 98%",
+      "secondary": "120 18% 92%",
+      "secondary-foreground": "120 20% 14%",
+      "muted": "120 18% 92%",
+      "muted-foreground": "120 12% 45%",
+      "accent": "120 18% 92%",
+      "accent-foreground": "120 20% 14%",
+      "destructive": "0 84% 60%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "120 15% 88%",
+      "input": "120 15% 88%",
+      "ring": "142 45% 35%"
+    },
+    "dark": {
+      "background": "140 24% 10%",
+      "foreground": "210 40% 98%",
+      "card": "140 24% 10%",
+      "card-foreground": "210 40% 98%",
+      "popover": "140 24% 10%",
+      "popover-foreground": "210 40% 98%",
+      "primary": "142 70% 55%",
+      "primary-foreground": "140 25% 12%",
+      "secondary": "140 20% 18%",
+      "secondary-foreground": "210 40% 98%",
+      "muted": "140 20% 18%",
+      "muted-foreground": "140 12% 70%",
+      "accent": "140 20% 18%",
+      "accent-foreground": "210 40% 98%",
+      "destructive": "0 63% 31%",
+      "destructive-foreground": "0 0% 98%",
+      "border": "140 20% 18%",
+      "input": "140 20% 18%",
+      "ring": "142 70% 55%"
+    }
+  }
+}
