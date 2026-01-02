@@ -1,5 +1,7 @@
 node_modules/
 dist/
+.next/
+out/
 repos/
 codex-skill/
 codex-skills-registry/

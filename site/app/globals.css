@@ -1,0 +1,431 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  --radius: 22px;
+  --shadow-soft: 0 22px 60px hsl(var(--foreground) / 0.12);
+  --shadow-strong: 0 40px 120px hsl(var(--foreground) / 0.2);
+  --border-subtle: 1px solid hsl(var(--border) / 0.45);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  min-height: 100vh;
+}
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: clamp(2.7rem, 5vw, 4.6rem);
+  line-height: 1.05;
+}
+
+h2 {
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+}
+
+h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+p {
+  color: hsl(var(--muted-foreground));
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+canvas,
+img,
+svg {
+  display: block;
+}
+
+.canvas {
+  position: relative;
+  min-height: 100vh;
+}
+
+.page {
+  position: relative;
+  z-index: 1;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 96px 24px 80px;
+  display: grid;
+  gap: 80px;
+}
+
+.section {
+  display: grid;
+  gap: 24px;
+}
+
+.section-title {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+}
+
+.hero {
+  display: grid;
+  gap: 24px;
+}
+
+.badge {
+  align-self: flex-start;
+  background: hsl(var(--secondary) / 0.35);
+  border: var(--border-subtle);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.lead {
+  font-size: 1.15rem;
+  max-width: 620px;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: var(--border-subtle);
+  font-weight: 600;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.btn.primary {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 18px 45px hsl(var(--primary) / 0.4);
+  border-color: transparent;
+}
+
+.btn.ghost {
+  background: hsl(var(--background) / 0.5);
+  color: hsl(var(--foreground));
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.hero-meta {
+  display: flex;
+  gap: 24px;
+  font-size: 0.95rem;
+  color: hsl(var(--muted-foreground));
+  flex-wrap: wrap;
+}
+
+.grid-4 {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.grid-3 {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.card {
+  background: hsl(var(--card) / 0.75);
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(10px);
+  animation: rise 0.8s ease both;
+}
+
+.step-index {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 8px;
+}
+
+.price {
+  display: grid;
+  gap: 16px;
+}
+
+.price-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.price ul {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  color: hsl(var(--muted-foreground));
+}
+
+.price li::before {
+  content: "•";
+  margin-right: 8px;
+  color: hsl(var(--primary));
+}
+
+.terminal-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.code-block {
+  background: linear-gradient(145deg, hsl(var(--background) / 0.95), hsl(var(--secondary) / 0.45));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border) / 0.6);
+}
+
+.code-block p {
+  color: hsl(var(--muted-foreground));
+}
+
+.code-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.copy {
+  border: none;
+  background: hsl(var(--secondary) / 0.55);
+  color: hsl(var(--foreground));
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+pre {
+  white-space: pre-wrap;
+  font-family: "SFMono-Regular", "Courier New", monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.stack-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.chip {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border) / 0.5);
+  background: hsl(var(--secondary) / 0.4);
+  font-weight: 600;
+}
+
+.arrow {
+  font-size: 1.4rem;
+  color: hsl(var(--muted-foreground));
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px;
+  border-radius: calc(var(--radius) + 6px);
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.2), hsl(var(--secondary) / 0.35));
+  border: 1px solid hsl(var(--border) / 0.55);
+}
+
+.footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid hsl(var(--border) / 0.4);
+}
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+  font-weight: 600;
+}
+
+.footer-links a {
+  border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.glow {
+  position: absolute;
+  width: 520px;
+  height: 520px;
+  border-radius: 50%;
+  filter: blur(0);
+  opacity: 0.35;
+  animation: float 18s ease-in-out infinite;
+}
+
+.glow-violet {
+  background: radial-gradient(circle, hsl(var(--primary) / 0.7) 0%, transparent 70%);
+  top: -160px;
+  left: -120px;
+}
+
+.glow-ice {
+  background: radial-gradient(circle, hsl(var(--accent) / 0.5) 0%, transparent 70%);
+  bottom: -200px;
+  right: -120px;
+  animation-delay: -6s;
+}
+
+.glow-ink {
+  background: radial-gradient(circle, hsl(var(--foreground) / 0.15) 0%, transparent 70%);
+  top: 35%;
+  right: -220px;
+  opacity: 0.2;
+  animation-delay: -3s;
+}
+
+.grid {
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(hsl(var(--border) / 0.4) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.4) 1px, transparent 1px);
+  background-size: 120px 120px;
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.85), transparent 70%);
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(24px);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .page {
+    padding: 72px 20px 60px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* @codex-theme:start */
+@layer base {
+  :root {
+  --background: 240 20% 98%;
+  --foreground: 230 20% 12%;
+  --card: 240 20% 98%;
+  --card-foreground: 230 20% 12%;
+  --popover: 240 20% 98%;
+  --popover-foreground: 230 20% 12%;
+  --primary: 262 83% 58%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 245 30% 95%;
+  --secondary-foreground: 230 20% 12%;
+  --muted: 245 30% 95%;
+  --muted-foreground: 240 10% 45%;
+  --accent: 245 30% 95%;
+  --accent-foreground: 230 20% 12%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 18% 90%;
+  --input: 240 18% 90%;
+  --ring: 262 83% 58%;
+  }
+  .dark {
+  --background: 240 30% 8%;
+  --foreground: 210 40% 98%;
+  --card: 240 30% 8%;
+  --card-foreground: 210 40% 98%;
+  --popover: 240 30% 8%;
+  --popover-foreground: 210 40% 98%;
+  --primary: 262 85% 68%;
+  --primary-foreground: 240 30% 12%;
+  --secondary: 240 20% 18%;
+  --secondary-foreground: 210 40% 98%;
+  --muted: 240 20% 18%;
+  --muted-foreground: 240 10% 70%;
+  --accent: 240 20% 18%;
+  --accent-foreground: 210 40% 98%;
+  --destructive: 0 63% 31%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 20% 18%;
+  --input: 240 20% 18%;
+  --ring: 262 85% 68%;
+  }
+}
+/* @codex-theme:end */
