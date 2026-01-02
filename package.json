@@ -2,10 +2,11 @@
   "name": "codex-theme",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "site"
   ],
   "scripts": {
-    "build": "npm -ws --if-present run build",
+    "build": "npm -ws --if-present run build && node scripts/prepare-pages-output.cjs",
     "clean": "npm -ws --if-present run clean",
     "lint": "npm -ws --if-present run lint"
   },
