@@ -14,14 +14,14 @@ const fraunces = Fraunces({
 });
 
 export const metadata = {
-  title: "TEMUS — RAG public payant",
+  title: "codex-skill — Ship installable Codex skills",
   description:
-    "TEMUS transforme des docs autorisees en un service RAG public payant, avec citations, conformite et deploiement Cloudflare Pages."
+    "codex-skill is a lightweight CLI + registry workflow for packaging, publishing, and installing Codex skills across teams."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="fr" className="dark">
+    <html lang="en" className="dark">
       <body className={`${spaceGrotesk.variable} ${fraunces.variable} antialiased`}>
         {children}
       </body>

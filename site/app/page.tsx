@@ -2,89 +2,86 @@ import { CopyButton } from "./components/CopyButton";
 
 const valueProps = [
   {
-    title: "Public mais payant",
+    title: "One-line installs",
     description:
-      "Un RAG accessible a tous, monete par cle API, quotas et plans. Tarif clair, usage mesurable."
+      "Install skills with codex-skill install <name>, restart Codex, and you are live."
   },
   {
-    title: "Sources autorisees",
+    title: "Registry + MCP ready",
     description:
-      "On ingere uniquement des contenus dont les licences sont claires. Partner first, zero zone grise."
+      "Ship a static index.json + .skill artifacts, or add an MCP server for live discovery."
   },
   {
-    title: "Citations verifiables",
+    title: "Cross-platform",
     description:
-      "Chaque reponse renvoie vers les sources originales avec passages cites pour garder la confiance."
+      "Works the same on macOS, Linux, and Windows thanks to npm-based installs."
   },
   {
-    title: "Stack Cloudflare",
+    title: "Open standard",
     description:
-      "Front Next.js sur Pages, chunks sur R2, API RAG deployee en edge pour la latence."
+      "Skills follow the open agent skills specification, so they stay portable."
   }
 ];
 
 const steps = [
   {
     tag: "01",
-    title: "Cadrer les sources",
+    title: "Write a SKILL.md",
     description:
-      "On choisit les docs publiques autorisees et on fixe les regles de mise a jour."
+      "Define when the skill should trigger, the workflow, and any scripts or references."
   },
   {
     tag: "02",
-    title: "Ingestion + chunks",
+    title: "Package it",
     description:
-      "Pipeline de crawl ou import direct. Chunks heberges sur R2 ou stockage client."
+      "Bundle the skill folder into a .skill artifact with validation."
   },
   {
     tag: "03",
-    title: "Index + RAG",
+    title: "Publish",
     description:
-      "Indexation, embeddings, puis API /ask et /status exposee publiquement."
+      "Update the registry index and host the artifact for public installs."
   },
   {
     tag: "04",
-    title: "Monetiser",
+    title: "Install + run",
     description:
-      "API keys, plans, usage tracking et facturation. Le produit devient vendable."
+      "codex-skill install <name> and restart Codex to activate it."
   }
 ];
 
-const pricing = [
+const skills = [
   {
-    name: "Starter",
-    price: "€199 / mois",
-    detail: "Pour lancer le RAG public et tester le marche.",
-    bullets: ["1 source", "50k tokens/jour", "Quotas + citations"]
+    name: "codex-theme",
+    label: "Design & UI",
+    detail:
+      "Generate, apply, and export themes for Next.js + Tailwind + shadcn/ui workflows.",
+    bullets: ["Curated themes + variants", "Tailwind tokens + presets", "Diffs + checklists"]
   },
   {
-    name: "Growth",
-    price: "€990 / mois",
-    detail: "Pour scaler un produit avec trafic regulier.",
-    bullets: ["5 sources", "500k tokens/jour", "Stats + alerting"]
+    name: "rag-docs-api",
+    label: "Docs & RAG",
+    detail:
+      "Query or ingest docs for RunMesh-compatible RAG APIs with citations and sources.",
+    bullets: ["/api/status + /api/ask", "Playwright ingest workflows", "Citation-first answers"]
   },
   {
-    name: "Enterprise",
-    price: "Sur devis",
-    detail: "Pour partenaires et catalogues larges.",
-    bullets: ["Sources illimitees", "SLA", "Pipeline custom"]
+    name: "polymarket-sentinel",
+    label: "Market Intel",
+    detail:
+      "Read-only analyst skill for monitoring Polymarket orderbooks and alerts.",
+    bullets: ["Orderbook snapshots", "Alerting + reports", "Market watchlists"]
   }
 ];
 
-const apiCurl = `curl -sS https://temus.ai/api/ask \\
-  -H "content-type: application/json" \\
-  -H "authorization: Bearer $TEMUS_API_KEY" \\
-  --data '{"prompt":"Comment faire une migration EUI21 ?","limit":6,"sessionId":"demo"}'`;
+const installCmd = `npm install -g codex-skill
+codex-skill list
+codex-skill install rag-docs-api
+# Restart Codex to load new skills`;
 
-const apiResponse = `{
-  "response": "Voici les etapes cle...",
-  "sources": [
-    {
-      "title": "Migration eUI 19.x to 21.x",
-      "url": "https://euidev.ecdevops.eu/.../eui-19-to-21"
-    }
-  ]
-}`;
+const listOutput = `codex-theme (0.1.1-alpha.0) — Theme installation + Tailwind tokens
+rag-docs-api (0.1.2-alpha.0) — Query or ingest docs for RunMesh RAG APIs
+polymarket-sentinel (0.1.0-alpha.0) — Read-only Polymarket analyst`;
 
 export default function Home() {
   return (
@@ -98,34 +95,33 @@ export default function Home() {
 
       <main className="page">
         <header className="hero">
-          <div className="badge">TEMUS · RAG public payant</div>
-          <h1>Le RAG public qui se vend comme un produit.</h1>
+          <div className="badge">codex-skill · skills registry</div>
+          <h1>Ship installable Codex skills in one command.</h1>
           <p className="lead">
-            TEMUS transforme des docs autorisees en un service RAG public, payant et
-            cite. On livre la pile technique, la mise en marche commerciale et un
-            front premium en dark.
+            codex-skill is a lightweight CLI and registry workflow that lets you
+            package, publish, and install Codex skills for teams or the public.
           </p>
           <div className="hero-actions">
-            <a className="btn primary" href="#pricing">
-              Rejoindre la beta payante
+            <a className="btn primary" href="#install">
+              Install the CLI
             </a>
-            <a className="btn ghost" href="#api">
-              Voir l&apos;API
+            <a className="btn ghost" href="#skills">
+              Browse skills
             </a>
           </div>
           <div className="hero-meta">
-            <span>Cloudflare Pages + R2</span>
-            <span>API publique /ask + /status</span>
-            <span>Skills Codex pour ingestion + theming</span>
+            <span>npm install -g codex-skill</span>
+            <span>Static registry + .skill artifacts</span>
+            <span>Optional MCP server for discovery</span>
           </div>
         </header>
 
-        <section id="business" className="section">
+        <section id="why" className="section">
           <div className="section-title">
-            <h2>Un modele public, mais rentable</h2>
+            <h2>Why codex-skill exists</h2>
             <p>
-              On vend un acces documente, trace et conforme. Tu lances un RAG que
-              les gens peuvent acheter sans friction.
+              Turn internal playbooks into shareable skills that install the same
+              way everywhere. No bespoke onboarding or manual copy-paste.
             </p>
           </div>
           <div className="grid-4">
@@ -140,8 +136,8 @@ export default function Home() {
 
         <section id="flow" className="section">
           <div className="section-title">
-            <h2>Comment on le construit</h2>
-            <p>Un pipeline court, des sources propres, une API vendable.</p>
+            <h2>How it works</h2>
+            <p>A tight loop from instructions to installs, built for speed.</p>
           </div>
           <div className="grid-4">
             {steps.map((step) => (
@@ -156,72 +152,72 @@ export default function Home() {
 
         <section id="stack" className="section">
           <div className="section-title">
-            <h2>Architecture TEMUS</h2>
-            <p>Une pile simple a deployer, faite pour Cloudflare Pages.</p>
+            <h2>Registry flow</h2>
+            <p>Everything you need to distribute skills to the public.</p>
           </div>
           <div className="stack-row">
-            <div className="chip">Sources autorisees</div>
+            <div className="chip">SKILL.md + scripts</div>
             <div className="arrow">→</div>
-            <div className="chip">Crawler / Import</div>
+            <div className="chip">Package .skill</div>
             <div className="arrow">→</div>
-            <div className="chip">Chunks R2</div>
+            <div className="chip">Registry index.json</div>
             <div className="arrow">→</div>
-            <div className="chip">Index + Embeddings</div>
+            <div className="chip">Artifact hosting</div>
             <div className="arrow">→</div>
-            <div className="chip">API RAG</div>
+            <div className="chip">MCP server (optional)</div>
             <div className="arrow">→</div>
-            <div className="chip">Next.js + Pages</div>
+            <div className="chip">codex-skill install</div>
           </div>
         </section>
 
-        <section id="pricing" className="section">
+        <section id="skills" className="section">
           <div className="section-title">
-            <h2>Offres publiques</h2>
-            <p>On facture a l&apos;usage, mais avec des plans lisibles.</p>
+            <h2>Featured skills</h2>
+            <p>Public skills you can install today from the registry.</p>
           </div>
           <div className="grid-3">
-            {pricing.map((plan) => (
-              <article className="card price" key={plan.name}>
+            {skills.map((skill) => (
+              <article className="card price" key={skill.name}>
                 <div className="price-head">
-                  <h3>{plan.name}</h3>
-                  <span>{plan.price}</span>
+                  <h3>{skill.name}</h3>
+                  <span>{skill.label}</span>
                 </div>
-                <p>{plan.detail}</p>
+                <p>{skill.detail}</p>
                 <ul>
-                  {plan.bullets.map((bullet) => (
+                  {skill.bullets.map((bullet) => (
                     <li key={bullet}>{bullet}</li>
                   ))}
                 </ul>
-                <a className="btn ghost" href="#cta">
-                  Parler pricing
+                <a className="btn ghost" href="#install">
+                  Install this skill
                 </a>
               </article>
             ))}
           </div>
         </section>
 
-        <section id="api" className="section">
+        <section id="install" className="section">
           <div className="section-title">
-            <h2>API publique, citations incluses</h2>
-            <p>Le RAG repond, mais il doit citer ses preuves.</p>
+            <h2>Install &amp; try</h2>
+            <p>Install the CLI, list the registry, and pull a skill in seconds.</p>
           </div>
           <div className="terminal-grid">
             <div className="card code-block">
               <div className="code-head">
-                <span>Requete /ask</span>
-                <CopyButton text={apiCurl} />
+                <span>Install + list</span>
+                <CopyButton text={installCmd} />
               </div>
               <pre>
-                <code>{apiCurl}</code>
+                <code>{installCmd}</code>
               </pre>
             </div>
             <div className="card code-block">
               <div className="code-head">
-                <span>Reponse + sources</span>
-                <CopyButton text={apiResponse} />
+                <span>What you see</span>
+                <CopyButton text={listOutput} />
               </div>
               <pre>
-                <code>{apiResponse}</code>
+                <code>{listOutput}</code>
               </pre>
             </div>
           </div>
@@ -229,26 +225,25 @@ export default function Home() {
 
         <section id="cta" className="section cta">
           <div>
-            <h2>On le met en ligne sur Pages ?</h2>
+            <h2>Ready to publish your own skill?</h2>
             <p>
-              Tu choisis les sources, on livre le RAG public, la facturation et un
-              front midnight. Ensuite on scale.
+              Package a skill, add it to the registry, and share it in one link.
             </p>
           </div>
           <a className="btn primary" href="mailto:hello@temus.ai">
-            Lancer la beta
+            Submit a skill
           </a>
         </section>
 
         <footer className="footer">
           <div>
-            <strong>TEMUS</strong>
-            <p>RAG public payant + skills Codex.</p>
+            <strong>codex-skill</strong>
+            <p>Registry-first installs for Codex skills.</p>
           </div>
           <div className="footer-links">
-            <a href="#business">Business</a>
-            <a href="#flow">Pipeline</a>
-            <a href="#api">API</a>
+            <a href="#why">Why</a>
+            <a href="#skills">Skills</a>
+            <a href="#install">Install</a>
           </div>
         </footer>
       </main>
