@@ -431,7 +431,7 @@ export default function Home() {
             </p>
           </div>
           <div className="cta-actions">
-            <a className="btn primary" href="mailto:hello@temus.ai">
+            <a className="btn primary" href="mailto:trotskiapp@gmail.com">
               Submit a skill
             </a>
             <a className="btn ghost" href="https://github.com/iluxu/codex-skill">
