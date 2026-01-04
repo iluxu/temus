@@ -50,6 +50,24 @@ const steps = [
   }
 ];
 
+const publishSteps = [
+  {
+    title: "Author the skill",
+    description:
+      "Create a SKILL.md with clear triggers. Add scripts/, references/, and assets/ when needed."
+  },
+  {
+    title: "Package the artifact",
+    description:
+      "Bundle the folder into a .skill file and record the version in a manifest."
+  },
+  {
+    title: "Publish to the registry",
+    description:
+      "Host the artifact and update index.json so codex-skill can install it."
+  }
+];
+
 const skills = [
   {
     name: "codex-theme",
@@ -74,6 +92,65 @@ const skills = [
   }
 ];
 
+const roadmap = [
+  {
+    phase: "Now",
+    title: "Stable public registry",
+    detail: "Npm installs, Windows support, and a curated starter set."
+  },
+  {
+    phase: "Next",
+    title: "Skill bundles",
+    detail: "Batch installs, dependency metadata, and signed artifacts."
+  },
+  {
+    phase: "Later",
+    title: "Marketplace",
+    detail: "Ratings, discoverability, and paid skill distribution."
+  }
+];
+
+const faqs = [
+  {
+    question: "Where do installed skills live?",
+    answer:
+      "By default they install to ~/.codex/skills or $CODEX_HOME/skills. Repo-level .codex/skills overrides are supported."
+  },
+  {
+    question: "Can I host a private registry?",
+    answer:
+      "Yes. Host index.json and .skill artifacts anywhere private, then pass --registry or set REGISTRY_URL."
+  },
+  {
+    question: "Do I need an MCP server?",
+    answer:
+      "No. MCP is optional for live discovery. The static registry works on its own."
+  },
+  {
+    question: "How do users activate a new skill?",
+    answer:
+      "Install it, then restart Codex so the skill metadata is loaded."
+  }
+];
+
+const resources = [
+  {
+    name: "codex-skill CLI",
+    url: "https://github.com/iluxu/codex-skill",
+    description: "The npm CLI that lists and installs skills."
+  },
+  {
+    name: "codex-skills-registry",
+    url: "https://github.com/iluxu/codex-skills-registry",
+    description: "Static registry index and published skill artifacts."
+  },
+  {
+    name: "codex-skills-mcp",
+    url: "https://github.com/iluxu/codex-skills-mcp",
+    description: "Optional MCP server for live skill discovery."
+  }
+];
+
 const installCmd = `npm install -g codex-skill
 codex-skill list
 codex-skill install rag-docs-api
@@ -82,6 +159,29 @@ codex-skill install rag-docs-api
 const listOutput = `codex-theme (0.1.1-alpha.0) — Theme installation + Tailwind tokens
 rag-docs-api (0.1.2-alpha.0) — Query or ingest docs for RunMesh RAG APIs
 polymarket-sentinel (0.1.0-alpha.0) — Read-only Polymarket analyst`;
+
+const skillSkeleton = `---
+name: my-skill
+description: "Do X when Codex needs Y"
+---
+
+# Workflow
+
+1) Inspect inputs
+2) Run scripts if needed
+3) Return outputs`;
+
+const registryLayout = `codex-skills-registry/
+  index.json
+  skills/my-skill/manifest.json
+  artifacts/my-skill/0.1.0.skill`;
+
+const registryEntry = `{
+  "name": "my-skill",
+  "latest": "0.1.0",
+  "manifest": "skills/my-skill/manifest.json",
+  "artifact": { "url": "artifacts/my-skill/0.1.0.skill" }
+}`;
 
 export default function Home() {
   return (
@@ -223,6 +323,106 @@ export default function Home() {
           </div>
         </section>
 
+        <section id="publish" className="section">
+          <div className="section-title">
+            <h2>Publish a skill</h2>
+            <p>From idea to public install in a few simple steps.</p>
+          </div>
+          <div className="grid-3">
+            {publishSteps.map((step) => (
+              <article className="card" key={step.title}>
+                <h3>{step.title}</h3>
+                <p>{step.description}</p>
+              </article>
+            ))}
+          </div>
+          <div className="terminal-grid">
+            <div className="card code-block">
+              <div className="code-head">
+                <span>SKILL.md template</span>
+                <CopyButton text={skillSkeleton} />
+              </div>
+              <pre>
+                <code>{skillSkeleton}</code>
+              </pre>
+            </div>
+            <div className="card code-block">
+              <div className="code-head">
+                <span>Registry layout</span>
+                <CopyButton text={registryLayout} />
+              </div>
+              <pre>
+                <code>{registryLayout}</code>
+              </pre>
+            </div>
+            <div className="card code-block">
+              <div className="code-head">
+                <span>Index entry</span>
+                <CopyButton text={registryEntry} />
+              </div>
+              <pre>
+                <code>{registryEntry}</code>
+              </pre>
+            </div>
+          </div>
+        </section>
+
+        <section id="roadmap" className="section">
+          <div className="section-title">
+            <h2>Roadmap</h2>
+            <p>Where codex-skill is heading next.</p>
+          </div>
+          <div className="grid-3">
+            {roadmap.map((item) => (
+              <article className="card" key={item.title}>
+                <div className="step-index">{item.phase}</div>
+                <h3>{item.title}</h3>
+                <p>{item.detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section id="faq" className="section">
+          <div className="section-title">
+            <h2>FAQ</h2>
+            <p>Quick answers for teams shipping skills at scale.</p>
+          </div>
+          <div className="faq-list">
+            {faqs.map((item) => (
+              <details className="faq-item" key={item.question}>
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        <section id="resources" className="section">
+          <div className="section-title">
+            <h2>Resources</h2>
+            <p>Start from the repos that power the registry.</p>
+          </div>
+          <div className="grid-3">
+            {resources.map((item) => (
+              <a
+                className="card link-card"
+                href={item.url}
+                key={item.name}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <div className="link-meta">
+                  <span>Repository</span>
+                  <span className="arrow">↗</span>
+                </div>
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+              </a>
+            ))}
+          </div>
+        </section>
+
         <section id="cta" className="section cta">
           <div>
             <h2>Ready to publish your own skill?</h2>
@@ -230,9 +430,14 @@ export default function Home() {
               Package a skill, add it to the registry, and share it in one link.
             </p>
           </div>
-          <a className="btn primary" href="mailto:hello@temus.ai">
-            Submit a skill
-          </a>
+          <div className="cta-actions">
+            <a className="btn primary" href="mailto:hello@temus.ai">
+              Submit a skill
+            </a>
+            <a className="btn ghost" href="https://github.com/iluxu/codex-skill">
+              View the CLI
+            </a>
+          </div>
         </section>
 
         <footer className="footer">
@@ -244,6 +449,7 @@ export default function Home() {
             <a href="#why">Why</a>
             <a href="#skills">Skills</a>
             <a href="#install">Install</a>
+            <a href="#publish">Publish</a>
           </div>
         </footer>
       </main>

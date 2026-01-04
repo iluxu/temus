@@ -272,6 +272,12 @@ pre {
   border: 1px solid hsl(var(--border) / 0.55);
 }
 
+.cta-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .footer {
   display: flex;
   align-items: flex-start;
@@ -290,6 +296,51 @@ pre {
 
 .footer-links a {
   border-bottom: 1px solid hsl(var(--border) / 0.5);
+}
+
+.faq-list {
+  display: grid;
+  gap: 14px;
+}
+
+.faq-item {
+  border: 1px solid hsl(var(--border) / 0.5);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  background: hsl(var(--card) / 0.75);
+  box-shadow: var(--shadow-soft);
+}
+
+.faq-item summary {
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item p {
+  margin-top: 12px;
+}
+
+.link-card {
+  display: grid;
+  gap: 10px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.link-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-strong);
+}
+
+.link-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: hsl(var(--muted-foreground));
 }
 
 .backdrop {
