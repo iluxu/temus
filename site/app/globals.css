@@ -755,6 +755,34 @@ a {
   }
 }
 
+@media (max-width: 760px) {
+  .nav-inner {
+    padding: 12px 16px;
+  }
+
+  .nav-logo {
+    font-size: 1.05rem;
+  }
+
+  .nav-links {
+    gap: 10px;
+  }
+
+  .nav-links a:not(.btn) {
+    display: none;
+  }
+
+  .lang-btn {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .nav-links .btn {
+    padding: 8px 14px;
+    font-size: 0.85rem;
+  }
+}
+
 /* Utility: Urgency badge */
 .urgency-badge {
   display: inline-flex;
