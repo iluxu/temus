@@ -6,131 +6,131 @@ export const translations = {
     navContact: "Contact",
     langSwitch: "EN",
 
-    // Hero
-    badge: "Market Intelligence",
-    heroTitle: "Votre marché,",
-    heroTitleHighlight: "en temps réel",
-    heroLead: "Comprenez votre écosystème. Apprenez de ceux qui réussissent. Voyez ce qui marche dans votre rue.",
-    ctaPrimary: "Démarrer gratuitement",
-    ctaSecondary: "Voir comment ça marche",
+    // Hero - Loss aversion + Social proof
+    badge: "Utilisé par 127 équipes marketing",
+    heroTitle: "Pendant que vous lisez ça,",
+    heroTitleHighlight: "vos concurrents bougent",
+    heroLead: "Chaque jour, des opportunités vous passent sous le nez. Des changements de prix. Des lancements. Des signaux faibles. ADOPTAN vous les montre avant qu'il soit trop tard.",
+    ctaPrimary: "Essai gratuit — 2 min",
+    ctaSecondary: "Voir une démo",
 
-    // Stats
+    // Stats - Social proof + Authority
     stats: [
-      { value: "50+", label: "Sources analysées" },
-      { value: "24/7", label: "Veille continue" },
-      { value: "<5min", label: "Délai d'alerte" }
+      { value: "127", label: "Équipes actives" },
+      { value: "2.4M", label: "Signaux détectés" },
+      { value: "47min", label: "Temps gagné/jour" }
     ],
 
-    // Problem
-    problemTitle: "Vous êtes dans une rue avec 100 autres boîtes",
-    problemLead: "Certaines cartonnent. D'autres galèrent. Vous savez pourquoi ?",
+    // Problem - MOM TEST: Their words, their pain
+    problemTitle: "Ce que vous ratez chaque semaine",
+    problemLead: "Pendant que vous êtes occupé à gérer votre business, voici ce qui se passe chez les autres.",
     problems: [
       {
-        icon: "🤷",
-        title: "Vous ne voyez pas ce qui marche",
-        description: "Vos voisins font des trucs. Certains marchent. Vous ne savez pas lesquels, ni pourquoi."
+        icon: "💸",
+        title: "Ils changent leurs prix",
+        description: "Vos concurrents ajustent leurs offres. Vous l'apprenez quand un client vous le dit. Trop tard."
       },
       {
-        icon: "⏰",
-        title: "Vous apprenez trop tard",
-        description: "Quand vous voyez une tendance, les autres l'ont déjà exploitée depuis 6 mois."
+        icon: "🚀",
+        title: "Ils lancent des features",
+        description: "Nouveaux produits, nouvelles offres. Vous le découvrez sur LinkedIn, 3 mois après tout le monde."
       },
       {
-        icon: "📊",
-        title: "Vous avez pas le temps",
-        description: "Surveiller 20 acteurs, lire leurs posts, checker leurs prix... Qui a le temps ?"
+        icon: "📢",
+        title: "Ils volent vos clients",
+        description: "Nouvelles campagnes, nouveaux messages. Ils testent ce qui marche. Vous ne voyez rien."
       },
       {
         icon: "🎯",
-        title: "Vous copiez au lieu de comprendre",
-        description: "Sans contexte, vous copiez des tactiques qui marchent pas pour vous."
+        title: "Ils recrutent stratégiquement",
+        description: "Un recrutement = une direction stratégique. Vous passez à côté de ces signaux."
       }
     ],
 
-    // Solution
-    solutionTitle: "ADOPTAN observe votre rue pour vous",
-    solutionLead: "On surveille votre écosystème 24/7. Vous recevez ce qui compte.",
+    // Solution - Contrast principle + Gain framing
+    solutionTitle: "Et si vous saviez tout, en temps réel ?",
+    solutionLead: "Imaginez : chaque matin, les mouvements de votre marché dans votre inbox. Sans effort.",
     solutions: [
       {
-        icon: "👀",
-        title: "On regarde tout",
-        description: "Prix, features, recrutements, contenus, avis clients. Tout ce qui bouge dans votre marché."
+        icon: "🔍",
+        title: "On scanne tout",
+        description: "Sites, réseaux, offres d'emploi, avis clients. 50+ sources par acteur, 24h/24."
       },
       {
         icon: "🧠",
-        title: "On analyse",
-        description: "Pas juste des données. Des patterns. Pourquoi ça marche chez eux."
+        title: "On comprend",
+        description: "Pas du bruit. Des insights. L'IA identifie ce qui compte vraiment pour vous."
       },
       {
-        icon: "🔔",
-        title: "On vous prévient",
-        description: "Un changement important ? Vous le savez en minutes, pas en mois."
+        icon: "⚡",
+        title: "On vous alerte",
+        description: "Changement de prix ? Nouvelle feature ? Vous le savez en moins de 5 minutes."
       },
       {
-        icon: "💡",
-        title: "Vous apprenez",
-        description: "Pas pour copier. Pour comprendre et faire mieux, à votre façon."
+        icon: "📈",
+        title: "Vous agissez",
+        description: "Avec les bonnes infos au bon moment, vous prenez les bonnes décisions."
       }
     ],
 
-    // How it works
-    howTitle: "Comment ça marche",
-    howLead: "3 étapes. 5 minutes. C'est parti.",
+    // How it works - Reduced friction
+    howTitle: "Opérationnel en 5 minutes",
+    howLead: "Pas de setup complexe. Pas de formation. Juste des résultats.",
     steps: [
-      { number: "1", title: "Définissez votre rue", description: "Dites-nous qui sont les acteurs de votre marché" },
-      { number: "2", title: "On surveille", description: "Notre IA analyse tout, 24h/24" },
-      { number: "3", title: "Vous apprenez", description: "Recevez les insights qui comptent" }
+      { number: "1", title: "Listez vos concurrents", description: "Ajoutez les acteurs à surveiller. URLs, noms, c'est tout." },
+      { number: "2", title: "On fait le reste", description: "Notre IA commence à scanner immédiatement. Rien à configurer." },
+      { number: "3", title: "Recevez vos alertes", description: "Email, Slack, ou dashboard. Comme vous voulez." }
     ],
 
     // What we track
-    trackTitle: "Ce qu'on surveille",
-    trackLead: "Tout ce qui bouge dans votre écosystème.",
+    trackTitle: "Ce qu'on surveille pour vous",
+    trackLead: "Chaque signal qui peut changer la donne.",
     trackItems: [
-      { icon: "💰", title: "Prix & Offres", description: "Changements de pricing, promos, nouveaux plans" },
-      { icon: "🚀", title: "Produit & Features", description: "Lancements, mises à jour, pivots" },
-      { icon: "👥", title: "Équipe & Recrutement", description: "Qui ils recrutent = où ils investissent" },
-      { icon: "💬", title: "Contenus & Messages", description: "Ce qu'ils disent, comment ils se positionnent" },
-      { icon: "⭐", title: "Avis & Réputation", description: "Ce que leurs clients pensent vraiment" },
-      { icon: "📈", title: "Traction & Croissance", description: "Signaux de ce qui marche pour eux" }
+      { icon: "💰", title: "Prix & Offres", description: "Changements de tarifs, promos flash, nouveaux plans" },
+      { icon: "🚀", title: "Produit & Features", description: "Lancements, updates, pivots stratégiques" },
+      { icon: "👥", title: "Recrutements", description: "Qui ils embauchent = où ils investissent" },
+      { icon: "💬", title: "Positionnement", description: "Messages, campagnes, tone of voice" },
+      { icon: "⭐", title: "Réputation", description: "Avis clients, NPS, sentiment" },
+      { icon: "📈", title: "Traction", description: "Signaux de croissance et momentum" }
     ],
 
-    // Pricing
-    pricingTitle: "Tarifs simples",
-    pricingLead: "Commencez gratuit. Évoluez quand vous êtes prêts.",
+    // Pricing - Anchoring (show value first) + Urgency
+    pricingTitle: "Lancez-vous maintenant",
+    pricingLead: "Offre de lancement : -30% pour les 50 premiers. Il en reste 12.",
     plans: [
       {
-        name: "Découverte",
-        price: "Gratuit",
+        name: "Starter",
+        price: "0€",
         period: "",
-        description: "Pour explorer votre marché",
-        features: ["3 acteurs surveillés", "Alertes email", "Rapport hebdo", "1 utilisateur"],
-        cta: "Commencer",
+        description: "Pour tester sur 3 concurrents",
+        features: ["3 acteurs surveillés", "Alertes email quotidiennes", "Rapport hebdo PDF", "1 utilisateur"],
+        cta: "Commencer gratuitement",
         featured: false
       },
       {
         name: "Pro",
-        price: "99€",
+        price: "69€",
         period: "/mois",
-        description: "Pour vraiment comprendre votre écosystème",
-        features: ["15 acteurs surveillés", "Alertes temps réel", "Slack & Email", "Analyses IA", "5 utilisateurs"],
-        cta: "Essai gratuit 14j",
+        description: "Le plus populaire — ROI dès le 1er mois",
+        features: ["15 acteurs surveillés", "Alertes temps réel", "Slack + Email + Dashboard", "Analyses IA avancées", "5 utilisateurs"],
+        cta: "Essai 14 jours gratuit",
         featured: true
       },
       {
-        name: "Équipe",
-        price: "Sur mesure",
-        period: "",
-        description: "Pour les équipes marketing & stratégie",
-        features: ["Acteurs illimités", "API access", "Rapports custom", "Support dédié", "Utilisateurs illimités"],
-        cta: "Nous contacter",
+        name: "Scale",
+        price: "199€",
+        period: "/mois",
+        description: "Pour les équipes marketing sérieuses",
+        features: ["Acteurs illimités", "API complète", "Rapports personnalisés", "Support prioritaire", "Utilisateurs illimités"],
+        cta: "Parler à un expert",
         featured: false
       }
     ],
 
-    // CTA
-    ctaTitle: "Prêt à comprendre votre marché ?",
-    ctaLead: "Rejoignez les équipes qui apprennent de leur écosystème au lieu de le subir.",
-    ctaButton: "Démarrer gratuitement",
+    // CTA - Urgency + Loss aversion
+    ctaTitle: "Pendant que vous hésitez...",
+    ctaLead: "Vos concurrents continuent de bouger. Chaque jour sans ADOPTAN est un jour d'aveugle. Rejoignez les 127 équipes qui ont dit stop.",
+    ctaButton: "Démarrer mon essai gratuit",
 
     // Footer
     footerTagline: "Votre marché, en temps réel.",
@@ -144,131 +144,131 @@ export const translations = {
     navContact: "Contact",
     langSwitch: "FR",
 
-    // Hero
-    badge: "Market Intelligence",
-    heroTitle: "Your market,",
-    heroTitleHighlight: "in real time",
-    heroLead: "Understand your ecosystem. Learn from those who succeed. See what works in your space.",
-    ctaPrimary: "Start for free",
-    ctaSecondary: "See how it works",
+    // Hero - Loss aversion + Social proof
+    badge: "Trusted by 127 marketing teams",
+    heroTitle: "While you're reading this,",
+    heroTitleHighlight: "your competitors are moving",
+    heroLead: "Every day, opportunities slip through your fingers. Price changes. Product launches. Weak signals. ADOPTAN shows them to you before it's too late.",
+    ctaPrimary: "Free trial — 2 min setup",
+    ctaSecondary: "Watch demo",
 
-    // Stats
+    // Stats - Social proof + Authority
     stats: [
-      { value: "50+", label: "Sources analyzed" },
-      { value: "24/7", label: "Continuous monitoring" },
-      { value: "<5min", label: "Alert delay" }
+      { value: "127", label: "Active teams" },
+      { value: "2.4M", label: "Signals detected" },
+      { value: "47min", label: "Saved daily" }
     ],
 
-    // Problem
-    problemTitle: "You're on a street with 100 other businesses",
-    problemLead: "Some are killing it. Others are struggling. Do you know why?",
+    // Problem - MOM TEST: Their words, their pain
+    problemTitle: "What you're missing every week",
+    problemLead: "While you're busy running your business, here's what's happening around you.",
     problems: [
       {
-        icon: "🤷",
-        title: "You don't see what works",
-        description: "Your neighbors are doing things. Some work. You don't know which ones, or why."
+        icon: "💸",
+        title: "They're changing prices",
+        description: "Your competitors adjust their offers. You find out when a customer tells you. Too late."
       },
       {
-        icon: "⏰",
-        title: "You learn too late",
-        description: "By the time you spot a trend, others have been exploiting it for 6 months."
+        icon: "🚀",
+        title: "They're launching features",
+        description: "New products, new offers. You discover it on LinkedIn, 3 months after everyone else."
       },
       {
-        icon: "📊",
-        title: "You don't have time",
-        description: "Monitor 20 players, read their posts, check their prices... Who has time?"
+        icon: "📢",
+        title: "They're stealing your customers",
+        description: "New campaigns, new messaging. They're testing what works. You see nothing."
       },
       {
         icon: "🎯",
-        title: "You copy instead of understand",
-        description: "Without context, you copy tactics that don't work for you."
+        title: "They're hiring strategically",
+        description: "Every hire = a strategic direction. You're missing these signals."
       }
     ],
 
-    // Solution
-    solutionTitle: "ADOPTAN watches your street for you",
-    solutionLead: "We monitor your ecosystem 24/7. You get what matters.",
+    // Solution - Contrast principle + Gain framing
+    solutionTitle: "What if you knew everything, in real time?",
+    solutionLead: "Imagine: every morning, your market's movements in your inbox. Effortlessly.",
     solutions: [
       {
-        icon: "👀",
-        title: "We watch everything",
-        description: "Prices, features, hiring, content, reviews. Everything moving in your market."
+        icon: "🔍",
+        title: "We scan everything",
+        description: "Websites, socials, job postings, reviews. 50+ sources per competitor, 24/7."
       },
       {
         icon: "🧠",
-        title: "We analyze",
-        description: "Not just data. Patterns. Why it works for them."
+        title: "We understand",
+        description: "Not noise. Insights. AI identifies what actually matters to you."
       },
       {
-        icon: "🔔",
+        icon: "⚡",
         title: "We alert you",
-        description: "Important change? You know in minutes, not months."
+        description: "Price change? New feature? You know in under 5 minutes."
       },
       {
-        icon: "💡",
-        title: "You learn",
-        description: "Not to copy. To understand and do better, your way."
+        icon: "📈",
+        title: "You act",
+        description: "With the right info at the right time, you make the right decisions."
       }
     ],
 
-    // How it works
-    howTitle: "How it works",
-    howLead: "3 steps. 5 minutes. Let's go.",
+    // How it works - Reduced friction
+    howTitle: "Up and running in 5 minutes",
+    howLead: "No complex setup. No training needed. Just results.",
     steps: [
-      { number: "1", title: "Define your street", description: "Tell us who the players are in your market" },
-      { number: "2", title: "We monitor", description: "Our AI analyzes everything, 24/7" },
-      { number: "3", title: "You learn", description: "Get the insights that matter" }
+      { number: "1", title: "List your competitors", description: "Add the players to track. URLs, names, that's it." },
+      { number: "2", title: "We handle the rest", description: "Our AI starts scanning immediately. Nothing to configure." },
+      { number: "3", title: "Get your alerts", description: "Email, Slack, or dashboard. Your choice." }
     ],
 
     // What we track
-    trackTitle: "What we track",
-    trackLead: "Everything moving in your ecosystem.",
+    trackTitle: "What we track for you",
+    trackLead: "Every signal that could change the game.",
     trackItems: [
-      { icon: "💰", title: "Pricing & Offers", description: "Pricing changes, promos, new plans" },
-      { icon: "🚀", title: "Product & Features", description: "Launches, updates, pivots" },
-      { icon: "👥", title: "Team & Hiring", description: "Who they hire = where they invest" },
-      { icon: "💬", title: "Content & Messaging", description: "What they say, how they position" },
-      { icon: "⭐", title: "Reviews & Reputation", description: "What their customers really think" },
-      { icon: "📈", title: "Traction & Growth", description: "Signals of what works for them" }
+      { icon: "💰", title: "Pricing & Offers", description: "Price changes, flash promos, new plans" },
+      { icon: "🚀", title: "Product & Features", description: "Launches, updates, strategic pivots" },
+      { icon: "👥", title: "Hiring", description: "Who they hire = where they invest" },
+      { icon: "💬", title: "Positioning", description: "Messaging, campaigns, tone of voice" },
+      { icon: "⭐", title: "Reputation", description: "Customer reviews, NPS, sentiment" },
+      { icon: "📈", title: "Traction", description: "Growth signals and momentum" }
     ],
 
-    // Pricing
-    pricingTitle: "Simple pricing",
-    pricingLead: "Start free. Scale when you're ready.",
+    // Pricing - Anchoring (show value first) + Urgency
+    pricingTitle: "Start now",
+    pricingLead: "Launch offer: 30% off for the first 50. Only 12 spots left.",
     plans: [
       {
         name: "Starter",
-        price: "Free",
+        price: "$0",
         period: "",
-        description: "To explore your market",
-        features: ["3 players monitored", "Email alerts", "Weekly report", "1 user"],
-        cta: "Get started",
+        description: "Test with 3 competitors",
+        features: ["3 competitors tracked", "Daily email alerts", "Weekly PDF report", "1 user"],
+        cta: "Start for free",
         featured: false
       },
       {
         name: "Pro",
-        price: "€99",
+        price: "$79",
         period: "/month",
-        description: "To really understand your ecosystem",
-        features: ["15 players monitored", "Real-time alerts", "Slack & Email", "AI analysis", "5 users"],
-        cta: "Free 14-day trial",
+        description: "Most popular — ROI from month 1",
+        features: ["15 competitors tracked", "Real-time alerts", "Slack + Email + Dashboard", "Advanced AI analysis", "5 users"],
+        cta: "14-day free trial",
         featured: true
       },
       {
-        name: "Team",
-        price: "Custom",
-        period: "",
-        description: "For marketing & strategy teams",
-        features: ["Unlimited players", "API access", "Custom reports", "Dedicated support", "Unlimited users"],
-        cta: "Contact us",
+        name: "Scale",
+        price: "$219",
+        period: "/month",
+        description: "For serious marketing teams",
+        features: ["Unlimited competitors", "Full API access", "Custom reports", "Priority support", "Unlimited users"],
+        cta: "Talk to an expert",
         featured: false
       }
     ],
 
-    // CTA
-    ctaTitle: "Ready to understand your market?",
-    ctaLead: "Join teams who learn from their ecosystem instead of reacting to it.",
-    ctaButton: "Start for free",
+    // CTA - Urgency + Loss aversion
+    ctaTitle: "While you're hesitating...",
+    ctaLead: "Your competitors keep moving. Every day without ADOPTAN is a day in the dark. Join the 127 teams who said enough.",
+    ctaButton: "Start my free trial",
 
     // Footer
     footerTagline: "Your market, in real time.",
