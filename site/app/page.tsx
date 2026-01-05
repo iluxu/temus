@@ -4,7 +4,7 @@ import { useState } from "react";
 import { translations, Lang } from "./translations";
 
 export default function Home() {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>("fr");
   const t = translations[lang];
 
   const toggleLang = () => setLang(lang === "en" ? "fr" : "en");
@@ -57,20 +57,39 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Features */}
+        {/* Problem */}
         <section id="features" className="section">
           <div className="section-header">
-            <h2>{t.featuresTitle}</h2>
-            <p>{t.featuresLead}</p>
+            <h2>{t.problemTitle}</h2>
+            <p>{t.problemLead}</p>
           </div>
           <div className="grid-4">
-            {t.features.map((feature) => (
-              <div className="card" key={feature.title}>
-                <div className="card-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
+            {t.problems.map((problem) => (
+              <div className="card" key={problem.title}>
+                <div className="card-icon">{problem.icon}</div>
+                <h3>{problem.title}</h3>
+                <p>{problem.description}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Solution */}
+        <section className="section value-section" style={{ margin: "0 -24px", padding: "100px 24px" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div className="section-header">
+              <h2>{t.solutionTitle}</h2>
+              <p>{t.solutionLead}</p>
+            </div>
+            <div className="grid-4">
+              {t.solutions.map((solution) => (
+                <div className="card" key={solution.title} style={{ background: "white" }}>
+                  <div className="card-icon">{solution.icon}</div>
+                  <h3>{solution.title}</h3>
+                  <p>{solution.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -91,35 +110,20 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Value prop */}
-        <section className="section value-section" style={{ margin: "0 -24px", padding: "100px 24px" }}>
-          <div className="value-grid" style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div className="value-content">
-              <h2>{t.valueTitle}</h2>
-              <p>{t.valueLead}</p>
-              <ul className="value-list">
-                {t.valuePoints.map((point) => (
-                  <li key={point}>{point}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="value-visual">
-              <div style={{
-                background: "linear-gradient(135deg, #f0f0ff 0%, #e8f8ff 100%)",
-                borderRadius: "12px",
-                padding: "24px",
-                fontFamily: "monospace",
-                fontSize: "0.85rem",
-                lineHeight: "1.8"
-              }}>
-                <div style={{ color: "#666", marginBottom: "8px" }}>// Agent activity log</div>
-                <div><span style={{ color: "#635bff" }}>→</span> claude-agent connected via SSO</div>
-                <div><span style={{ color: "#635bff" }}>→</span> Query: "summarize Q4 report"</div>
-                <div><span style={{ color: "#00d4ff" }}>✓</span> Response delivered (124ms)</div>
-                <div><span style={{ color: "#635bff" }}>→</span> Data access: sales_data.csv</div>
-                <div><span style={{ color: "#00d4ff" }}>✓</span> Audit log saved</div>
+        {/* What we track */}
+        <section className="section">
+          <div className="section-header">
+            <h2>{t.trackTitle}</h2>
+            <p>{t.trackLead}</p>
+          </div>
+          <div className="grid-3">
+            {t.trackItems.map((item) => (
+              <div className="card" key={item.title}>
+                <div className="card-icon">{item.icon}</div>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
               </div>
-            </div>
+            ))}
           </div>
         </section>
 
@@ -168,7 +172,7 @@ export default function Home() {
             <div className="footer-links">
               <a href="#features">{t.footerLinks[0]}</a>
               <a href="#pricing">{t.footerLinks[1]}</a>
-              <a href="#contact">{t.footerLinks[3]}</a>
+              <a href="#contact">{t.footerLinks[2]}</a>
             </div>
           </div>
         </footer>

@@ -1,14 +1,14 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "ADOPTAN.AI — Infrastructure for AI Agents",
+  title: "ADOPTAN.AI — Votre marché, en temps réel",
   description:
-    "Deploy, monitor, and control AI agents across your organization. One platform for visibility, compliance, and governance."
+    "Comprenez votre écosystème. Apprenez de ceux qui réussissent. Surveillez votre marché 24/7 avec l'IA."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <body>{children}</body>
     </html>
   );

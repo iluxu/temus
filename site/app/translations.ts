@@ -1,224 +1,278 @@
 export const translations = {
-  en: {
-    // Nav
-    navProduct: "Product",
-    navPricing: "Pricing",
-    navDocs: "Docs",
-    navContact: "Contact",
-    langSwitch: "FR",
-
-    // Hero
-    badge: "Now in private beta",
-    heroTitle: "Infrastructure for",
-    heroTitleHighlight: "AI agents",
-    heroLead: "Deploy, monitor, and control AI agents across your organization. One platform for visibility, compliance, and governance.",
-    ctaPrimary: "Request access",
-    ctaSecondary: "View demo",
-
-    // Stats
-    stats: [
-      { value: "99.9%", label: "Uptime SLA" },
-      { value: "<50ms", label: "Latency" },
-      { value: "SOC 2", label: "Compliant" }
-    ],
-
-    // Features
-    featuresTitle: "Everything you need to manage AI agents",
-    featuresLead: "From deployment to monitoring to compliance. All in one platform.",
-    features: [
-      {
-        icon: "🎯",
-        title: "Centralized control",
-        description: "All AI agents run through your ADOPTAN dashboard. See every action, every query, every response."
-      },
-      {
-        icon: "📊",
-        title: "Real-time monitoring",
-        description: "Track usage, performance, and costs across all agents. Get alerts when something needs attention."
-      },
-      {
-        icon: "🔒",
-        title: "Enterprise security",
-        description: "SSO, role-based access, audit logs, and data encryption. Meet compliance requirements easily."
-      },
-      {
-        icon: "⚡",
-        title: "Easy deployment",
-        description: "Deploy agents from our registry or bring your own. One-click setup, instant scaling."
-      }
-    ],
-
-    // How it works
-    howTitle: "How it works",
-    howLead: "Get started in minutes, not months.",
-    steps: [
-      { number: "1", title: "Connect", description: "Integrate with SSO and existing tools" },
-      { number: "2", title: "Deploy", description: "Install agents from registry" },
-      { number: "3", title: "Monitor", description: "Track all AI activity" },
-      { number: "4", title: "Control", description: "Set policies and permissions" }
-    ],
-
-    // Value prop
-    valueTitle: "Your AI agents, under control",
-    valueLead: "ADOPTAN.AI gives you complete visibility and control over every AI agent in your organization. No more shadow AI, no more compliance risks.",
-    valuePoints: [
-      "Full audit trail for every action",
-      "Role-based access controls",
-      "Data loss prevention built-in",
-      "GDPR and SOC 2 compliant"
-    ],
-
-    // Pricing
-    pricingTitle: "Simple, transparent pricing",
-    pricingLead: "Start free, scale as you grow. No hidden fees.",
-    plans: [
-      {
-        name: "Starter",
-        price: "Free",
-        period: "",
-        description: "For teams exploring AI agents",
-        features: ["Up to 5 users", "3 agents", "7-day logs", "Community support"],
-        cta: "Get started",
-        featured: false
-      },
-      {
-        name: "Team",
-        price: "€49",
-        period: "/user/month",
-        description: "For growing teams that need control",
-        features: ["Unlimited users", "Unlimited agents", "90-day logs", "SSO integration", "Priority support"],
-        cta: "Start free trial",
-        featured: true
-      },
-      {
-        name: "Enterprise",
-        price: "Custom",
-        period: "",
-        description: "For organizations with advanced needs",
-        features: ["Everything in Team", "Unlimited logs", "Custom policies", "Dedicated support", "SLA guarantee", "On-premise option"],
-        cta: "Contact sales",
-        featured: false
-      }
-    ],
-
-    // CTA
-    ctaTitle: "Ready to take control?",
-    ctaLead: "Join leading companies using ADOPTAN.AI to manage their AI infrastructure.",
-    ctaButton: "Request access",
-
-    // Footer
-    footerLinks: ["Product", "Pricing", "Docs", "Contact"]
-  },
-
   fr: {
     // Nav
     navProduct: "Produit",
     navPricing: "Tarifs",
-    navDocs: "Docs",
     navContact: "Contact",
     langSwitch: "EN",
 
     // Hero
-    badge: "Bêta privée",
-    heroTitle: "L'infrastructure pour",
-    heroTitleHighlight: "vos agents IA",
-    heroLead: "Déployez, surveillez et contrôlez les agents IA dans votre organisation. Une plateforme pour la visibilité, la conformité et la gouvernance.",
-    ctaPrimary: "Demander un accès",
-    ctaSecondary: "Voir la démo",
+    badge: "Market Intelligence",
+    heroTitle: "Votre marché,",
+    heroTitleHighlight: "en temps réel",
+    heroLead: "Comprenez votre écosystème. Apprenez de ceux qui réussissent. Voyez ce qui marche dans votre rue.",
+    ctaPrimary: "Démarrer gratuitement",
+    ctaSecondary: "Voir comment ça marche",
 
     // Stats
     stats: [
-      { value: "99.9%", label: "SLA Uptime" },
-      { value: "<50ms", label: "Latence" },
-      { value: "SOC 2", label: "Conforme" }
+      { value: "50+", label: "Sources analysées" },
+      { value: "24/7", label: "Veille continue" },
+      { value: "<5min", label: "Délai d'alerte" }
     ],
 
-    // Features
-    featuresTitle: "Tout ce qu'il faut pour gérer vos agents IA",
-    featuresLead: "Du déploiement au monitoring à la conformité. Tout en une plateforme.",
-    features: [
+    // Problem
+    problemTitle: "Vous êtes dans une rue avec 100 autres boîtes",
+    problemLead: "Certaines cartonnent. D'autres galèrent. Vous savez pourquoi ?",
+    problems: [
       {
-        icon: "🎯",
-        title: "Contrôle centralisé",
-        description: "Tous les agents IA passent par votre dashboard ADOPTAN. Voyez chaque action, chaque requête, chaque réponse."
+        icon: "🤷",
+        title: "Vous ne voyez pas ce qui marche",
+        description: "Vos voisins font des trucs. Certains marchent. Vous ne savez pas lesquels, ni pourquoi."
+      },
+      {
+        icon: "⏰",
+        title: "Vous apprenez trop tard",
+        description: "Quand vous voyez une tendance, les autres l'ont déjà exploitée depuis 6 mois."
       },
       {
         icon: "📊",
-        title: "Monitoring temps réel",
-        description: "Suivez l'usage, la performance et les coûts de tous vos agents. Alertes quand quelque chose nécessite attention."
+        title: "Vous avez pas le temps",
+        description: "Surveiller 20 acteurs, lire leurs posts, checker leurs prix... Qui a le temps ?"
       },
       {
-        icon: "🔒",
-        title: "Sécurité entreprise",
-        description: "SSO, contrôle d'accès par rôle, logs d'audit et chiffrement des données. Conformité simplifiée."
+        icon: "🎯",
+        title: "Vous copiez au lieu de comprendre",
+        description: "Sans contexte, vous copiez des tactiques qui marchent pas pour vous."
+      }
+    ],
+
+    // Solution
+    solutionTitle: "ADOPTAN observe votre rue pour vous",
+    solutionLead: "On surveille votre écosystème 24/7. Vous recevez ce qui compte.",
+    solutions: [
+      {
+        icon: "👀",
+        title: "On regarde tout",
+        description: "Prix, features, recrutements, contenus, avis clients. Tout ce qui bouge dans votre marché."
       },
       {
-        icon: "⚡",
-        title: "Déploiement simple",
-        description: "Déployez des agents depuis notre registry ou apportez les vôtres. Setup en un clic, scaling instantané."
+        icon: "🧠",
+        title: "On analyse",
+        description: "Pas juste des données. Des patterns. Pourquoi ça marche chez eux."
+      },
+      {
+        icon: "🔔",
+        title: "On vous prévient",
+        description: "Un changement important ? Vous le savez en minutes, pas en mois."
+      },
+      {
+        icon: "💡",
+        title: "Vous apprenez",
+        description: "Pas pour copier. Pour comprendre et faire mieux, à votre façon."
       }
     ],
 
     // How it works
     howTitle: "Comment ça marche",
-    howLead: "Démarrez en minutes, pas en mois.",
+    howLead: "3 étapes. 5 minutes. C'est parti.",
     steps: [
-      { number: "1", title: "Connecter", description: "Intégrez via SSO et outils existants" },
-      { number: "2", title: "Déployer", description: "Installez des agents depuis le registry" },
-      { number: "3", title: "Monitorer", description: "Suivez toute l'activité IA" },
-      { number: "4", title: "Contrôler", description: "Définissez politiques et permissions" }
+      { number: "1", title: "Définissez votre rue", description: "Dites-nous qui sont les acteurs de votre marché" },
+      { number: "2", title: "On surveille", description: "Notre IA analyse tout, 24h/24" },
+      { number: "3", title: "Vous apprenez", description: "Recevez les insights qui comptent" }
     ],
 
-    // Value prop
-    valueTitle: "Vos agents IA, sous contrôle",
-    valueLead: "ADOPTAN.AI vous donne une visibilité et un contrôle complets sur chaque agent IA de votre organisation. Plus de shadow AI, plus de risques de conformité.",
-    valuePoints: [
-      "Traçabilité complète de chaque action",
-      "Contrôle d'accès par rôle",
-      "Protection des données intégrée",
-      "Conforme RGPD et SOC 2"
+    // What we track
+    trackTitle: "Ce qu'on surveille",
+    trackLead: "Tout ce qui bouge dans votre écosystème.",
+    trackItems: [
+      { icon: "💰", title: "Prix & Offres", description: "Changements de pricing, promos, nouveaux plans" },
+      { icon: "🚀", title: "Produit & Features", description: "Lancements, mises à jour, pivots" },
+      { icon: "👥", title: "Équipe & Recrutement", description: "Qui ils recrutent = où ils investissent" },
+      { icon: "💬", title: "Contenus & Messages", description: "Ce qu'ils disent, comment ils se positionnent" },
+      { icon: "⭐", title: "Avis & Réputation", description: "Ce que leurs clients pensent vraiment" },
+      { icon: "📈", title: "Traction & Croissance", description: "Signaux de ce qui marche pour eux" }
     ],
 
     // Pricing
-    pricingTitle: "Tarifs simples et transparents",
-    pricingLead: "Commencez gratuitement, évoluez selon vos besoins. Pas de frais cachés.",
+    pricingTitle: "Tarifs simples",
+    pricingLead: "Commencez gratuit. Évoluez quand vous êtes prêts.",
     plans: [
       {
-        name: "Starter",
+        name: "Découverte",
         price: "Gratuit",
         period: "",
-        description: "Pour les équipes qui découvrent les agents IA",
-        features: ["Jusqu'à 5 utilisateurs", "3 agents", "Logs 7 jours", "Support communauté"],
+        description: "Pour explorer votre marché",
+        features: ["3 acteurs surveillés", "Alertes email", "Rapport hebdo", "1 utilisateur"],
         cta: "Commencer",
         featured: false
       },
       {
-        name: "Team",
-        price: "49€",
-        period: "/utilisateur/mois",
-        description: "Pour les équipes qui ont besoin de contrôle",
-        features: ["Utilisateurs illimités", "Agents illimités", "Logs 90 jours", "Intégration SSO", "Support prioritaire"],
-        cta: "Essai gratuit",
+        name: "Pro",
+        price: "99€",
+        period: "/mois",
+        description: "Pour vraiment comprendre votre écosystème",
+        features: ["15 acteurs surveillés", "Alertes temps réel", "Slack & Email", "Analyses IA", "5 utilisateurs"],
+        cta: "Essai gratuit 14j",
         featured: true
       },
       {
-        name: "Enterprise",
+        name: "Équipe",
         price: "Sur mesure",
         period: "",
-        description: "Pour les organisations avec des besoins avancés",
-        features: ["Tout Team inclus", "Logs illimités", "Politiques custom", "Support dédié", "SLA garanti", "Option on-premise"],
-        cta: "Contacter",
+        description: "Pour les équipes marketing & stratégie",
+        features: ["Acteurs illimités", "API access", "Rapports custom", "Support dédié", "Utilisateurs illimités"],
+        cta: "Nous contacter",
         featured: false
       }
     ],
 
     // CTA
-    ctaTitle: "Prêt à reprendre le contrôle ?",
-    ctaLead: "Rejoignez les entreprises leaders qui utilisent ADOPTAN.AI pour gérer leur infrastructure IA.",
-    ctaButton: "Demander un accès",
+    ctaTitle: "Prêt à comprendre votre marché ?",
+    ctaLead: "Rejoignez les équipes qui apprennent de leur écosystème au lieu de le subir.",
+    ctaButton: "Démarrer gratuitement",
 
     // Footer
-    footerLinks: ["Produit", "Tarifs", "Docs", "Contact"]
+    footerTagline: "Votre marché, en temps réel.",
+    footerLinks: ["Produit", "Tarifs", "Contact"]
+  },
+
+  en: {
+    // Nav
+    navProduct: "Product",
+    navPricing: "Pricing",
+    navContact: "Contact",
+    langSwitch: "FR",
+
+    // Hero
+    badge: "Market Intelligence",
+    heroTitle: "Your market,",
+    heroTitleHighlight: "in real time",
+    heroLead: "Understand your ecosystem. Learn from those who succeed. See what works in your space.",
+    ctaPrimary: "Start for free",
+    ctaSecondary: "See how it works",
+
+    // Stats
+    stats: [
+      { value: "50+", label: "Sources analyzed" },
+      { value: "24/7", label: "Continuous monitoring" },
+      { value: "<5min", label: "Alert delay" }
+    ],
+
+    // Problem
+    problemTitle: "You're on a street with 100 other businesses",
+    problemLead: "Some are killing it. Others are struggling. Do you know why?",
+    problems: [
+      {
+        icon: "🤷",
+        title: "You don't see what works",
+        description: "Your neighbors are doing things. Some work. You don't know which ones, or why."
+      },
+      {
+        icon: "⏰",
+        title: "You learn too late",
+        description: "By the time you spot a trend, others have been exploiting it for 6 months."
+      },
+      {
+        icon: "📊",
+        title: "You don't have time",
+        description: "Monitor 20 players, read their posts, check their prices... Who has time?"
+      },
+      {
+        icon: "🎯",
+        title: "You copy instead of understand",
+        description: "Without context, you copy tactics that don't work for you."
+      }
+    ],
+
+    // Solution
+    solutionTitle: "ADOPTAN watches your street for you",
+    solutionLead: "We monitor your ecosystem 24/7. You get what matters.",
+    solutions: [
+      {
+        icon: "👀",
+        title: "We watch everything",
+        description: "Prices, features, hiring, content, reviews. Everything moving in your market."
+      },
+      {
+        icon: "🧠",
+        title: "We analyze",
+        description: "Not just data. Patterns. Why it works for them."
+      },
+      {
+        icon: "🔔",
+        title: "We alert you",
+        description: "Important change? You know in minutes, not months."
+      },
+      {
+        icon: "💡",
+        title: "You learn",
+        description: "Not to copy. To understand and do better, your way."
+      }
+    ],
+
+    // How it works
+    howTitle: "How it works",
+    howLead: "3 steps. 5 minutes. Let's go.",
+    steps: [
+      { number: "1", title: "Define your street", description: "Tell us who the players are in your market" },
+      { number: "2", title: "We monitor", description: "Our AI analyzes everything, 24/7" },
+      { number: "3", title: "You learn", description: "Get the insights that matter" }
+    ],
+
+    // What we track
+    trackTitle: "What we track",
+    trackLead: "Everything moving in your ecosystem.",
+    trackItems: [
+      { icon: "💰", title: "Pricing & Offers", description: "Pricing changes, promos, new plans" },
+      { icon: "🚀", title: "Product & Features", description: "Launches, updates, pivots" },
+      { icon: "👥", title: "Team & Hiring", description: "Who they hire = where they invest" },
+      { icon: "💬", title: "Content & Messaging", description: "What they say, how they position" },
+      { icon: "⭐", title: "Reviews & Reputation", description: "What their customers really think" },
+      { icon: "📈", title: "Traction & Growth", description: "Signals of what works for them" }
+    ],
+
+    // Pricing
+    pricingTitle: "Simple pricing",
+    pricingLead: "Start free. Scale when you're ready.",
+    plans: [
+      {
+        name: "Starter",
+        price: "Free",
+        period: "",
+        description: "To explore your market",
+        features: ["3 players monitored", "Email alerts", "Weekly report", "1 user"],
+        cta: "Get started",
+        featured: false
+      },
+      {
+        name: "Pro",
+        price: "€99",
+        period: "/month",
+        description: "To really understand your ecosystem",
+        features: ["15 players monitored", "Real-time alerts", "Slack & Email", "AI analysis", "5 users"],
+        cta: "Free 14-day trial",
+        featured: true
+      },
+      {
+        name: "Team",
+        price: "Custom",
+        period: "",
+        description: "For marketing & strategy teams",
+        features: ["Unlimited players", "API access", "Custom reports", "Dedicated support", "Unlimited users"],
+        cta: "Contact us",
+        featured: false
+      }
+    ],
+
+    // CTA
+    ctaTitle: "Ready to understand your market?",
+    ctaLead: "Join teams who learn from their ecosystem instead of reacting to it.",
+    ctaButton: "Start for free",
+
+    // Footer
+    footerTagline: "Your market, in real time.",
+    footerLinks: ["Product", "Pricing", "Contact"]
   }
 };
 
