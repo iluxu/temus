@@ -8,9 +8,9 @@ export const translations = {
 
     // Hero - Loss aversion + Social proof
     badge: "Utilisé par 127 équipes marketing",
-    heroTitle: "Le marché bouge,",
-    heroTitleHighlight: "vous aussi pouvez avancer",
-    heroLead: "ADOPTAN transforme les infos publiques en intelligence collective. Vous gagnez en clarté, vous agissez plus vite, et vous progressez sans pression.",
+    heroTitle: "Pendant que le marché bouge,",
+    heroTitleHighlight: "vous gardez une longueur d'avance",
+    heroLead: "ADOPTAN transforme les infos publiques en intelligence collective. Vous voyez ce qui compte, sans pression, et vous avancez plus vite.",
     ctaPrimary: "Démarrer en 2 min",
     ctaSecondary: "Voir une démo",
 
@@ -22,28 +22,28 @@ export const translations = {
     ],
 
     // Problem - MOM TEST: Their words, their pain
-    problemTitle: "Ce que vous captez quand vous êtes bien informé",
-    problemLead: "Des signaux utiles, au bon moment. Pas de stress, juste de l'avance.",
+    problemTitle: "Les signaux clés, au bon moment",
+    problemLead: "Un flux clair pour décider vite, sans comparaison inutile.",
     problems: [
       {
         icon: "💸",
         title: "Changements de prix",
-        description: "Vous voyez les évolutions tarifaires dès qu'elles apparaissent, pour ajuster sereinement."
+        description: "Repérez les évolutions tarifaires dès qu'elles apparaissent."
       },
       {
         icon: "🚀",
         title: "Nouveaux lancements",
-        description: "Produits, features, offres : vous repérez les mouvements importants sans courir après."
+        description: "Produits, features, offres : vous captez les mouvements importants."
       },
       {
         icon: "📢",
         title: "Positionnement & messages",
-        description: "Vous comprenez les angles qui fonctionnent et ceux qui évoluent, pour rester aligné."
+        description: "Comprenez ce qui résonne sur le marché pour rester aligné."
       },
       {
         icon: "🎯",
         title: "Recrutements clés",
-        description: "Chaque recrutement donne une indication sur les priorités du marché."
+        description: "Chaque recrutement indique une direction stratégique."
       }
     ],
 
@@ -146,9 +146,9 @@ export const translations = {
 
     // Hero - Loss aversion + Social proof
     badge: "Trusted by 127 marketing teams",
-    heroTitle: "The market moves,",
-    heroTitleHighlight: "and you can move too",
-    heroLead: "ADOPTAN turns public signals into collective intelligence. You get clarity, act faster, and improve with confidence.",
+    heroTitle: "While the market moves,",
+    heroTitleHighlight: "you stay one step ahead",
+    heroLead: "ADOPTAN turns public signals into collective intelligence. You see what matters, without pressure, and move faster.",
     ctaPrimary: "Get started in 2 min",
     ctaSecondary: "Watch demo",
 
@@ -160,18 +160,18 @@ export const translations = {
     ],
 
     // Problem - MOM TEST: Their words, their pain
-    problemTitle: "What you see when you're well informed",
-    problemLead: "Useful signals at the right time. No pressure, just momentum.",
+    problemTitle: "Key signals, right on time",
+    problemLead: "A clear stream to decide quickly, without unhealthy comparisons.",
     problems: [
       {
         icon: "💸",
         title: "Pricing shifts",
-        description: "Spot pricing changes as they happen and adjust calmly."
+        description: "Spot pricing changes as they happen."
       },
       {
         icon: "🚀",
         title: "New launches",
-        description: "Products, features, offers: catch meaningful moves without chasing."
+        description: "Products, features, offers: catch meaningful moves early."
       },
       {
         icon: "📢",
@@ -181,7 +181,7 @@ export const translations = {
       {
         icon: "🎯",
         title: "Key hires",
-        description: "Each hire signals a shift in focus across the market."
+        description: "Each hire signals a shift in market focus."
       }
     ],
 
