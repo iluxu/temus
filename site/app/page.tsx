@@ -14,7 +14,7 @@ export default function Home() {
       {/* Nav */}
       <nav className="nav">
         <div className="nav-inner">
-          <div className="nav-logo">adoptan.ai</div>
+          <div className="nav-logo">ADOPTAN.AI</div>
           <div className="nav-links">
             <a href="#features">{t.navProduct}</a>
             <a href="#pricing">{t.navPricing}</a>
@@ -168,7 +168,7 @@ export default function Home() {
         {/* Footer */}
         <footer className="footer">
           <div className="footer-inner">
-            <div className="footer-logo">adoptan.ai</div>
+            <div className="footer-logo">ADOPTAN.AI</div>
             <div className="footer-links">
               <a href="#features">{t.footerLinks[0]}</a>
               <a href="#pricing">{t.footerLinks[1]}</a>
