@@ -8,10 +8,10 @@ export const translations = {
 
     // Hero - Loss aversion + Social proof
     badge: "Utilisé par 127 équipes marketing",
-    heroTitle: "Le marché bouge,",
-    heroTitleHighlight: "vous aussi pouvez avancer",
-    heroLead: "ADOPTAN transforme les infos publiques en intelligence collective. Vous gagnez en clarté, vous agissez plus vite, et vous progressez sans pression.",
-    ctaPrimary: "Démarrer en 2 min",
+    heroTitle: "Pendant que vous lisez ça,",
+    heroTitleHighlight: "vos concurrents bougent",
+    heroLead: "Chaque jour, des opportunités vous passent sous le nez. Des changements de prix. Des lancements. Des signaux faibles. ADOPTAN vous les montre avant qu'il soit trop tard.",
+    ctaPrimary: "Essai gratuit — 2 min",
     ctaSecondary: "Voir une démo",
 
     // Stats - Social proof + Authority
@@ -22,34 +22,34 @@ export const translations = {
     ],
 
     // Problem - MOM TEST: Their words, their pain
-    problemTitle: "Ce que vous captez quand vous êtes bien informé",
-    problemLead: "Des signaux utiles, au bon moment. Pas de stress, juste de l'avance.",
+    problemTitle: "Ce que vous ratez chaque semaine",
+    problemLead: "Pendant que vous êtes occupé à gérer votre business, voici ce qui se passe chez les autres.",
     problems: [
       {
         icon: "💸",
-        title: "Changements de prix",
-        description: "Vous voyez les évolutions tarifaires dès qu'elles apparaissent, pour ajuster sereinement."
+        title: "Ils changent leurs prix",
+        description: "Vos concurrents ajustent leurs offres. Vous l'apprenez quand un client vous le dit. Trop tard."
       },
       {
         icon: "🚀",
-        title: "Nouveaux lancements",
-        description: "Produits, features, offres : vous repérez les mouvements importants sans courir après."
+        title: "Ils lancent des features",
+        description: "Nouveaux produits, nouvelles offres. Vous le découvrez sur LinkedIn, 3 mois après tout le monde."
       },
       {
         icon: "📢",
-        title: "Positionnement & messages",
-        description: "Vous comprenez les angles qui fonctionnent et ceux qui évoluent, pour rester aligné."
+        title: "Ils volent vos clients",
+        description: "Nouvelles campagnes, nouveaux messages. Ils testent ce qui marche. Vous ne voyez rien."
       },
       {
         icon: "🎯",
-        title: "Recrutements clés",
-        description: "Chaque recrutement donne une indication sur les priorités du marché."
+        title: "Ils recrutent stratégiquement",
+        description: "Un recrutement = une direction stratégique. Vous passez à côté de ces signaux."
       }
     ],
 
     // Solution - Contrast principle + Gain framing
-    solutionTitle: "Votre intelligence collective, en temps réel",
-    solutionLead: "Chaque matin, un résumé clair des mouvements du marché. Simple, utile, sans bruit.",
+    solutionTitle: "Et si vous saviez tout, en temps réel ?",
+    solutionLead: "Imaginez : chaque matin, les mouvements de votre marché dans votre inbox. Sans effort.",
     solutions: [
       {
         icon: "🔍",
@@ -96,7 +96,7 @@ export const translations = {
 
     // Pricing - Anchoring (show value first) + Urgency
     pricingTitle: "Lancez-vous maintenant",
-    pricingLead: "Le marché avance vite. Les équipes qui s'équipent tôt prennent de l'élan — vous aussi.",
+    pricingLead: "Offre de lancement : -30% pour les 50 premiers. Il en reste 12.",
     plans: [
       {
         name: "Starter",
@@ -128,9 +128,9 @@ export const translations = {
     ],
 
     // CTA - Urgency + Loss aversion
-    ctaTitle: "Prêt à avancer avec clarté ?",
-    ctaLead: "Le marché bouge vite, et vous pouvez suivre le rythme. Rejoignez les équipes qui transforment l'info en action.",
-    ctaButton: "Démarrer maintenant",
+    ctaTitle: "Pendant que vous hésitez...",
+    ctaLead: "Vos concurrents continuent de bouger. Chaque jour sans ADOPTAN est un jour d'aveugle. Rejoignez les 127 équipes qui ont dit stop.",
+    ctaButton: "Démarrer mon essai gratuit",
 
     // Footer
     footerTagline: "Votre marché, en temps réel.",
@@ -146,10 +146,10 @@ export const translations = {
 
     // Hero - Loss aversion + Social proof
     badge: "Trusted by 127 marketing teams",
-    heroTitle: "The market moves,",
-    heroTitleHighlight: "and you can move too",
-    heroLead: "ADOPTAN turns public signals into collective intelligence. You get clarity, act faster, and improve with confidence.",
-    ctaPrimary: "Get started in 2 min",
+    heroTitle: "While you're reading this,",
+    heroTitleHighlight: "your competitors are moving",
+    heroLead: "Every day, opportunities slip through your fingers. Price changes. Product launches. Weak signals. ADOPTAN shows them to you before it's too late.",
+    ctaPrimary: "Free trial — 2 min setup",
     ctaSecondary: "Watch demo",
 
     // Stats - Social proof + Authority
@@ -160,34 +160,34 @@ export const translations = {
     ],
 
     // Problem - MOM TEST: Their words, their pain
-    problemTitle: "What you see when you're well informed",
-    problemLead: "Useful signals at the right time. No pressure, just momentum.",
+    problemTitle: "What you're missing every week",
+    problemLead: "While you're busy running your business, here's what's happening around you.",
     problems: [
       {
         icon: "💸",
-        title: "Pricing shifts",
-        description: "Spot pricing changes as they happen and adjust calmly."
+        title: "They're changing prices",
+        description: "Your competitors adjust their offers. You find out when a customer tells you. Too late."
       },
       {
         icon: "🚀",
-        title: "New launches",
-        description: "Products, features, offers: catch meaningful moves without chasing."
+        title: "They're launching features",
+        description: "New products, new offers. You discover it on LinkedIn, 3 months after everyone else."
       },
       {
         icon: "📢",
-        title: "Positioning & messaging",
-        description: "Understand what resonates in the market to stay aligned."
+        title: "They're stealing your customers",
+        description: "New campaigns, new messaging. They're testing what works. You see nothing."
       },
       {
         icon: "🎯",
-        title: "Key hires",
-        description: "Each hire signals a shift in focus across the market."
+        title: "They're hiring strategically",
+        description: "Every hire = a strategic direction. You're missing these signals."
       }
     ],
 
     // Solution - Contrast principle + Gain framing
-    solutionTitle: "Your collective intelligence, in real time",
-    solutionLead: "Each morning, a clear snapshot of market moves. Simple, useful, and noise-free.",
+    solutionTitle: "What if you knew everything, in real time?",
+    solutionLead: "Imagine: every morning, your market's movements in your inbox. Effortlessly.",
     solutions: [
       {
         icon: "🔍",
@@ -234,7 +234,7 @@ export const translations = {
 
     // Pricing - Anchoring (show value first) + Urgency
     pricingTitle: "Start now",
-    pricingLead: "The market moves fast. Teams who equip early build momentum — you can too.",
+    pricingLead: "Launch offer: 30% off for the first 50. Only 12 spots left.",
     plans: [
       {
         name: "Starter",
@@ -266,9 +266,9 @@ export const translations = {
     ],
 
     // CTA - Urgency + Loss aversion
-    ctaTitle: "Ready to move with clarity?",
-    ctaLead: "The market moves fast, and you can keep up. Join the teams turning information into action.",
-    ctaButton: "Get started",
+    ctaTitle: "While you're hesitating...",
+    ctaLead: "Your competitors keep moving. Every day without ADOPTAN is a day in the dark. Join the 127 teams who said enough.",
+    ctaButton: "Start my free trial",
 
     // Footer
     footerTagline: "Your market, in real time.",
