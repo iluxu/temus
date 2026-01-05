@@ -101,6 +101,27 @@ svg {
   text-transform: uppercase;
 }
 
+.lang-toggle {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 100;
+  background: hsl(var(--secondary) / 0.6);
+  border: 1px solid hsl(var(--border) / 0.5);
+  color: hsl(var(--foreground));
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.lang-toggle:hover {
+  transform: scale(1.05);
+  background: hsl(var(--secondary) / 0.8);
+}
+
 .lead {
   font-size: 1.15rem;
   max-width: 620px;
@@ -177,6 +198,27 @@ svg {
 .price {
   display: grid;
   gap: 16px;
+  position: relative;
+}
+
+.price.popular {
+  border-color: hsl(var(--primary) / 0.6);
+  box-shadow: 0 0 40px hsl(var(--primary) / 0.2);
+}
+
+.popular-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  padding: 4px 16px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .price-head {
@@ -184,6 +226,12 @@ svg {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
+}
+
+.price-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
 }
 
 .price ul {
@@ -194,9 +242,17 @@ svg {
 }
 
 .price li::before {
-  content: "•";
+  content: "✓";
   margin-right: 8px;
   color: hsl(var(--primary));
+}
+
+.problem-card {
+  border-left: 3px solid hsl(var(--destructive) / 0.6);
+}
+
+.solution-card {
+  border-left: 3px solid hsl(var(--primary) / 0.6);
 }
 
 .terminal-grid {

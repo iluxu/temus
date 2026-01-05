@@ -14,9 +14,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata = {
-  title: "codex-skill — Ship installable Codex skills",
+  title: "ADOPTAN.AI — Control AI Agent Execution",
   description:
-    "codex-skill is a lightweight CLI + registry workflow for packaging, publishing, and installing Codex skills across teams."
+    "ADOPTAN.AI is the execution layer for AI agents. Enterprise-grade security, full audit trail, GDPR compliant. Control how AI runs in your organization."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
