@@ -1,211 +1,224 @@
 export const translations = {
   en: {
-    // Header
-    badge: "AI Agent Infrastructure",
-    heroTitle: "Control how AI agents execute in your organization.",
-    heroLead: "ADOPTAN.AI is the execution layer for AI agents. Skills are open and portable. You control the infrastructure, compliance, and data.",
-    ctaPrimary: "Book a demo",
-    ctaSecondary: "See pricing",
-    heroMeta: ["Enterprise-grade security", "Full audit trail", "GDPR compliant"],
+    // Nav
+    navProduct: "Product",
+    navPricing: "Pricing",
+    navDocs: "Docs",
+    navContact: "Contact",
+    langSwitch: "FR",
 
-    // Problem section
-    problemTitle: "The problem",
-    problemLead: "AI agents are everywhere. But who controls what they do?",
-    problems: [
-      {
-        title: "No visibility",
-        description: "You don't know which AI agents run in your org, what data they access, or what actions they take."
-      },
-      {
-        title: "No control",
-        description: "Employees use dozens of AI tools. Each one is a potential data leak or compliance risk."
-      },
-      {
-        title: "No audit trail",
-        description: "When something goes wrong, you can't trace what happened or who did what."
-      },
-      {
-        title: "No governance",
-        description: "No SSO, no access controls, no way to enforce policies across AI usage."
-      }
+    // Hero
+    badge: "Now in private beta",
+    heroTitle: "Infrastructure for",
+    heroTitleHighlight: "AI agents",
+    heroLead: "Deploy, monitor, and control AI agents across your organization. One platform for visibility, compliance, and governance.",
+    ctaPrimary: "Request access",
+    ctaSecondary: "View demo",
+
+    // Stats
+    stats: [
+      { value: "99.9%", label: "Uptime SLA" },
+      { value: "<50ms", label: "Latency" },
+      { value: "SOC 2", label: "Compliant" }
     ],
 
-    // Solution section
-    solutionTitle: "The solution",
-    solutionLead: "One platform to govern all AI agent execution.",
-    solutions: [
+    // Features
+    featuresTitle: "Everything you need to manage AI agents",
+    featuresLead: "From deployment to monitoring to compliance. All in one platform.",
+    features: [
       {
-        title: "Centralized execution",
-        description: "All AI agents run through ADOPTAN.AI. You see everything, control everything."
+        icon: "🎯",
+        title: "Centralized control",
+        description: "All AI agents run through your ADOPTAN dashboard. See every action, every query, every response."
       },
       {
-        title: "Full audit logs",
-        description: "Every action, every query, every response. Timestamped and searchable."
+        icon: "📊",
+        title: "Real-time monitoring",
+        description: "Track usage, performance, and costs across all agents. Get alerts when something needs attention."
       },
       {
-        title: "Enterprise SSO",
-        description: "Connect your identity provider. Control who can use what."
+        icon: "🔒",
+        title: "Enterprise security",
+        description: "SSO, role-based access, audit logs, and data encryption. Meet compliance requirements easily."
       },
       {
-        title: "Policy engine",
-        description: "Define rules. Block sensitive data. Enforce compliance automatically."
+        icon: "⚡",
+        title: "Easy deployment",
+        description: "Deploy agents from our registry or bring your own. One-click setup, instant scaling."
       }
     ],
 
     // How it works
     howTitle: "How it works",
-    howLead: "Simple to deploy, powerful to use.",
+    howLead: "Get started in minutes, not months.",
     steps: [
-      { tag: "01", title: "Connect", description: "Integrate with your existing tools via SSO and API." },
-      { tag: "02", title: "Deploy", description: "Install agents from our skill registry or bring your own." },
-      { tag: "03", title: "Monitor", description: "Watch all AI activity in real-time on your dashboard." },
-      { tag: "04", title: "Control", description: "Set policies, permissions, and alerts that match your needs." }
+      { number: "1", title: "Connect", description: "Integrate with SSO and existing tools" },
+      { number: "2", title: "Deploy", description: "Install agents from registry" },
+      { number: "3", title: "Monitor", description: "Track all AI activity" },
+      { number: "4", title: "Control", description: "Set policies and permissions" }
+    ],
+
+    // Value prop
+    valueTitle: "Your AI agents, under control",
+    valueLead: "ADOPTAN.AI gives you complete visibility and control over every AI agent in your organization. No more shadow AI, no more compliance risks.",
+    valuePoints: [
+      "Full audit trail for every action",
+      "Role-based access controls",
+      "Data loss prevention built-in",
+      "GDPR and SOC 2 compliant"
     ],
 
     // Pricing
-    pricingTitle: "Pricing",
-    pricingLead: "Start free. Scale as you grow.",
+    pricingTitle: "Simple, transparent pricing",
+    pricingLead: "Start free, scale as you grow. No hidden fees.",
     plans: [
       {
         name: "Starter",
         price: "Free",
-        description: "For small teams getting started with AI agents.",
-        features: ["Up to 5 users", "Basic skill registry", "7-day log retention", "Community support"],
-        cta: "Get started"
+        period: "",
+        description: "For teams exploring AI agents",
+        features: ["Up to 5 users", "3 agents", "7-day logs", "Community support"],
+        cta: "Get started",
+        featured: false
       },
       {
         name: "Team",
-        price: "€49/user/mo",
-        description: "For growing teams that need visibility and control.",
-        features: ["Unlimited users", "Full skill registry", "90-day log retention", "SSO integration", "Priority support"],
-        cta: "Start trial",
-        popular: true
+        price: "€49",
+        period: "/user/month",
+        description: "For growing teams that need control",
+        features: ["Unlimited users", "Unlimited agents", "90-day logs", "SSO integration", "Priority support"],
+        cta: "Start free trial",
+        featured: true
       },
       {
         name: "Enterprise",
         price: "Custom",
-        description: "For organizations with advanced security needs.",
-        features: ["Everything in Team", "Unlimited retention", "Custom policies", "Dedicated support", "SLA guarantee", "On-premise option"],
-        cta: "Contact sales"
+        period: "",
+        description: "For organizations with advanced needs",
+        features: ["Everything in Team", "Unlimited logs", "Custom policies", "Dedicated support", "SLA guarantee", "On-premise option"],
+        cta: "Contact sales",
+        featured: false
       }
     ],
 
     // CTA
-    ctaTitle: "Ready to take control of AI in your organization?",
-    ctaLead: "Book a 15-minute demo and see ADOPTAN.AI in action.",
-    ctaButton: "Book a demo",
-    ctaSecondaryButton: "Contact sales",
+    ctaTitle: "Ready to take control?",
+    ctaLead: "Join leading companies using ADOPTAN.AI to manage their AI infrastructure.",
+    ctaButton: "Request access",
 
     // Footer
-    footerTagline: "The execution layer for AI agents.",
-    footerLinks: ["Product", "Pricing", "Security", "Contact"],
-
-    // Language
-    langSwitch: "FR"
+    footerLinks: ["Product", "Pricing", "Docs", "Contact"]
   },
-  fr: {
-    // Header
-    badge: "Infrastructure IA",
-    heroTitle: "Contrôlez l'exécution des agents IA dans votre organisation.",
-    heroLead: "ADOPTAN.AI est la couche d'exécution pour les agents IA. Les skills sont ouverts et portables. Vous contrôlez l'infrastructure, la conformité et les données.",
-    ctaPrimary: "Réserver une démo",
-    ctaSecondary: "Voir les tarifs",
-    heroMeta: ["Sécurité entreprise", "Traçabilité complète", "Conforme RGPD"],
 
-    // Problem section
-    problemTitle: "Le problème",
-    problemLead: "Les agents IA sont partout. Mais qui contrôle ce qu'ils font ?",
-    problems: [
-      {
-        title: "Aucune visibilité",
-        description: "Vous ne savez pas quels agents IA tournent, quelles données ils accèdent, ni quelles actions ils prennent."
-      },
-      {
-        title: "Aucun contrôle",
-        description: "Vos employés utilisent des dizaines d'outils IA. Chacun est un risque potentiel de fuite de données."
-      },
-      {
-        title: "Aucune traçabilité",
-        description: "Quand quelque chose ne va pas, impossible de retracer ce qui s'est passé."
-      },
-      {
-        title: "Aucune gouvernance",
-        description: "Pas de SSO, pas de contrôle d'accès, pas moyen d'appliquer des politiques sur l'usage IA."
-      }
+  fr: {
+    // Nav
+    navProduct: "Produit",
+    navPricing: "Tarifs",
+    navDocs: "Docs",
+    navContact: "Contact",
+    langSwitch: "EN",
+
+    // Hero
+    badge: "Bêta privée",
+    heroTitle: "L'infrastructure pour",
+    heroTitleHighlight: "vos agents IA",
+    heroLead: "Déployez, surveillez et contrôlez les agents IA dans votre organisation. Une plateforme pour la visibilité, la conformité et la gouvernance.",
+    ctaPrimary: "Demander un accès",
+    ctaSecondary: "Voir la démo",
+
+    // Stats
+    stats: [
+      { value: "99.9%", label: "SLA Uptime" },
+      { value: "<50ms", label: "Latence" },
+      { value: "SOC 2", label: "Conforme" }
     ],
 
-    // Solution section
-    solutionTitle: "La solution",
-    solutionLead: "Une plateforme pour gouverner l'exécution de tous les agents IA.",
-    solutions: [
+    // Features
+    featuresTitle: "Tout ce qu'il faut pour gérer vos agents IA",
+    featuresLead: "Du déploiement au monitoring à la conformité. Tout en une plateforme.",
+    features: [
       {
-        title: "Exécution centralisée",
-        description: "Tous les agents IA passent par ADOPTAN.AI. Vous voyez tout, vous contrôlez tout."
+        icon: "🎯",
+        title: "Contrôle centralisé",
+        description: "Tous les agents IA passent par votre dashboard ADOPTAN. Voyez chaque action, chaque requête, chaque réponse."
       },
       {
-        title: "Logs d'audit complets",
-        description: "Chaque action, chaque requête, chaque réponse. Horodaté et searchable."
+        icon: "📊",
+        title: "Monitoring temps réel",
+        description: "Suivez l'usage, la performance et les coûts de tous vos agents. Alertes quand quelque chose nécessite attention."
       },
       {
-        title: "SSO entreprise",
-        description: "Connectez votre provider d'identité. Contrôlez qui peut utiliser quoi."
+        icon: "🔒",
+        title: "Sécurité entreprise",
+        description: "SSO, contrôle d'accès par rôle, logs d'audit et chiffrement des données. Conformité simplifiée."
       },
       {
-        title: "Moteur de politiques",
-        description: "Définissez des règles. Bloquez les données sensibles. Appliquez la conformité automatiquement."
+        icon: "⚡",
+        title: "Déploiement simple",
+        description: "Déployez des agents depuis notre registry ou apportez les vôtres. Setup en un clic, scaling instantané."
       }
     ],
 
     // How it works
     howTitle: "Comment ça marche",
-    howLead: "Simple à déployer, puissant à utiliser.",
+    howLead: "Démarrez en minutes, pas en mois.",
     steps: [
-      { tag: "01", title: "Connecter", description: "Intégrez vos outils existants via SSO et API." },
-      { tag: "02", title: "Déployer", description: "Installez des agents depuis notre registry ou apportez les vôtres." },
-      { tag: "03", title: "Monitorer", description: "Surveillez toute l'activité IA en temps réel sur votre dashboard." },
-      { tag: "04", title: "Contrôler", description: "Définissez des politiques, permissions et alertes selon vos besoins." }
+      { number: "1", title: "Connecter", description: "Intégrez via SSO et outils existants" },
+      { number: "2", title: "Déployer", description: "Installez des agents depuis le registry" },
+      { number: "3", title: "Monitorer", description: "Suivez toute l'activité IA" },
+      { number: "4", title: "Contrôler", description: "Définissez politiques et permissions" }
+    ],
+
+    // Value prop
+    valueTitle: "Vos agents IA, sous contrôle",
+    valueLead: "ADOPTAN.AI vous donne une visibilité et un contrôle complets sur chaque agent IA de votre organisation. Plus de shadow AI, plus de risques de conformité.",
+    valuePoints: [
+      "Traçabilité complète de chaque action",
+      "Contrôle d'accès par rôle",
+      "Protection des données intégrée",
+      "Conforme RGPD et SOC 2"
     ],
 
     // Pricing
-    pricingTitle: "Tarifs",
-    pricingLead: "Commencez gratuitement. Évoluez selon vos besoins.",
+    pricingTitle: "Tarifs simples et transparents",
+    pricingLead: "Commencez gratuitement, évoluez selon vos besoins. Pas de frais cachés.",
     plans: [
       {
         name: "Starter",
         price: "Gratuit",
-        description: "Pour les petites équipes qui démarrent avec les agents IA.",
-        features: ["Jusqu'à 5 utilisateurs", "Registry de base", "Rétention 7 jours", "Support communauté"],
-        cta: "Commencer"
+        period: "",
+        description: "Pour les équipes qui découvrent les agents IA",
+        features: ["Jusqu'à 5 utilisateurs", "3 agents", "Logs 7 jours", "Support communauté"],
+        cta: "Commencer",
+        featured: false
       },
       {
         name: "Team",
-        price: "49€/user/mois",
-        description: "Pour les équipes qui ont besoin de visibilité et contrôle.",
-        features: ["Utilisateurs illimités", "Registry complet", "Rétention 90 jours", "Intégration SSO", "Support prioritaire"],
+        price: "49€",
+        period: "/utilisateur/mois",
+        description: "Pour les équipes qui ont besoin de contrôle",
+        features: ["Utilisateurs illimités", "Agents illimités", "Logs 90 jours", "Intégration SSO", "Support prioritaire"],
         cta: "Essai gratuit",
-        popular: true
+        featured: true
       },
       {
         name: "Enterprise",
         price: "Sur mesure",
-        description: "Pour les organisations avec des besoins de sécurité avancés.",
-        features: ["Tout Team inclus", "Rétention illimitée", "Politiques custom", "Support dédié", "SLA garanti", "Option on-premise"],
-        cta: "Contacter"
+        period: "",
+        description: "Pour les organisations avec des besoins avancés",
+        features: ["Tout Team inclus", "Logs illimités", "Politiques custom", "Support dédié", "SLA garanti", "Option on-premise"],
+        cta: "Contacter",
+        featured: false
       }
     ],
 
     // CTA
-    ctaTitle: "Prêt à reprendre le contrôle de l'IA dans votre organisation ?",
-    ctaLead: "Réservez une démo de 15 minutes et voyez ADOPTAN.AI en action.",
-    ctaButton: "Réserver une démo",
-    ctaSecondaryButton: "Contacter les ventes",
+    ctaTitle: "Prêt à reprendre le contrôle ?",
+    ctaLead: "Rejoignez les entreprises leaders qui utilisent ADOPTAN.AI pour gérer leur infrastructure IA.",
+    ctaButton: "Demander un accès",
 
     // Footer
-    footerTagline: "La couche d'exécution pour les agents IA.",
-    footerLinks: ["Produit", "Tarifs", "Sécurité", "Contact"],
-
-    // Language
-    langSwitch: "EN"
+    footerLinks: ["Produit", "Tarifs", "Docs", "Contact"]
   }
 };
 
