@@ -130,12 +130,18 @@ a {
 }
 
 .nav-logo {
-  font-weight: 800;
-  font-size: 1.35rem;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: hsl(var(--foreground));
+  background: linear-gradient(135deg, hsla(231, 76%, 96%, 0.9) 0%, hsla(172, 66%, 96%, 0.9) 100%);
+  border: 1px solid hsla(231, 76%, 60%, 0.18);
+  padding: 6px 14px;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px hsla(231, 76%, 20%, 0.08);
 }
 
 .nav-links {
@@ -622,12 +628,18 @@ a {
 }
 
 .footer-logo {
-  font-weight: 800;
-  font-size: 1.2rem;
-  background: var(--gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  display: inline-flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  color: hsl(var(--foreground));
+  background: linear-gradient(135deg, hsla(231, 76%, 96%, 0.9) 0%, hsla(172, 66%, 96%, 0.9) 100%);
+  border: 1px solid hsla(231, 76%, 60%, 0.18);
+  padding: 6px 12px;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px hsla(231, 76%, 20%, 0.08);
 }
 
 .footer-links {
@@ -761,7 +773,9 @@ a {
   }
 
   .nav-logo {
-    font-size: 1.05rem;
+    font-size: 0.9rem;
+    letter-spacing: 0.06em;
+    padding: 5px 10px;
   }
 
   .nav-links {

@@ -10,8 +10,8 @@ export const translations = {
     badge: "Utilisé par 127 équipes marketing",
     heroTitle: "Pendant que vous lisez ça,",
     heroTitleHighlight: "vos concurrents bougent",
-    heroLead: "Chaque jour, des opportunités vous passent sous le nez. Des changements de prix. Des lancements. Des signaux faibles. ADOPTAN vous les montre avant qu'il soit trop tard.",
-    ctaPrimary: "Essai gratuit — 2 min",
+    heroLead: "Chaque jour, des opportunités vous passent sous le nez. Des changements de prix. Des lancements. Des signaux faibles. adoptan vous les montre avant qu'il soit trop tard.",
+    ctaPrimary: "Démarrer en 2 min",
     ctaSecondary: "Voir une démo",
 
     // Stats - Social proof + Authority
@@ -113,7 +113,7 @@ export const translations = {
         period: "/mois",
         description: "Le plus populaire — ROI dès le 1er mois",
         features: ["15 acteurs surveillés", "Alertes temps réel", "Slack + Email + Dashboard", "Analyses IA avancées", "5 utilisateurs"],
-        cta: "Essai 14 jours gratuit",
+        cta: "Choisir Pro",
         featured: true
       },
       {
@@ -129,8 +129,8 @@ export const translations = {
 
     // CTA - Urgency + Loss aversion
     ctaTitle: "Pendant que vous hésitez...",
-    ctaLead: "Vos concurrents continuent de bouger. Chaque jour sans ADOPTAN est un jour d'aveugle. Rejoignez les 127 équipes qui ont dit stop.",
-    ctaButton: "Démarrer mon essai gratuit",
+    ctaLead: "Vos concurrents continuent de bouger. Chaque jour sans adoptan est un jour d'aveugle. Rejoignez les 127 équipes qui ont dit stop.",
+    ctaButton: "Démarrer maintenant",
 
     // Footer
     footerTagline: "Votre marché, en temps réel.",
@@ -148,8 +148,8 @@ export const translations = {
     badge: "Trusted by 127 marketing teams",
     heroTitle: "While you're reading this,",
     heroTitleHighlight: "your competitors are moving",
-    heroLead: "Every day, opportunities slip through your fingers. Price changes. Product launches. Weak signals. ADOPTAN shows them to you before it's too late.",
-    ctaPrimary: "Free trial — 2 min setup",
+    heroLead: "Every day, opportunities slip through your fingers. Price changes. Product launches. Weak signals. adoptan shows them to you before it's too late.",
+    ctaPrimary: "Get started in 2 min",
     ctaSecondary: "Watch demo",
 
     // Stats - Social proof + Authority
@@ -251,7 +251,7 @@ export const translations = {
         period: "/month",
         description: "Most popular — ROI from month 1",
         features: ["15 competitors tracked", "Real-time alerts", "Slack + Email + Dashboard", "Advanced AI analysis", "5 users"],
-        cta: "14-day free trial",
+        cta: "Start Pro",
         featured: true
       },
       {
@@ -267,8 +267,8 @@ export const translations = {
 
     // CTA - Urgency + Loss aversion
     ctaTitle: "While you're hesitating...",
-    ctaLead: "Your competitors keep moving. Every day without ADOPTAN is a day in the dark. Join the 127 teams who said enough.",
-    ctaButton: "Start my free trial",
+    ctaLead: "Your competitors keep moving. Every day without adoptan is a day in the dark. Join the 127 teams who said enough.",
+    ctaButton: "Start now",
 
     // Footer
     footerTagline: "Your market, in real time.",
