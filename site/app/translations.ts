@@ -100,11 +100,11 @@ export const translations = {
     plans: [
       {
         name: "Starter",
-        price: "0€",
-        period: "",
+        price: "19€",
+        period: "/mois",
         description: "Pour tester sur 3 concurrents",
         features: ["3 acteurs surveillés", "Alertes email quotidiennes", "Rapport hebdo PDF", "1 utilisateur"],
-        cta: "Commencer gratuitement",
+        cta: "Commencer",
         featured: false
       },
       {
@@ -238,11 +238,11 @@ export const translations = {
     plans: [
       {
         name: "Starter",
-        price: "$0",
-        period: "",
+        price: "$19",
+        period: "/month",
         description: "Test with 3 competitors",
         features: ["3 competitors tracked", "Daily email alerts", "Weekly PDF report", "1 user"],
-        cta: "Start for free",
+        cta: "Get started",
         featured: false
       },
       {

@@ -83,7 +83,7 @@ export default function Home() {
             </div>
             <div className="grid-4">
               {t.solutions.map((solution) => (
-                <div className="card" key={solution.title} style={{ background: "white" }}>
+                <div className="card" key={solution.title}>
                   <div className="card-icon">{solution.icon}</div>
                   <h3>{solution.title}</h3>
                   <p>{solution.description}</p>
