@@ -2,277 +2,347 @@ export const translations = {
   fr: {
     // Nav
     navProduct: "Produit",
+    navWorkflow: "Workflow",
     navPricing: "Tarifs",
     navContact: "Contact",
     langSwitch: "EN",
 
-    // Hero - Loss aversion + Social proof
-    badge: "Utilisé par 127 équipes marketing",
-    heroTitle: "Pendant que vous lisez ça,",
-    heroTitleHighlight: "vos concurrents bougent",
-    heroLead: "Chaque jour, des opportunités vous passent sous le nez. Des changements de prix. Des lancements. Des signaux faibles. adoptan vous les montre avant qu'il soit trop tard.",
-    ctaPrimary: "Démarrer en 2 min",
-    ctaSecondary: "Voir une démo",
+    // Hero
+    badge: "Plateforme desktop pour watchlists, signaux et workflows de publication",
+    heroTitle: "Chaque jour, des opportunités",
+    heroTitleHighlight: "vous échappent",
+    heroLead:
+      "adoptan.ai transforme des signaux dispersés en décisions concrètes. Surveillez votre marché, vos sources et vos workflows créateur depuis un seul espace.",
+    ctaPrimary: "Demander une démo",
+    ctaSecondary: "Voir le workflow",
 
-    // Stats - Social proof + Authority
+    // Stats
     stats: [
-      { value: "127", label: "Équipes actives" },
-      { value: "2.4M", label: "Signaux détectés" },
-      { value: "47min", label: "Temps gagné/jour" }
+      { value: "24/7", label: "surveillance continue" },
+      { value: "1", label: "workspace pour centraliser" },
+      { value: "<5 min", label: "pour qualifier un signal" }
     ],
 
-    // Problem - MOM TEST: Their words, their pain
-    problemTitle: "Ce que vous ratez chaque semaine",
-    problemLead: "Pendant que vous êtes occupé à gérer votre business, voici ce qui se passe chez les autres.",
+    // Problem
+    problemTitle: "Pourquoi les équipes perdent du temps",
+    problemLead:
+      "Sites, réseaux, catalogues, retours clients, contenus: les signaux existent déjà. Le vrai problème, c'est de les capter à temps et de savoir quoi faire ensuite.",
     problems: [
       {
-        icon: "💸",
-        title: "Ils changent leurs prix",
-        description: "Vos concurrents ajustent leurs offres. Vous l'apprenez quand un client vous le dit. Trop tard."
+        icon: "🧩",
+        title: "Signal partout, contexte nulle part",
+        description: "Les informations utiles sont dispersées entre sites, feeds, documents et outils internes."
       },
       {
-        icon: "🚀",
-        title: "Ils lancent des features",
-        description: "Nouveaux produits, nouvelles offres. Vous le découvrez sur LinkedIn, 3 mois après tout le monde."
+        icon: "⏳",
+        title: "Validation manuelle et lente",
+        description: "Chaque décision passe par des captures, des messages et des allers-retours sans vraie priorisation."
       },
       {
-        icon: "📢",
-        title: "Ils volent vos clients",
-        description: "Nouvelles campagnes, nouveaux messages. Ils testent ce qui marche. Vous ne voyez rien."
+        icon: "🚨",
+        title: "Fenêtres de réaction ratées",
+        description: "Quand un changement important apparaît, l'équipe le voit souvent trop tard pour vraiment agir."
       },
       {
-        icon: "🎯",
-        title: "Ils recrutent stratégiquement",
-        description: "Un recrutement = une direction stratégique. Vous passez à côté de ces signaux."
+        icon: "🗂️",
+        title: "Outils cloisonnés",
+        description: "La veille, l'analyse et la publication vivent dans des outils séparés qui ne partagent pas le même contexte."
       }
     ],
 
-    // Solution - Contrast principle + Gain framing
-    solutionTitle: "Et si vous saviez tout, en temps réel ?",
-    solutionLead: "Imaginez : chaque matin, les mouvements de votre marché dans votre inbox. Sans effort.",
+    // Solution
+    solutionTitle: "Une couche d'analyse et d'action",
+    solutionLead: "adoptan.ai collecte, classe et pousse les signaux utiles vers le bon workflow.",
     solutions: [
       {
-        icon: "🔍",
-        title: "On scanne tout",
-        description: "Sites, réseaux, offres d'emploi, avis clients. 50+ sources par acteur, 24h/24."
+        icon: "🛰️",
+        title: "Watchlists multi-sources",
+        description: "Sites, catalogues, réseaux sociaux, retours clients, contenus: vous choisissez les sources à suivre."
       },
       {
         icon: "🧠",
-        title: "On comprend",
-        description: "Pas du bruit. Des insights. L'IA identifie ce qui compte vraiment pour vous."
+        title: "Résumé utile, pas du bruit",
+        description: "L'IA regroupe les changements, extrait le contexte et fait remonter uniquement ce qui mérite une décision."
       },
       {
-        icon: "⚡",
-        title: "On vous alerte",
-        description: "Changement de prix ? Nouvelle feature ? Vous le savez en moins de 5 minutes."
+        icon: "🤝",
+        title: "Validation d'équipe",
+        description: "Chaque signal peut être relu, commenté et validé avant de déclencher une suite d'actions."
       },
       {
-        icon: "📈",
-        title: "Vous agissez",
-        description: "Avec les bonnes infos au bon moment, vous prenez les bonnes décisions."
+        icon: "⚙️",
+        title: "Actions connectées",
+        description: "Alertes, exports, publishing workflows ou synchronisation vers vos outils: le bon signal déclenche la bonne suite."
       }
     ],
 
-    // How it works - Reduced friction
-    howTitle: "Opérationnel en 5 minutes",
-    howLead: "Pas de setup complexe. Pas de formation. Juste des résultats.",
+    // How it works
+    howTitle: "Le workflow adoptan.ai",
+    howLead: "Surveiller, comprendre, décider, agir. Sans bricoler cinq outils.",
     steps: [
-      { number: "1", title: "Listez vos concurrents", description: "Ajoutez les acteurs à surveiller. URLs, noms, c'est tout." },
-      { number: "2", title: "On fait le reste", description: "Notre IA commence à scanner immédiatement. Rien à configurer." },
-      { number: "3", title: "Recevez vos alertes", description: "Email, Slack, ou dashboard. Comme vous voulez." }
+      { number: "1", title: "Configurez vos watchlists", description: "Ajoutez vos sources, vos pages ou vos comptes à suivre dans un seul workspace." },
+      { number: "2", title: "Recevez des signaux priorisés", description: "adoptan.ai détecte les changements, les regroupe et vous montre ce qui compte vraiment." },
+      { number: "3", title: "Validez puis déclenchez l'action", description: "L'équipe approuve, commente et lance l'alerte, l'export ou la publication voulue." }
+    ],
+
+    // Creator workflow
+    creatorTitle: "Workflow créateur et publication",
+    creatorLead:
+      "Pour les équipes contenu, adoptan.ai prépare une publication courte avec un vrai contrôle utilisateur.",
+    creatorItems: [
+      {
+        icon: "🎬",
+        title: "Sélection manuelle du contenu",
+        description: "L'utilisateur authentifié choisit le clip ou l'extrait à publier. Rien n'est envoyé sans validation."
+      },
+      {
+        icon: "✍️",
+        title: "Légende et paramètres",
+        description: "L'utilisateur renseigne la légende puis choisit les options de confidentialité et d'interaction disponibles."
+      },
+      {
+        icon: "🚀",
+        title: "Publication depuis le workspace",
+        description: "adoptan.ai lance uniquement la publication demandée par l'utilisateur connecté, au moment voulu."
+      }
     ],
 
     // What we track
-    trackTitle: "Ce qu'on surveille pour vous",
-    trackLead: "Chaque signal qui peut changer la donne.",
+    trackTitle: "Ce qu'adoptan.ai peut surveiller",
+    trackLead: "Des signaux marché aux workflows créateur, selon votre équipe.",
     trackItems: [
-      { icon: "💰", title: "Prix & Offres", description: "Changements de tarifs, promos flash, nouveaux plans" },
-      { icon: "🚀", title: "Produit & Features", description: "Lancements, updates, pivots stratégiques" },
-      { icon: "👥", title: "Recrutements", description: "Qui ils embauchent = où ils investissent" },
-      { icon: "💬", title: "Positionnement", description: "Messages, campagnes, tone of voice" },
-      { icon: "⭐", title: "Réputation", description: "Avis clients, NPS, sentiment" },
-      { icon: "📈", title: "Traction", description: "Signaux de croissance et momentum" }
+      { icon: "🌐", title: "Sites & pages stratégiques", description: "Pages produit, pages tarifaires, changelogs, documentations" },
+      { icon: "💰", title: "Prix & catalogues", description: "Évolutions de prix, stock, bundles, offres et listings" },
+      { icon: "🚀", title: "Lancements & changelogs", description: "Nouvelles features, campagnes, annonces et signaux de mouvement" },
+      { icon: "📱", title: "Comptes sociaux & créateurs", description: "Posts, profils, nouveaux formats, activité et cadence de publication" },
+      { icon: "⭐", title: "Réputation & feedback", description: "Avis clients, commentaires, sentiment et points de friction répétés" },
+      { icon: "🗃️", title: "Queues de publication", description: "Contenus à relire, approuver puis publier depuis un workflow encadré" }
     ],
 
-    // Pricing - Anchoring (show value first) + Urgency
-    pricingTitle: "Lancez-vous maintenant",
-    pricingLead: "Offre de lancement : -30% pour les 50 premiers. Il en reste 12.",
+    // Pricing
+    pricingTitle: "Des plans simples",
+    pricingLead: "Commencez avec un workflow léger, puis ajoutez des sources, des utilisateurs et des automatisations.",
     plans: [
       {
         name: "Starter",
-        price: "19€",
+        price: "29€",
         period: "/mois",
-        description: "Pour tester sur 3 concurrents",
-        features: ["3 acteurs surveillés", "Alertes email quotidiennes", "Rapport hebdo PDF", "1 utilisateur"],
-        cta: "Commencer",
+        description: "Pour une première watchlist opérationnelle",
+        features: ["3 watchlists", "Digest email quotidien", "1 workflow de validation", "1 utilisateur"],
+        cta: "Démarrer",
         featured: false
       },
       {
         name: "Pro",
-        price: "69€",
+        price: "99€",
         period: "/mois",
-        description: "Le plus populaire — ROI dès le 1er mois",
-        features: ["15 acteurs surveillés", "Alertes temps réel", "Slack + Email + Dashboard", "Analyses IA avancées", "5 utilisateurs"],
+        description: "Pour une équipe qui veut agir vite",
+        features: ["20 watchlists", "Alertes temps réel", "Workflows créateur et publishing", "Analyses IA avancées", "5 utilisateurs"],
         cta: "Choisir Pro",
         featured: true
       },
       {
-        name: "Scale",
-        price: "199€",
-        period: "/mois",
-        description: "Pour les équipes marketing sérieuses",
-        features: ["Acteurs illimités", "API complète", "Rapports personnalisés", "Support prioritaire", "Utilisateurs illimités"],
+        name: "Enterprise",
+        price: "Sur devis",
+        period: "",
+        description: "Pour les équipes multi-marques ou multi-pays",
+        features: ["Sources illimitées", "SSO / RBAC", "Workflows sur mesure", "Support prioritaire", "API & exports"],
         cta: "Parler à un expert",
         featured: false
       }
     ],
 
-    // CTA - Urgency + Loss aversion
-    ctaTitle: "Pendant que vous hésitez...",
-    ctaLead: "Vos concurrents continuent de bouger. Chaque jour sans adoptan est un jour d'aveugle. Rejoignez les 127 équipes qui ont dit stop.",
-    ctaButton: "Démarrer maintenant",
+    // CTA
+    ctaTitle: "Voir plus tôt. Décider plus vite.",
+    ctaLead:
+      "adoptan.ai aide les équipes à détecter les signaux utiles, coordonner la validation et lancer les actions au bon moment.",
+    ctaButton: "Parler à l'équipe",
+    complianceNote:
+      "Les intégrations tierces nécessitent l'autorisation de l'utilisateur et respectent les paramètres de publication disponibles par plateforme.",
 
     // Footer
-    footerTagline: "Votre marché, en temps réel.",
-    footerLinks: ["Produit", "Tarifs", "Contact"]
+    footerTagline: "Signals in. Decisions out.",
+    footerProduct: "Produit",
+    footerWorkflow: "Workflow",
+    footerPricing: "Tarifs",
+    footerContact: "Contact",
+    footerPrivacy: "Confidentialité",
+    footerTerms: "Conditions",
+    footerNote:
+      "Workspace desktop et web pour veille, analyse et workflows de publication validés par l'utilisateur."
   },
 
   en: {
     // Nav
     navProduct: "Product",
+    navWorkflow: "Workflow",
     navPricing: "Pricing",
     navContact: "Contact",
     langSwitch: "FR",
 
-    // Hero - Loss aversion + Social proof
-    badge: "Trusted by 127 marketing teams",
-    heroTitle: "While you're reading this,",
-    heroTitleHighlight: "your competitors are moving",
-    heroLead: "Every day, opportunities slip through your fingers. Price changes. Product launches. Weak signals. adoptan shows them to you before it's too late.",
-    ctaPrimary: "Get started in 2 min",
-    ctaSecondary: "Watch demo",
+    // Hero
+    badge: "Desktop workspace for watchlists, signals, and publishing workflows",
+    heroTitle: "Every day, opportunities",
+    heroTitleHighlight: "slip past you",
+    heroLead:
+      "adoptan.ai turns scattered signals into concrete decisions. Monitor your market, your sources, and your creator workflows from one workspace.",
+    ctaPrimary: "Book a demo",
+    ctaSecondary: "See the workflow",
 
-    // Stats - Social proof + Authority
+    // Stats
     stats: [
-      { value: "127", label: "Active teams" },
-      { value: "2.4M", label: "Signals detected" },
-      { value: "47min", label: "Saved daily" }
+      { value: "24/7", label: "continuous monitoring" },
+      { value: "1", label: "workspace to centralize decisions" },
+      { value: "<5 min", label: "to qualify a signal" }
     ],
 
-    // Problem - MOM TEST: Their words, their pain
-    problemTitle: "What you're missing every week",
-    problemLead: "While you're busy running your business, here's what's happening around you.",
+    // Problem
+    problemTitle: "Why teams lose time",
+    problemLead:
+      "Websites, social feeds, catalogs, customer feedback, content queues: the signals already exist. The real issue is catching them early and knowing what to do next.",
     problems: [
       {
-        icon: "💸",
-        title: "They're changing prices",
-        description: "Your competitors adjust their offers. You find out when a customer tells you. Too late."
+        icon: "🧩",
+        title: "Signals everywhere, context nowhere",
+        description: "Important changes live across sites, feeds, documents, and internal tools without one shared view."
       },
       {
-        icon: "🚀",
-        title: "They're launching features",
-        description: "New products, new offers. You discover it on LinkedIn, 3 months after everyone else."
+        icon: "⏳",
+        title: "Manual validation slows everything down",
+        description: "Each decision still depends on screenshots, chat threads, and slow back-and-forth without real prioritization."
       },
       {
-        icon: "📢",
-        title: "They're stealing your customers",
-        description: "New campaigns, new messaging. They're testing what works. You see nothing."
+        icon: "🚨",
+        title: "Reaction windows get missed",
+        description: "By the time a critical change is visible to the team, the best response window is often already gone."
       },
       {
-        icon: "🎯",
-        title: "They're hiring strategically",
-        description: "Every hire = a strategic direction. You're missing these signals."
+        icon: "🗂️",
+        title: "Tools stay fragmented",
+        description: "Monitoring, analysis, and publishing happen in separate products that do not share the same context."
       }
     ],
 
-    // Solution - Contrast principle + Gain framing
-    solutionTitle: "What if you knew everything, in real time?",
-    solutionLead: "Imagine: every morning, your market's movements in your inbox. Effortlessly.",
+    // Solution
+    solutionTitle: "A layer for analysis and action",
+    solutionLead: "adoptan.ai collects, ranks, and routes useful signals into the right workflow.",
     solutions: [
       {
-        icon: "🔍",
-        title: "We scan everything",
-        description: "Websites, socials, job postings, reviews. 50+ sources per competitor, 24/7."
+        icon: "🛰️",
+        title: "Multi-source watchlists",
+        description: "Websites, catalogs, social accounts, customer feedback, and content sources live in one monitored workspace."
       },
       {
         icon: "🧠",
-        title: "We understand",
-        description: "Not noise. Insights. AI identifies what actually matters to you."
+        title: "Useful summaries, not noise",
+        description: "AI groups related changes, extracts context, and surfaces only the movements that deserve a decision."
       },
       {
-        icon: "⚡",
-        title: "We alert you",
-        description: "Price change? New feature? You know in under 5 minutes."
+        icon: "🤝",
+        title: "Team validation",
+        description: "Signals can be reviewed, commented, and approved before they trigger any next step."
       },
       {
-        icon: "📈",
-        title: "You act",
-        description: "With the right info at the right time, you make the right decisions."
+        icon: "⚙️",
+        title: "Connected actions",
+        description: "Alerts, exports, publishing workflows, or downstream sync: the right signal starts the right action."
       }
     ],
 
-    // How it works - Reduced friction
-    howTitle: "Up and running in 5 minutes",
-    howLead: "No complex setup. No training needed. Just results.",
+    // How it works
+    howTitle: "The adoptan.ai workflow",
+    howLead: "Monitor, understand, decide, act. Without stitching together five tools.",
     steps: [
-      { number: "1", title: "List your competitors", description: "Add the players to track. URLs, names, that's it." },
-      { number: "2", title: "We handle the rest", description: "Our AI starts scanning immediately. Nothing to configure." },
-      { number: "3", title: "Get your alerts", description: "Email, Slack, or dashboard. Your choice." }
+      { number: "1", title: "Configure your watchlists", description: "Add the sources, pages, or accounts you want to monitor inside one workspace." },
+      { number: "2", title: "Receive prioritized signals", description: "adoptan.ai detects changes, groups them, and shows what actually matters first." },
+      { number: "3", title: "Approve and trigger action", description: "Your team validates the signal, adds context, and launches the alert, export, or publish step you want." }
+    ],
+
+    // Creator workflow
+    creatorTitle: "Creator workflow and publishing",
+    creatorLead:
+      "For content teams, adoptan.ai supports short-form publishing with real user control.",
+    creatorItems: [
+      {
+        icon: "🎬",
+        title: "Manual content selection",
+        description: "The authenticated user chooses the clip or excerpt to publish. Nothing is sent without approval."
+      },
+      {
+        icon: "✍️",
+        title: "Caption and settings",
+        description: "The user writes the caption and chooses the available privacy and interaction settings."
+      },
+      {
+        icon: "🚀",
+        title: "Publish from the workspace",
+        description: "adoptan.ai only starts the publish action requested by the signed-in user, at the moment they choose."
+      }
     ],
 
     // What we track
-    trackTitle: "What we track for you",
-    trackLead: "Every signal that could change the game.",
+    trackTitle: "What adoptan.ai can monitor",
+    trackLead: "From market signals to creator workflows, depending on your team.",
     trackItems: [
-      { icon: "💰", title: "Pricing & Offers", description: "Price changes, flash promos, new plans" },
-      { icon: "🚀", title: "Product & Features", description: "Launches, updates, strategic pivots" },
-      { icon: "👥", title: "Hiring", description: "Who they hire = where they invest" },
-      { icon: "💬", title: "Positioning", description: "Messaging, campaigns, tone of voice" },
-      { icon: "⭐", title: "Reputation", description: "Customer reviews, NPS, sentiment" },
-      { icon: "📈", title: "Traction", description: "Growth signals and momentum" }
+      { icon: "🌐", title: "Strategic pages", description: "Product pages, pricing pages, changelogs, and documentation" },
+      { icon: "💰", title: "Pricing and catalogs", description: "Price changes, stock changes, bundles, offers, and listings" },
+      { icon: "🚀", title: "Launches and changelogs", description: "New features, campaigns, announcements, and movement signals" },
+      { icon: "📱", title: "Social accounts and creators", description: "Posts, profiles, new formats, activity levels, and publishing cadence" },
+      { icon: "⭐", title: "Reputation and feedback", description: "Reviews, comments, sentiment, and repeated friction points" },
+      { icon: "🗃️", title: "Publishing queues", description: "Content waiting to be reviewed, approved, and published through a controlled workflow" }
     ],
 
-    // Pricing - Anchoring (show value first) + Urgency
-    pricingTitle: "Start now",
-    pricingLead: "Launch offer: 30% off for the first 50. Only 12 spots left.",
+    // Pricing
+    pricingTitle: "Simple plans",
+    pricingLead: "Start with a light workflow, then add more sources, teammates, and automation as you grow.",
     plans: [
       {
         name: "Starter",
-        price: "$19",
+        price: "€29",
         period: "/month",
-        description: "Test with 3 competitors",
-        features: ["3 competitors tracked", "Daily email alerts", "Weekly PDF report", "1 user"],
+        description: "For a first production-ready watchlist",
+        features: ["3 watchlists", "Daily email digest", "1 approval workflow", "1 user"],
         cta: "Get started",
         featured: false
       },
       {
         name: "Pro",
-        price: "$79",
+        price: "€99",
         period: "/month",
-        description: "Most popular — ROI from month 1",
-        features: ["15 competitors tracked", "Real-time alerts", "Slack + Email + Dashboard", "Advanced AI analysis", "5 users"],
+        description: "For teams that need to move faster",
+        features: ["20 watchlists", "Real-time alerts", "Creator and publishing workflows", "Advanced AI analysis", "5 users"],
         cta: "Start Pro",
         featured: true
       },
       {
-        name: "Scale",
-        price: "$219",
-        period: "/month",
-        description: "For serious marketing teams",
-        features: ["Unlimited competitors", "Full API access", "Custom reports", "Priority support", "Unlimited users"],
-        cta: "Talk to an expert",
+        name: "Enterprise",
+        price: "Custom",
+        period: "",
+        description: "For multi-brand or multi-country teams",
+        features: ["Unlimited sources", "SSO / RBAC", "Custom workflows", "Priority support", "API & exports"],
+        cta: "Talk to sales",
         featured: false
       }
     ],
 
-    // CTA - Urgency + Loss aversion
-    ctaTitle: "While you're hesitating...",
-    ctaLead: "Your competitors keep moving. Every day without adoptan is a day in the dark. Join the 127 teams who said enough.",
-    ctaButton: "Start now",
+    // CTA
+    ctaTitle: "See sooner. Decide faster.",
+    ctaLead:
+      "adoptan.ai helps teams detect useful signals, coordinate validation, and launch the right action at the right moment.",
+    ctaButton: "Talk to the team",
+    complianceNote:
+      "Third-party integrations require user authorization and respect the publishing settings made available by each platform.",
 
     // Footer
-    footerTagline: "Your market, in real time.",
-    footerLinks: ["Product", "Pricing", "Contact"]
+    footerTagline: "Signals in. Decisions out.",
+    footerProduct: "Product",
+    footerWorkflow: "Workflow",
+    footerPricing: "Pricing",
+    footerContact: "Contact",
+    footerPrivacy: "Privacy",
+    footerTerms: "Terms",
+    footerNote:
+      "Desktop and web workspace for monitoring, analysis, and user-approved publishing workflows."
   }
 };
 

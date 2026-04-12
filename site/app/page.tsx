@@ -17,6 +17,7 @@ export default function Home() {
           <div className="nav-logo">adoptan.ai</div>
           <div className="nav-links">
             <a href="#features">{t.navProduct}</a>
+            <a href="#workflow">{t.navWorkflow}</a>
             <a href="#pricing">{t.navPricing}</a>
             <a href="#contact">{t.navContact}</a>
             <button className="lang-btn" onClick={toggleLang}>
@@ -94,7 +95,7 @@ export default function Home() {
         </section>
 
         {/* How it works */}
-        <section className="section">
+        <section id="workflow" className="section">
           <div className="section-header">
             <h2>{t.howTitle}</h2>
             <p>{t.howLead}</p>
@@ -105,6 +106,22 @@ export default function Home() {
                 <div className="step-number">{step.number}</div>
                 <h3>{step.title}</h3>
                 <p>{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="section">
+          <div className="section-header">
+            <h2>{t.creatorTitle}</h2>
+            <p>{t.creatorLead}</p>
+          </div>
+          <div className="grid-3">
+            {t.creatorItems.map((item) => (
+              <div className="card" key={item.title}>
+                <div className="card-icon">{item.icon}</div>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
               </div>
             ))}
           </div>
@@ -163,16 +180,24 @@ export default function Home() {
           <a className="btn btn-primary" href="mailto:contact@adoptan.ai">
             {t.ctaButton}
           </a>
+          <p className="cta-note">{t.complianceNote}</p>
         </section>
 
         {/* Footer */}
         <footer className="footer">
           <div className="footer-inner">
-            <div className="footer-logo">adoptan.ai</div>
+            <div className="footer-copy">
+              <div className="footer-logo">adoptan.ai</div>
+              <p className="footer-note">{t.footerTagline}</p>
+              <p className="footer-meta">{t.footerNote}</p>
+            </div>
             <div className="footer-links">
-              <a href="#features">{t.footerLinks[0]}</a>
-              <a href="#pricing">{t.footerLinks[1]}</a>
-              <a href="#contact">{t.footerLinks[2]}</a>
+              <a href="#features">{t.footerProduct}</a>
+              <a href="#workflow">{t.footerWorkflow}</a>
+              <a href="#pricing">{t.footerPricing}</a>
+              <a href="/privacy">{t.footerPrivacy}</a>
+              <a href="/terms">{t.footerTerms}</a>
+              <a href="#contact">{t.footerContact}</a>
             </div>
           </div>
         </footer>

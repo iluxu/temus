@@ -1,9 +1,10 @@
+import type { Metadata } from "next";
 import "./globals.css";
 
-export const metadata = {
-  title: "adoptan.ai — Votre marché, en temps réel",
+export const metadata: Metadata = {
+  title: "adoptan.ai — Watchlists, signals, and publishing workflows",
   description:
-    "Comprenez votre écosystème. Apprenez de ceux qui réussissent. Surveillez votre marché 24/7 avec l'IA."
+    "Desktop and web workspace to monitor market signals, review content, and trigger user-approved publishing workflows."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
