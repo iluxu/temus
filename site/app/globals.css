@@ -1404,3 +1404,113 @@ a {
     padding-top: 84px;
   }
 }
+
+/* Callback page */
+.callback-page {
+  min-height: 100vh;
+  padding: 48px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at top left, hsla(231, 76%, 60%, 0.08) 0%, transparent 32%),
+    radial-gradient(circle at bottom right, hsla(172, 66%, 50%, 0.08) 0%, transparent 32%),
+    hsl(var(--background));
+}
+
+.callback-card {
+  width: min(760px, 100%);
+  background: white;
+  border: 1px solid hsl(var(--border));
+  border-radius: 24px;
+  padding: 36px;
+  box-shadow: 0 18px 48px hsla(231, 30%, 16%, 0.08);
+}
+
+.callback-kicker {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: hsl(231 76% 45%);
+  background: linear-gradient(135deg, hsl(231 76% 97%) 0%, hsl(172 66% 97%) 100%);
+  border: 1px solid hsla(231, 76%, 60%, 0.18);
+}
+
+.callback-card h1 {
+  margin-top: 22px;
+}
+
+.callback-lead {
+  margin-top: 18px;
+  font-size: 1.05rem;
+  line-height: 1.8;
+}
+
+.callback-grid {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.callback-field {
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  padding: 14px 16px;
+  background: hsl(var(--background));
+}
+
+.callback-field span {
+  display: block;
+  font-size: 0.82rem;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 8px;
+}
+
+.callback-field strong {
+  color: hsl(var(--foreground));
+}
+
+.callback-panel {
+  margin-top: 20px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  padding: 18px;
+  background: #0f172a;
+}
+
+.callback-panel-title {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.callback-pre {
+  margin-top: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #e2e8f0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 0.92rem;
+  line-height: 1.7;
+}
+
+.callback-actions {
+  margin-top: 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 780px) {
+  .callback-card {
+    padding: 24px;
+  }
+
+  .callback-grid {
+    grid-template-columns: 1fr;
+  }
+}
