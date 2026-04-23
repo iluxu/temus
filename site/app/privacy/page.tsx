@@ -77,7 +77,7 @@ export default function PrivacyPage() {
     <LegalDocument
       eyebrow="Privacy"
       title="Privacy Policy"
-      lastUpdated="April 12, 2026"
+      lastUpdated="April 23, 2026"
       intro="This page explains what data adoptan.ai processes, why we process it, and how we handle user-authorized integrations."
       sections={[...sections]}
     />

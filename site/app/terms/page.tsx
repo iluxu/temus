@@ -78,7 +78,7 @@ export default function TermsPage() {
     <LegalDocument
       eyebrow="Terms"
       title="Terms of Service"
-      lastUpdated="April 12, 2026"
+      lastUpdated="April 23, 2026"
       intro="These terms describe the conditions under which adoptan.ai can be accessed and used, including user-authorized integrations and publishing workflows."
       sections={[...sections]}
     />

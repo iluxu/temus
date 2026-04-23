@@ -921,6 +921,13 @@ a {
   border-radius: 999px;
 }
 
+.legal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .legal-shell {
   max-width: 860px;
   margin: 0 auto;
@@ -1003,9 +1010,14 @@ a {
 .review-nav-links {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 22px;
   font-size: 0.92rem;
   color: hsl(var(--muted-foreground));
+}
+
+.review-nav-links a {
+  font-weight: 500;
 }
 
 .review-page {
@@ -1047,6 +1059,43 @@ a {
   flex-wrap: wrap;
   gap: 12px;
   margin-top: 32px;
+}
+
+.review-legal-strip {
+  margin-top: 28px;
+  padding: 20px 22px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 20px;
+  background: linear-gradient(135deg, hsla(231, 76%, 98%, 0.98) 0%, white 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 12px 32px hsla(231, 30%, 16%, 0.05);
+}
+
+.review-legal-copy {
+  max-width: 720px;
+}
+
+.review-legal-kicker {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: hsl(231 76% 45%);
+  margin-bottom: 8px;
+}
+
+.review-legal-copy p:last-child {
+  color: hsl(var(--muted-foreground));
+  line-height: 1.7;
+}
+
+.review-legal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .review-badges span,
@@ -1360,6 +1409,41 @@ a {
   margin-bottom: 12px;
 }
 
+.review-footer {
+  margin-top: 64px;
+  padding-top: 32px;
+  border-top: 1px solid hsl(var(--border));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.review-footer-copy {
+  max-width: 560px;
+}
+
+.review-footer-copy p {
+  margin-top: 14px;
+  line-height: 1.7;
+}
+
+.review-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.review-footer-links a {
+  color: hsl(var(--muted-foreground));
+  font-weight: 500;
+}
+
+.review-footer-links a:hover,
+.review-nav-links a:hover {
+  color: hsl(var(--foreground));
+}
+
 @media (max-width: 1100px) {
   .review-flow,
   .review-card-grid {
@@ -1374,6 +1458,12 @@ a {
   .review-sidebar {
     position: static;
   }
+
+  .review-legal-strip,
+  .review-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 780px) {
@@ -1387,7 +1477,8 @@ a {
   .review-grid,
   .review-card-grid,
   .review-preview,
-  .review-setting-grid {
+  .review-setting-grid,
+  .review-legal-actions {
     grid-template-columns: 1fr;
     display: grid;
   }
@@ -1402,6 +1493,15 @@ a {
 
   .review-hero {
     padding-top: 84px;
+  }
+
+  .legal-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .legal-actions {
+    justify-content: flex-start;
   }
 }
 

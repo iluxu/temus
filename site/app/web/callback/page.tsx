@@ -75,7 +75,7 @@ export default function TikTokCallbackPage() {
         </div>
 
         <div className="callback-actions">
-          <a className="btn btn-primary" href="/web/">
+          <a className="btn btn-primary" href="/">
             Back to web workspace
           </a>
           <a className="btn btn-outline" href="/">

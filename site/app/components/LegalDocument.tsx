@@ -27,9 +27,17 @@ export default function LegalDocument({
         <Link className="legal-home" href="/">
           adoptan.ai
         </Link>
-        <Link className="btn btn-outline" href="/">
-          Back to home
-        </Link>
+        <div className="legal-actions">
+          <Link className="btn btn-outline" href="/privacy">
+            Privacy Policy
+          </Link>
+          <Link className="btn btn-outline" href="/terms">
+            Terms of Service
+          </Link>
+          <Link className="btn btn-outline" href="/">
+            Back to home
+          </Link>
+        </div>
       </header>
 
       <main className="legal-shell">
