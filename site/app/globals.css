@@ -1061,43 +1061,6 @@ a {
   margin-top: 32px;
 }
 
-.review-legal-strip {
-  margin-top: 28px;
-  padding: 20px 22px;
-  border: 1px solid hsl(var(--border));
-  border-radius: 20px;
-  background: linear-gradient(135deg, hsla(231, 76%, 98%, 0.98) 0%, white 100%);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 12px 32px hsla(231, 30%, 16%, 0.05);
-}
-
-.review-legal-copy {
-  max-width: 720px;
-}
-
-.review-legal-kicker {
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: hsl(231 76% 45%);
-  margin-bottom: 8px;
-}
-
-.review-legal-copy p:last-child {
-  color: hsl(var(--muted-foreground));
-  line-height: 1.7;
-}
-
-.review-legal-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
 .review-badges span,
 .review-inline-tags span {
   display: inline-flex;
@@ -1459,7 +1422,6 @@ a {
     position: static;
   }
 
-  .review-legal-strip,
   .review-footer {
     flex-direction: column;
     align-items: flex-start;
@@ -1477,8 +1439,7 @@ a {
   .review-grid,
   .review-card-grid,
   .review-preview,
-  .review-setting-grid,
-  .review-legal-actions {
+  .review-setting-grid {
     grid-template-columns: 1fr;
     display: grid;
   }

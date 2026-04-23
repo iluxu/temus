@@ -120,23 +120,6 @@ export default function WebWorkspaceHome() {
             <span>Exports</span>
             <span>Webhook timeline</span>
           </div>
-          <section className="review-legal-strip" aria-label="Legal and review resources">
-            <div className="review-legal-copy">
-              <p className="review-legal-kicker">Review resources</p>
-              <p>
-                Privacy Policy and Terms of Service stay directly accessible from the homepage for
-                TikTok review and production audits.
-              </p>
-            </div>
-            <div className="review-legal-actions">
-              <Link className="btn btn-outline" href="/privacy">
-                Privacy Policy
-              </Link>
-              <Link className="btn btn-outline" href="/terms">
-                Terms of Service
-              </Link>
-            </div>
-          </section>
         </section>
 
         <section id="flow" className="review-section">
