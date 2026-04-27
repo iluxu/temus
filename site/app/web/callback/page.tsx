@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 type CallbackPayload = {
-  code: string | null;
+  codePresent: boolean;
   state: string | null;
   error: string | null;
   errorDescription: string | null;
@@ -11,7 +11,7 @@ type CallbackPayload = {
 
 export default function TikTokCallbackPage() {
   const [payload, setPayload] = useState<CallbackPayload>({
-    code: null,
+    codePresent: false,
     state: null,
     error: null,
     errorDescription: null
@@ -20,14 +20,14 @@ export default function TikTokCallbackPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setPayload({
-      code: params.get("code"),
+      codePresent: Boolean(params.get("code")),
       state: params.get("state"),
       error: params.get("error"),
       errorDescription: params.get("error_description")
     });
   }, []);
 
-  const hasCode = Boolean(payload.code);
+  const hasCode = payload.codePresent;
   const hasError = Boolean(payload.error);
 
   return (
@@ -37,9 +37,9 @@ export default function TikTokCallbackPage() {
         <h1>{hasError ? "TikTok connection failed" : hasCode ? "TikTok account connected" : "Waiting for TikTok callback"}</h1>
         <p className="callback-lead">
           {hasError
-            ? "TikTok returned an error to the web callback. The operator should review the error details below."
+            ? "TikTok returned an error to the web callback. The user can return to the workspace and retry the connection."
             : hasCode
-              ? "TikTok redirected back to the web callback with an authorization code. The next step is exchanging it server-side."
+              ? "TikTok redirected back to adoptan.ai after the user approved the requested scopes. The workspace can now show the connected account and publishing controls."
               : "This page is the redirect target used after TikTok authorization for the adoptan.ai web workflow."}
         </p>
 
@@ -49,7 +49,7 @@ export default function TikTokCallbackPage() {
             <strong>{hasError ? "error" : hasCode ? "code_received" : "idle"}</strong>
           </div>
           <div className="callback-field">
-            <span>Code present</span>
+            <span>Authorization result</span>
             <strong>{hasCode ? "yes" : "no"}</strong>
           </div>
           <div className="callback-field">
@@ -59,19 +59,14 @@ export default function TikTokCallbackPage() {
         </div>
 
         <div className="callback-panel">
-          <p className="callback-panel-title">Returned parameters</p>
-          <pre className="callback-pre">
-{JSON.stringify(
-  {
-    code: payload.code ? `${payload.code.slice(0, 12)}...` : null,
-    state: payload.state,
-    error: payload.error,
-    error_description: payload.errorDescription
-  },
-  null,
-  2
-)}
-          </pre>
+          <p className="callback-panel-title">Connection summary</p>
+          <p>
+            {hasError
+              ? payload.errorDescription || payload.error || "The TikTok connection was not completed."
+              : hasCode
+                ? "TikTok consent completed. The user can continue to the workspace to review creator_info settings and confirm publishing."
+                : "Waiting for TikTok to return the authorization result."}
+          </p>
         </div>
 
         <div className="callback-actions">
