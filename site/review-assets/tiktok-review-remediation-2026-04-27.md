@@ -66,10 +66,12 @@ Record a new browser-only video. Do not show terminal, code, Postman, logs, or l
 
 Target duration: 90 to 120 seconds.
 
+Before recording the real TikTok authorization step, make sure `NEXT_PUBLIC_TIKTOK_CLIENT_KEY` is set to the TikTok Developer Portal Client key for the Adoptan.ai app. Do not reuse the Twitch app client ID; TikTok will reject it with a `client_key` error. For a temporary browser test, `/app?tiktok_client_key=<public TikTok client key>` stores the key locally for the session.
+
 Required storyboard:
 
 1. Open `https://adoptan.ai/app`.
-2. Show the demo sign-in page and click `Sign in to review workspace`.
+2. Show the demo sign-in page and click `Sign in to workspace`.
 3. Show the requested scopes: `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`, `video.publish`.
 4. Click `Connect TikTok`.
 5. Show TikTok sandbox consent with `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`, and `video.publish`.
@@ -89,6 +91,8 @@ Required storyboard:
 19. Click `Confirm and publish to TikTok`. This demonstrates `video.publish`.
 20. Show activity log: `oauth.connected`, `profile.loaded`, `video_list.loaded`, `creator_info.loaded`, `draft_upload.completed`, `publish.started`, `publish.completed`.
 21. Click or show `Disconnect TikTok`.
+
+The filmed UI should look like the actual Adoptan creator workspace, not an audit-only TikTok review page. Keep "review" wording out of the visible product interface; use it only in this written submission note.
 
 Add short English overlay labels in the video:
 

@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const TIKTOK_CLIENT_KEY = "09en2l84fpipb7q7o5poytnea788ae";
+const DEFAULT_TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY || "";
 const TIKTOK_REDIRECT_URI = "https://adoptan.ai/web/callback/";
+const SIGNED_IN_KEY = "adoptan.workspace.signed_in";
+const TIKTOK_CONNECTED_KEY = "adoptan.workspace.tiktok_connected";
+const TIKTOK_CLIENT_KEY_STORAGE = "adoptan.workspace.tiktok_client_key";
+
 const TIKTOK_SCOPES = [
   "user.info.basic",
   "user.info.profile",
@@ -23,6 +27,8 @@ const recentVideos = [
 export default function TikTokReviewApp() {
   const [signedIn, setSignedIn] = useState(false);
   const [connected, setConnected] = useState(false);
+  const [clientKey, setClientKey] = useState(DEFAULT_TIKTOK_CLIENT_KEY);
+  const [oauthNotice, setOauthNotice] = useState("");
   const [privacy, setPrivacy] = useState("");
   const [allowComments, setAllowComments] = useState(false);
   const [allowDuet, setAllowDuet] = useState(false);
@@ -34,25 +40,32 @@ export default function TikTokReviewApp() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connectedFromCallback = params.get("connected") === "1";
+    const clientKeyFromUrl = params.get("tiktok_client_key")?.trim();
 
-    if (connectedFromCallback) {
-      window.localStorage.setItem("adoptan.review.signed_in", "1");
-      window.localStorage.setItem("adoptan.review.tiktok_connected", "1");
+    if (clientKeyFromUrl) {
+      window.localStorage.setItem(TIKTOK_CLIENT_KEY_STORAGE, clientKeyFromUrl);
+      setClientKey(clientKeyFromUrl);
+    } else {
+      setClientKey(window.localStorage.getItem(TIKTOK_CLIENT_KEY_STORAGE) || DEFAULT_TIKTOK_CLIENT_KEY);
     }
 
-    setSignedIn(
-      connectedFromCallback || window.localStorage.getItem("adoptan.review.signed_in") === "1"
-    );
-    setConnected(
-      connectedFromCallback ||
-        window.localStorage.getItem("adoptan.review.tiktok_connected") === "1"
-    );
+    if (connectedFromCallback) {
+      window.localStorage.setItem(SIGNED_IN_KEY, "1");
+      window.localStorage.setItem(TIKTOK_CONNECTED_KEY, "1");
+    }
+
+    setSignedIn(connectedFromCallback || window.localStorage.getItem(SIGNED_IN_KEY) === "1");
+    setConnected(connectedFromCallback || window.localStorage.getItem(TIKTOK_CONNECTED_KEY) === "1");
   }, []);
 
   function buildTikTokAuthUrl() {
-    const state = `adoptan_review_${Date.now()}`;
+    if (!clientKey) {
+      return null;
+    }
+
+    const state = `adoptan_workspace_${Date.now()}`;
     const params = new URLSearchParams({
-      client_key: TIKTOK_CLIENT_KEY,
+      client_key: clientKey,
       response_type: "code",
       scope: TIKTOK_SCOPES.join(","),
       redirect_uri: TIKTOK_REDIRECT_URI,
@@ -74,23 +87,34 @@ export default function TikTokReviewApp() {
   ].filter(Boolean);
 
   function signIn() {
-    window.localStorage.setItem("adoptan.review.signed_in", "1");
+    window.localStorage.setItem(SIGNED_IN_KEY, "1");
     setSignedIn(true);
   }
 
-  function connectMock() {
-    window.localStorage.setItem("adoptan.review.signed_in", "1");
-    window.localStorage.setItem("adoptan.review.tiktok_connected", "1");
+  function connectDemo() {
+    window.localStorage.setItem(SIGNED_IN_KEY, "1");
+    window.localStorage.setItem(TIKTOK_CONNECTED_KEY, "1");
     setSignedIn(true);
     setConnected(true);
+    setOauthNotice("");
   }
 
   function connectTikTok() {
-    window.location.assign(buildTikTokAuthUrl());
+    const authUrl = buildTikTokAuthUrl();
+
+    if (!authUrl) {
+      setOauthNotice(
+        "TikTok OAuth is not configured on this build yet. Add the TikTok Developer Portal Client key before recording the real login, or use the demo connection to show the product flow."
+      );
+      return;
+    }
+
+    setOauthNotice("");
+    window.location.assign(authUrl);
   }
 
   function disconnect() {
-    window.localStorage.removeItem("adoptan.review.tiktok_connected");
+    window.localStorage.removeItem(TIKTOK_CONNECTED_KEY);
     setConnected(false);
     setDraftUploaded(false);
     setPublished(false);
@@ -109,7 +133,7 @@ export default function TikTokReviewApp() {
             adoptan.ai
           </Link>
           <div className="review-nav-links">
-            <Link href="/">Review site</Link>
+            <Link href="/">Home</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
           </div>
@@ -119,11 +143,11 @@ export default function TikTokReviewApp() {
       <main className="app-demo-page">
         <section className="app-demo-hero">
           <div>
-            <div className="review-kicker">Sandbox mode</div>
-            <h1>Clickable TikTok review flow</h1>
+            <div className="review-kicker">Creator workspace</div>
+            <h1>Prepare and publish creator clips from one workspace</h1>
             <p className="review-lead">
-              This workspace demonstrates Login Kit, user profile scopes, recent public videos,
-              creator_info controls, draft upload, direct post, publish status, and disconnect.
+              Connect TikTok, verify the creator account, check recent posts, prepare a short-form
+              clip, choose draft upload or direct post, and track every status update.
             </p>
           </div>
           <div className="app-demo-scope-card">
@@ -138,21 +162,18 @@ export default function TikTokReviewApp() {
             <div>
               <p className="review-panel-kicker">Step 1</p>
               <h2>Sign in to adoptan.ai</h2>
-              <p>
-                This demo login is the user interaction interface shown to TikTok reviewers before
-                the creator connects TikTok.
-              </p>
+              <p>Open the creator workspace before connecting publishing channels.</p>
             </div>
             <label>
               Email
-              <input readOnly value="reviewer@adoptan.ai" />
+              <input readOnly value="creator@adoptan.ai" />
             </label>
             <label>
               Password
-              <input readOnly type="password" value="review-demo-password" />
+              <input readOnly type="password" value="workspace-demo-password" />
             </label>
             <button className="btn btn-primary" type="button" onClick={signIn}>
-              Sign in to review workspace
+              Sign in to workspace
             </button>
           </section>
         ) : !connected ? (
@@ -162,25 +183,21 @@ export default function TikTokReviewApp() {
                 <p className="review-panel-kicker">Step 2</p>
                 <h2>Connect TikTok</h2>
               </div>
-              <span className="review-pill warning">Sandbox OAuth</span>
+              <span className="review-pill warning">OAuth connection</span>
             </div>
             <p>
-              The primary button opens TikTok Login Kit with the exact scopes selected in the
-              Developer Portal. After consent, TikTok redirects back to
-              `https://adoptan.ai/web/callback/`.
+              Login Kit opens TikTok authorization, asks for the selected account permissions, then
+              returns the creator to the Adoptan workspace.
             </p>
             <div className="review-cta-row">
               <button className="btn btn-primary" type="button" onClick={connectTikTok}>
                 Connect TikTok
               </button>
-              <button className="btn btn-outline" type="button" onClick={connectMock}>
-                Use sandbox mock connection
+              <button className="btn btn-outline" type="button" onClick={connectDemo}>
+                Use demo connection
               </button>
             </div>
-            <p className="review-note">
-              Use the mock connection only if TikTok sandbox is unavailable during recording. The
-              UI still demonstrates every selected scope and user action.
-            </p>
+            {oauthNotice ? <p className="review-note">{oauthNotice}</p> : null}
           </section>
         ) : (
           <section className="app-demo-workspace">
@@ -196,7 +213,7 @@ export default function TikTokReviewApp() {
                 <div className="app-demo-avatar">AD</div>
                 <div>
                   <strong>Adoptan Demo</strong>
-                  <p>Creator workflow sandbox</p>
+                  <p>Creator account</p>
                 </div>
               </div>
               <ul className="review-metric-list">
@@ -245,7 +262,7 @@ export default function TikTokReviewApp() {
                 <div className="review-panel-head">
                   <div>
                     <p className="review-panel-kicker">Selected clip</p>
-                    <h2>Review and choose TikTok action</h2>
+                    <h2>Prepare TikTok action</h2>
                   </div>
                   <span className="review-pill success">creator_info.loaded</span>
                 </div>
@@ -257,7 +274,7 @@ export default function TikTokReviewApp() {
                   <div className="review-preview-body">
                     <label className="app-demo-label">
                       Editable caption
-                      <textarea defaultValue="Creator-approved clip, ready for TikTok. #creatorworkflow" />
+                      <textarea defaultValue="A creator-approved clip, packaged for the next post. #creatorworkflow" />
                     </label>
 
                     <label className="app-demo-label">
@@ -303,8 +320,8 @@ export default function TikTokReviewApp() {
                         onChange={(event) => setConsent(event.target.checked)}
                         type="checkbox"
                       />
-                      By posting, I agree to TikTok's Music Usage Confirmation and confirm the
-                      selected content, caption, visibility, and interaction settings.
+                      I confirm the selected content, caption, visibility, interaction settings, and
+                      TikTok music usage requirements before upload.
                     </label>
 
                     <div className="review-cta-row">
@@ -343,7 +360,7 @@ export default function TikTokReviewApp() {
                       <span className="review-status-dot success" />
                       <div>
                         <strong>{event}</strong>
-                        <p>Shown in the workspace for reviewer visibility.</p>
+                        <p>Shown in the workspace for clear status visibility.</p>
                       </div>
                     </div>
                   ))}

@@ -5,13 +5,13 @@ const flowSteps = [
     step: "01",
     title: "Start in the web workspace",
     description:
-      "The creator signs in to adoptan.ai and opens the TikTok publishing workspace on the same verified domain used for review."
+      "The creator signs in to adoptan.ai and opens the TikTok publishing workspace on the same verified domain."
   },
   {
     step: "02",
-    title: "Connect TikTok in sandbox",
+    title: "Connect TikTok",
     description:
-      "Login Kit redirects to TikTok sandbox, the user grants the requested scopes, and returns to adoptan.ai."
+      "Login Kit redirects to TikTok, the user grants the requested scopes, and returns to adoptan.ai."
   },
   {
     step: "03",
@@ -21,9 +21,9 @@ const flowSteps = [
   },
   {
     step: "04",
-    title: "Load creator_info and review video",
+    title: "Load creator_info and prepare video",
     description:
-      "The creator previews the 9:16 clip, edits the caption, and reviews privacy, comments, duet, stitch, and duration options from TikTok."
+      "The creator previews the 9:16 clip, edits the caption, and checks privacy, comments, duet, stitch, and duration options from TikTok."
   },
   {
     step: "05",
@@ -39,7 +39,7 @@ const capabilities = [
     body: "Creators connect TikTok through OAuth and the workspace demonstrates user.info.basic, user.info.profile, and user.info.stats."
   },
   {
-    name: "Recent video review",
+    name: "Recent video check",
     body: "The workspace uses video.list to show recent public videos and help the creator avoid accidental duplicate posts."
   },
   {
@@ -52,11 +52,11 @@ const capabilities = [
   },
   {
     name: "Direct post",
-    body: "video.publish lets the creator publish directly only after reviewing content, caption, privacy, and interaction settings."
+    body: "video.publish lets the creator publish directly only after confirming content, caption, privacy, and interaction settings."
   },
   {
-    name: "No unused products",
-    body: "The web app uses Login Kit and Content Posting API. Share Kit and Data Portability are not part of this review flow."
+    name: "Focused publishing workflow",
+    body: "The web app uses Login Kit and Content Posting API for account connection, content settings, draft upload, and direct publishing."
   }
 ] as const;
 
@@ -102,7 +102,7 @@ export default function WebWorkspaceHome() {
             <a href="#workspace">Workspace</a>
             <a href="#capabilities">Capabilities</a>
             <a href="#controls">Controls</a>
-            <Link href="/app">Review app</Link>
+            <Link href="/app">Open app</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
           </div>
@@ -111,11 +111,11 @@ export default function WebWorkspaceHome() {
 
       <main className="review-page">
         <section className="review-hero">
-          <div className="review-kicker">TikTok sandbox review workspace</div>
-          <h1>Connect TikTok, review the video, confirm upload or publish, and track every event</h1>
+          <div className="review-kicker">TikTok creator workspace</div>
+          <h1>Connect TikTok, prepare the video, confirm upload or publish, and track every event</h1>
           <p className="review-lead">
             adoptan.ai gives creators a web workspace for TikTok Login Kit profile context, video
-            list review, Content Posting API draft upload, direct post, status tracking, and
+            list checks, Content Posting API draft upload, direct post, status tracking, and
             disconnect.
           </p>
           <div className="review-badges">
@@ -125,8 +125,7 @@ export default function WebWorkspaceHome() {
             <span>video.list</span>
             <span>video.upload</span>
             <span>video.publish</span>
-            <span>Sandbox flow</span>
-            <span>No Share Kit</span>
+            <span>Creator flow</span>
           </div>
         </section>
 
@@ -134,7 +133,7 @@ export default function WebWorkspaceHome() {
           <div className="review-section-head">
             <h2>How the workflow moves</h2>
             <p>
-              The creator starts in the web UI, authorizes TikTok in sandbox, reviews account and
+              The creator starts in the web UI, authorizes TikTok, checks account and
               video context, confirms draft upload or direct post, then sees the outcome.
             </p>
           </div>
@@ -161,7 +160,7 @@ export default function WebWorkspaceHome() {
           <div className="review-shell">
             <aside className="review-sidebar">
               <div className="review-sidebar-label">Workspace</div>
-              <div className="review-sidebar-title">TikTok Review</div>
+              <div className="review-sidebar-title">TikTok Publishing</div>
               <ul className="review-sidebar-list">
                 <li className="active">TikTok publishing</li>
                 <li>Account connection</li>
@@ -177,18 +176,17 @@ export default function WebWorkspaceHome() {
                 <div className="review-panel-head">
                   <div>
                     <p className="review-panel-kicker">Connected account</p>
-                    <h3>TikTok sandbox authorization</h3>
+                    <h3>TikTok authorization</h3>
                   </div>
-                  <span className="review-pill success">Sandbox ready</span>
+                  <span className="review-pill success">Connection ready</span>
                 </div>
                 <div className="review-cta-row">
                   <Link className="btn btn-primary" href="/app">
-                    Open clickable review app
+                    Open creator workspace
                   </Link>
                   <span className="review-note">
                     Requested scopes shown in consent: user.info.basic, user.info.profile,
-                    user.info.stats, video.list, video.upload, and video.publish. Share Kit and
-                    Data Portability are not requested.
+                    user.info.stats, video.list, video.upload, and video.publish.
                   </span>
                 </div>
               </section>
@@ -263,7 +261,7 @@ export default function WebWorkspaceHome() {
                     <div className="review-preview-body">
                       <p className="review-preview-title">Caption</p>
                       <div className="review-input">
-                        This clip is ready after creator review. Caption is editable before TikTok
+                        This clip is ready after creator approval. Caption is editable before TikTok
                         upload starts. #creatorworkflow
                       </div>
                       <p className="review-preview-title">Publish settings from creator_info</p>
@@ -333,7 +331,7 @@ export default function WebWorkspaceHome() {
                       <span className="review-status-dot success" />
                       <div>
                         <strong>oauth.connected</strong>
-                        <p>TikTok sandbox returned the user to adoptan.ai after consent.</p>
+                        <p>TikTok returned the user to adoptan.ai after consent.</p>
                       </div>
                     </div>
                     <div className="review-status-item">
@@ -347,7 +345,7 @@ export default function WebWorkspaceHome() {
                       <span className="review-status-dot success" />
                       <div>
                         <strong>video_list.loaded</strong>
-                        <p>Recent public TikTok videos were loaded for duplicate review.</p>
+                        <p>Recent public TikTok videos were loaded for duplicate checks.</p>
                       </div>
                     </div>
                     <div className="review-status-item">
@@ -387,7 +385,7 @@ export default function WebWorkspaceHome() {
           <div className="review-section-head">
             <h2>Core capabilities</h2>
             <p>
-              The product is designed around the exact products requested for review: Login Kit and
+              The product is designed around Login Kit and
               Content Posting API, with profile, stats, video list, draft upload, and direct post
               visible in the UI.
             </p>
@@ -407,7 +405,7 @@ export default function WebWorkspaceHome() {
             <h2>Operator controls and safeguards</h2>
             <p>
               The workspace keeps account, publishing, consent, policy, and disconnect controls
-              visible so the workflow stays reviewable by humans.
+              visible so the workflow stays controlled by humans.
             </p>
           </div>
           <div className="review-card-grid">
@@ -425,7 +423,7 @@ export default function WebWorkspaceHome() {
             <div className="footer-logo">adoptan.ai</div>
             <p>
               Creator-facing web workspace for TikTok account connection, profile context, recent
-              video review, draft upload, direct post, status tracking, and disconnect.
+              video checks, draft upload, direct post, status tracking, and disconnect.
             </p>
           </div>
           <div className="review-footer-links">

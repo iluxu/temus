@@ -21,8 +21,8 @@ export default function TikTokCallbackPage() {
     const params = new URLSearchParams(window.location.search);
     const hasCode = Boolean(params.get("code"));
     if (hasCode) {
-      window.localStorage.setItem("adoptan.review.signed_in", "1");
-      window.localStorage.setItem("adoptan.review.tiktok_connected", "1");
+      window.localStorage.setItem("adoptan.workspace.signed_in", "1");
+      window.localStorage.setItem("adoptan.workspace.tiktok_connected", "1");
     }
 
     setPayload({
@@ -69,8 +69,8 @@ export default function TikTokCallbackPage() {
           <p>
             {hasError
               ? payload.errorDescription || payload.error || "The TikTok connection was not completed."
-              : hasCode
-                ? "TikTok consent completed. The user can continue to the workspace to review creator_info settings and confirm publishing."
+            : hasCode
+              ? "TikTok consent completed. The user can continue to the workspace to inspect creator_info settings and confirm publishing."
                 : "Waiting for TikTok to return the authorization result."}
           </p>
         </div>
