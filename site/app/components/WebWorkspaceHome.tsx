@@ -102,6 +102,7 @@ export default function WebWorkspaceHome() {
             <a href="#workspace">Workspace</a>
             <a href="#capabilities">Capabilities</a>
             <a href="#controls">Controls</a>
+            <Link href="/app">Review app</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
           </div>
@@ -181,9 +182,9 @@ export default function WebWorkspaceHome() {
                   <span className="review-pill success">Sandbox ready</span>
                 </div>
                 <div className="review-cta-row">
-                  <button className="btn btn-primary" type="button">
-                    Connect TikTok in sandbox
-                  </button>
+                  <Link className="btn btn-primary" href="/app">
+                    Open clickable review app
+                  </Link>
                   <span className="review-note">
                     Requested scopes shown in consent: user.info.basic, user.info.profile,
                     user.info.stats, video.list, video.upload, and video.publish. Share Kit and

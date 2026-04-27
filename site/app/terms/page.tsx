@@ -33,6 +33,7 @@ const sections = [
     title: "4. TikTok-specific terms",
     paragraphs: [
       "If you connect a TikTok account to adoptan.ai, you authorize adoptan.ai to use the TikTok scopes and permissions you approve only for the workflows shown in the workspace. You also agree to TikTok's own terms, including TikTok's Terms of Service at https://www.tiktok.com/legal/page/row/terms-of-service/en and TikTok for Developers Terms at https://developers.tiktok.com/terms/.",
+      "You must also comply with TikTok's Community Guidelines at https://www.tiktok.com/community-guidelines.",
       "You retain ownership of content you publish or prepare through adoptan.ai, subject to the rights you grant to TikTok and other third-party platforms under their own terms. You are solely responsible for ensuring that you have all rights, licenses, permissions, releases, and consents needed for the content, audio, likenesses, trademarks, captions, hashtags, and claims you submit.",
       "adoptan.ai does not guarantee that TikTok will accept, process, save as draft, publish, distribute, recommend, monetize, or keep any content available. TikTok may impose review, rate limits, privacy restrictions, account restrictions, visibility limits, processing delays, or other platform rules. We may block or disable a TikTok workflow if required by TikTok, by law, or by our platform safety standards."
     ]
@@ -81,6 +82,7 @@ const sections = [
   {
     title: "10. Fees, trials, and billing",
     paragraphs: [
+      "The service is currently provided free of charge. We will provide reasonable advance notice before introducing fees or paid plans.",
       "adoptan.ai may currently offer free, beta, pilot, or custom access. We may introduce or change paid plans with notice. If you purchase a paid plan, you agree to the pricing, billing cycle, payment method, taxes, renewal, cancellation, and refund terms presented at checkout or in the applicable order form.",
       "Unless otherwise stated in a signed agreement, fees are non-refundable except where required by law. We may suspend access for unpaid fees, payment disputes, abuse, or legal risk."
     ]
@@ -143,7 +145,7 @@ const sections = [
   {
     title: "19. Contact",
     paragraphs: [
-      "For legal notices or questions about these Terms, contact legal [at] adoptan.ai. Replace [at] with @ when emailing us. For privacy requests, contact privacy [at] adoptan.ai.",
+      "For legal notices or questions about these Terms, contact legal@adoptan.ai. For privacy requests, contact privacy@adoptan.ai.",
       "These Terms are intended to provide clear operational rules for the service, including TikTok-connected creator workflows. They are not legal advice and may be updated after review by legal counsel."
     ]
   }

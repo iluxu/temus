@@ -19,8 +19,14 @@ export default function TikTokCallbackPage() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const hasCode = Boolean(params.get("code"));
+    if (hasCode) {
+      window.localStorage.setItem("adoptan.review.signed_in", "1");
+      window.localStorage.setItem("adoptan.review.tiktok_connected", "1");
+    }
+
     setPayload({
-      codePresent: Boolean(params.get("code")),
+      codePresent: hasCode,
       state: params.get("state"),
       error: params.get("error"),
       errorDescription: params.get("error_description")
@@ -70,8 +76,8 @@ export default function TikTokCallbackPage() {
         </div>
 
         <div className="callback-actions">
-          <a className="btn btn-primary" href="/">
-            Back to web workspace
+          <a className="btn btn-primary" href="/app?connected=1">
+            Continue to workspace
           </a>
           <a className="btn btn-outline" href="/">
             Back to adoptan.ai

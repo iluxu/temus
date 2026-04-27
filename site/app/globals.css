@@ -1549,6 +1549,12 @@ a {
   font-weight: 700;
 }
 
+.callback-panel p:not(.callback-panel-title) {
+  color: #e2e8f0;
+  line-height: 1.7;
+  margin-top: 10px;
+}
+
 .callback-pre {
   margin-top: 12px;
   white-space: pre-wrap;
@@ -1566,12 +1572,161 @@ a {
   gap: 12px;
 }
 
+/* Clickable TikTok review app */
+.app-demo-page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 72px 24px 120px;
+}
+
+.app-demo-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.6fr);
+  gap: 24px;
+  align-items: end;
+  margin-bottom: 28px;
+}
+
+.app-demo-hero h1 {
+  margin-top: 22px;
+}
+
+.app-demo-scope-card,
+.app-demo-card {
+  background: white;
+  border: 1px solid hsl(var(--border));
+  border-radius: 22px;
+  box-shadow: 0 14px 38px hsla(231, 30%, 16%, 0.06);
+}
+
+.app-demo-scope-card {
+  padding: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.app-demo-scope-card span {
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.app-demo-card {
+  padding: 24px;
+}
+
+.app-demo-login {
+  max-width: 560px;
+  display: grid;
+  gap: 16px;
+}
+
+.app-demo-login label,
+.app-demo-label {
+  display: grid;
+  gap: 8px;
+  color: hsl(var(--foreground));
+  font-weight: 700;
+}
+
+.app-demo-login input,
+.app-demo-label textarea,
+.app-demo-label select {
+  width: 100%;
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  padding: 14px 16px;
+  font: inherit;
+}
+
+.app-demo-label textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.app-demo-workspace {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.app-demo-stack {
+  display: grid;
+  gap: 20px;
+}
+
+.app-demo-profile {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.app-demo-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 900;
+  background: var(--gradient);
+}
+
+.app-demo-checks {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.app-demo-checks label,
+.app-demo-consent {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 0.92rem;
+}
+
+.app-demo-consent {
+  margin-bottom: 16px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
 @media (max-width: 780px) {
   .callback-card {
     padding: 24px;
   }
 
   .callback-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-demo-page {
+    padding: 56px 16px 96px;
+  }
+
+  .app-demo-hero,
+  .app-demo-workspace,
+  .app-demo-checks {
     grid-template-columns: 1fr;
   }
 }

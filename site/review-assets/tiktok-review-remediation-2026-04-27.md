@@ -37,6 +37,9 @@ The new Privacy Policy explicitly covers:
 - TikTok data usage limited to user-authorized connect, review, draft upload, direct publish, status, and disconnect workflows.
 - No sale or advertising sharing of TikTok user data.
 - Retention, deletion, token revocation, backups, subprocessors, international transfers, security, breach notification, GDPR, CCPA, and children's privacy.
+- OAuth tokens encrypted at rest using AES-256 or equivalent managed encryption controls.
+- TikTok disconnection cleanup within 30 days.
+- Direct contact emails: `privacy@adoptan.ai` and `legal@adoptan.ai`.
 
 The new Terms explicitly cover:
 
@@ -46,6 +49,8 @@ The new Terms explicitly cover:
 - User-approved draft upload and direct publishing only.
 - AI-assisted captions/transcripts requiring user review.
 - Acceptable use, fees, termination, disclaimers, liability, indemnification, Belgian law, and Brussels courts.
+- TikTok Community Guidelines.
+- Current free-of-charge beta status before any future paid plans.
 
 ## Exact Form Text
 
@@ -63,26 +68,27 @@ Target duration: 90 to 120 seconds.
 
 Required storyboard:
 
-1. Open `https://adoptan.ai`.
-2. Show the web workspace and the review badges: `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`, `video.publish`, sandbox flow, no Share Kit.
-3. Click or point to `Connect TikTok in sandbox`.
-4. Show TikTok sandbox consent with `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`, and `video.publish`.
-5. Return to adoptan.ai callback/workspace.
-6. Show connected sandbox account: username/nickname/avatar. This demonstrates `user.info.basic`.
-7. Show bio/profile/verified fields. This demonstrates `user.info.profile`.
-8. Show follower/likes/video count fields. This demonstrates `user.info.stats`.
-9. Show recent public videos and duplicate check. This demonstrates `video.list`.
-10. Show creator_info response card: privacy options, max duration, comments, duet, stitch. This demonstrates Content Posting API UX.
-11. Show 9:16 video preview.
-12. Edit the caption field.
-13. Show privacy selection and interaction toggles.
-14. Show the explicit consent note before upload/publish.
-15. Click `Upload as TikTok draft`. This demonstrates `video.upload`.
-16. Show `draft_upload.completed`.
-17. Click `Confirm and publish to TikTok`. This demonstrates `video.publish`.
-18. Show activity log: `oauth.connected`, `profile.loaded`, `video_list.loaded`, `creator_info.loaded`, `draft_upload.completed`, `publish.started`, `publish.completed`.
-19. Show the result in TikTok sandbox if available, or a mocked sandbox completion if TikTok sandbox cannot render the final post.
-20. Click or show `Disconnect TikTok`.
+1. Open `https://adoptan.ai/app`.
+2. Show the demo sign-in page and click `Sign in to review workspace`.
+3. Show the requested scopes: `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`, `video.publish`.
+4. Click `Connect TikTok`.
+5. Show TikTok sandbox consent with `user.info.basic`, `user.info.profile`, `user.info.stats`, `video.list`, `video.upload`, and `video.publish`.
+6. Return to `https://adoptan.ai/web/callback/`.
+7. Click `Continue to workspace`.
+8. Show connected sandbox account: username/nickname/avatar. This demonstrates `user.info.basic`.
+9. Show bio/profile/verified fields. This demonstrates `user.info.profile`.
+10. Show follower/likes/video count fields. This demonstrates `user.info.stats`.
+11. Show recent public videos and duplicate check. This demonstrates `video.list`.
+12. Show creator_info response card: privacy options, max duration, comments, duet, stitch. This demonstrates Content Posting API UX.
+13. Show 9:16 video preview.
+14. Edit the caption field.
+15. Select privacy manually and turn on comment/duet/stitch manually.
+16. Check the explicit consent note before upload/publish.
+17. Click `Upload as TikTok draft`. This demonstrates `video.upload`.
+18. Show `draft_upload.completed`.
+19. Click `Confirm and publish to TikTok`. This demonstrates `video.publish`.
+20. Show activity log: `oauth.connected`, `profile.loaded`, `video_list.loaded`, `creator_info.loaded`, `draft_upload.completed`, `publish.started`, `publish.completed`.
+21. Click or show `Disconnect TikTok`.
 
 Add short English overlay labels in the video:
 
@@ -112,7 +118,7 @@ Following your feedback, we made the following changes:
 
 3. Terms of Service: replaced the previous short terms with detailed Terms at `https://adoptan.ai/terms`. They now include TikTok Terms and TikTok Developer Terms references, user content ownership, publishing responsibility, user-approved draft upload/direct publishing, AI-assisted output review, acceptable use, disclaimers, limitation of liability, indemnification, and Belgian governing law.
 
-4. Demo video: uploaded a new browser-only end-to-end sandbox demo. It shows the actual web interface, TikTok sandbox OAuth consent, connected creator account, profile fields, stats, recent public videos, creator_info-driven privacy and interaction settings, editable caption, explicit consent before draft upload/direct publish, status feedback, and disconnect. The video contains no terminal or code.
+4. Demo video: uploaded a new browser-only end-to-end sandbox demo recorded from `https://adoptan.ai/app`. It shows the actual web interface, demo sign-in, TikTok sandbox OAuth consent, connected creator account, profile fields, stats, recent public videos, creator_info-driven privacy and interaction settings, editable caption, explicit consent before draft upload/direct publish, status feedback, and disconnect. The video contains no terminal or code.
 
 Available for any clarification.
 

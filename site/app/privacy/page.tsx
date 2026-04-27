@@ -107,7 +107,7 @@ const sections = [
     title: "9. Subprocessors and international transfers",
     paragraphs: [
       "We may use service providers located in the European Union, the United States, and other countries. These countries may have data protection laws that differ from the laws where you live.",
-      "Where required, we use appropriate transfer safeguards such as Standard Contractual Clauses, data processing agreements, security commitments, and vendor due diligence. A current subprocessor list can be requested by contacting privacy [at] adoptan.ai. Replace [at] with @ when emailing us."
+      "Where required, we use appropriate transfer safeguards such as Standard Contractual Clauses, data processing agreements, security commitments, and vendor due diligence. A current subprocessor list can be requested by contacting privacy@adoptan.ai."
     ]
   },
   {
@@ -115,7 +115,7 @@ const sections = [
     paragraphs: [
       "We keep personal data only for as long as reasonably necessary for the purposes described in this Privacy Policy, unless a longer retention period is required by law, needed to resolve disputes, or needed to enforce agreements.",
       "Account records are retained while your account is active. Workspace data, media processing records, captions, transcripts, audit logs, and publish events are retained according to your plan settings, operational needs, and legal requirements. Security logs are typically retained for a limited period unless needed for investigation.",
-      "TikTok access and refresh tokens are stored only while your TikTok account remains connected or while necessary to complete a user-requested workflow. When you disconnect TikTok or request deletion, we delete or revoke tokens where technically available, stop future TikTok workflows, and remove related connection records from active systems within a reasonable period. Backup copies may persist for a limited backup retention window before being overwritten."
+      "TikTok access and refresh tokens are stored only while your TikTok account remains connected or while necessary to complete a user-requested workflow. When you disconnect TikTok or request deletion, we delete or revoke tokens where technically available, stop future TikTok workflows, and remove related connection records from active systems within 30 days of disconnection. Backup copies may persist for a limited backup retention window before being overwritten."
     ]
   },
   {
@@ -123,14 +123,14 @@ const sections = [
     paragraphs: [
       "You can disconnect TikTok from the adoptan.ai workspace when the disconnect control is available. Disconnecting removes the active connection from adoptan.ai and prevents new TikTok workflows from using that account.",
       "You may also revoke adoptan.ai's access from your TikTok account settings at tiktok.com/settings or any equivalent TikTok authorization management page made available by TikTok. Revoking access on TikTok may immediately stop our ability to refresh tokens or complete pending TikTok actions.",
-      "To request deletion of TikTok connection records or related personal data, contact privacy [at] adoptan.ai. Replace [at] with @ when emailing us. We may need to retain limited records where required for security, legal compliance, dispute resolution, or audit purposes."
+      "To request deletion of TikTok connection records or related personal data, contact privacy@adoptan.ai. We may need to retain limited records where required for security, legal compliance, dispute resolution, or audit purposes."
     ]
   },
   {
     title: "12. Security",
     paragraphs: [
       "We use technical and organizational safeguards designed to protect personal data. These measures include TLS encryption in transit, access controls, limited internal access, logging, backups, infrastructure monitoring, and secure handling of credentials and OAuth tokens.",
-      "TikTok tokens and other sensitive integration credentials are treated as confidential authorization artifacts. We restrict access to personnel and systems that need them to provide the service. No method of transmission or storage is perfectly secure, so we cannot guarantee absolute security, but we work to keep risk proportionate to the nature of the data."
+      "TikTok tokens and other sensitive integration credentials are treated as confidential authorization artifacts. OAuth tokens are encrypted at rest using AES-256 or equivalent platform-managed encryption controls. We restrict access to personnel and systems that need them to provide the service. No method of transmission or storage is perfectly secure, so we cannot guarantee absolute security, but we work to keep risk proportionate to the nature of the data."
     ]
   },
   {
@@ -144,7 +144,7 @@ const sections = [
     title: "14. Your privacy rights",
     paragraphs: [
       "Depending on where you live, you may have rights to access, correct, delete, export, restrict, or object to the processing of your personal data. You may also have the right to withdraw consent where processing is based on consent.",
-      "To exercise these rights, contact privacy [at] adoptan.ai. Replace [at] with @ when emailing us. We may need to verify your identity before responding. We will respond within the time required by applicable law."
+      "To exercise these rights, contact privacy@adoptan.ai. We may need to verify your identity before responding. We will respond within the time required by applicable law."
     ]
   },
   {
@@ -165,7 +165,7 @@ const sections = [
     title: "17. Children's privacy",
     paragraphs: [
       "adoptan.ai is not directed to children under 13. We do not knowingly collect personal data from children under 13. In jurisdictions where a higher age threshold applies, such as 16 for certain EEA contexts unless local law allows otherwise, users must meet the applicable age requirement or have valid parental authorization.",
-      "If you believe a child has provided personal data to us, contact privacy [at] adoptan.ai so we can take appropriate steps."
+      "If you believe a child has provided personal data to us, contact privacy@adoptan.ai so we can take appropriate steps."
     ]
   },
   {
@@ -185,8 +185,8 @@ const sections = [
   {
     title: "20. Contact",
     paragraphs: [
-      "For privacy requests, data deletion requests, TikTok data questions, or security concerns, contact privacy [at] adoptan.ai. Replace [at] with @ when emailing us.",
-      "For general legal notices, contact legal [at] adoptan.ai. This Privacy Policy is provided for transparency and operational compliance. It is not legal advice, and adoptan.ai may update it after review by legal counsel."
+      "For privacy requests, data deletion requests, TikTok data questions, or security concerns, contact privacy@adoptan.ai.",
+      "For general legal notices, contact legal@adoptan.ai. This Privacy Policy is provided for transparency and operational compliance. It is not legal advice, and adoptan.ai may update it after review by legal counsel."
     ]
   }
 ] as const;
