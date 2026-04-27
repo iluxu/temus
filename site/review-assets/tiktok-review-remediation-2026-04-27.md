@@ -56,7 +56,7 @@ The new Terms explicitly cover:
 
 Use this in the TikTok field "Explain how each product and scope works within your app or website":
 
-adoptan.ai is a web workspace for reviewing short-form content and running user-approved TikTok upload/publishing workflows. Login Kit lets a creator connect TikTok in the workspace. `user.info.basic` shows the connected identity and avatar. `user.info.profile` shows profile fields such as bio/profile link/verified status. `user.info.stats` shows account stats. `video.list` shows recent public videos so the creator can avoid duplicate uploads. For a selected clip, the creator previews the video, edits the caption, reviews TikTok creator_info privacy/interactions, and explicitly chooses either draft upload or direct post. Content Posting API uses `video.upload` for TikTok draft upload and `video.publish` for direct posting only after user confirmation. Share Kit and Data Portability API were removed.
+adoptan.ai is a web workspace for reviewing short-form content and running user-approved TikTok upload/publishing workflows. Login Kit lets a creator connect TikTok in the workspace. `user.info.basic` shows the connected identity and avatar. `user.info.profile` shows profile fields such as bio/profile link/verified status. `user.info.stats` shows account stats. `video.list` shows recent public videos so the creator can avoid duplicate uploads. For a selected clip, the creator previews the video, edits the caption, reviews TikTok creator_info privacy/interactions, and explicitly chooses either draft upload or direct post. Content Posting API uses `video.upload` for TikTok draft upload and `video.publish` for direct posting only after user confirmation.
 
 This text is under 1000 characters.
 
