@@ -127,12 +127,12 @@ export default function TikTokReviewApp() {
 
   return (
     <>
-      <header className="review-nav">
-        <div className="review-nav-inner">
+      <header className="workspace-nav">
+        <div className="workspace-nav-inner">
           <Link className="nav-logo" href="/">
             adoptan.ai
           </Link>
-          <div className="review-nav-links">
+          <div className="workspace-nav-links">
             <Link href="/">Home</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
@@ -143,9 +143,9 @@ export default function TikTokReviewApp() {
       <main className="app-demo-page">
         <section className="app-demo-hero">
           <div>
-            <div className="review-kicker">Creator workspace</div>
+            <div className="workspace-kicker">Creator workspace</div>
             <h1>Prepare and publish creator clips from one workspace</h1>
-            <p className="review-lead">
+            <p className="workspace-lead">
               Connect TikTok, verify the creator account, check recent posts, prepare a short-form
               clip, choose draft upload or direct post, and track every status update.
             </p>
@@ -160,7 +160,7 @@ export default function TikTokReviewApp() {
         {!signedIn ? (
           <section className="app-demo-card app-demo-login">
             <div>
-              <p className="review-panel-kicker">Step 1</p>
+              <p className="workspace-panel-kicker">Step 1</p>
               <h2>Sign in to adoptan.ai</h2>
               <p>Open the creator workspace before connecting publishing channels.</p>
             </div>
@@ -178,18 +178,18 @@ export default function TikTokReviewApp() {
           </section>
         ) : !connected ? (
           <section className="app-demo-card">
-            <div className="review-panel-head">
+            <div className="workspace-panel-head">
               <div>
-                <p className="review-panel-kicker">Step 2</p>
+                <p className="workspace-panel-kicker">Step 2</p>
                 <h2>Connect TikTok</h2>
               </div>
-              <span className="review-pill warning">OAuth connection</span>
+              <span className="workspace-pill warning">OAuth connection</span>
             </div>
             <p>
               Login Kit opens TikTok authorization, asks for the selected account permissions, then
               returns the creator to the Adoptan workspace.
             </p>
-            <div className="review-cta-row">
+            <div className="workspace-cta-row">
               <button className="btn btn-primary" type="button" onClick={connectTikTok}>
                 Connect TikTok
               </button>
@@ -197,17 +197,17 @@ export default function TikTokReviewApp() {
                 Use demo connection
               </button>
             </div>
-            {oauthNotice ? <p className="review-note">{oauthNotice}</p> : null}
+            {oauthNotice ? <p className="workspace-note">{oauthNotice}</p> : null}
           </section>
         ) : (
           <section className="app-demo-workspace">
             <aside className="app-demo-card">
-              <div className="review-panel-head">
+              <div className="workspace-panel-head">
                 <div>
-                  <p className="review-panel-kicker">Connected creator</p>
+                  <p className="workspace-panel-kicker">Connected creator</p>
                   <h2>@adoptan_demo</h2>
                 </div>
-                <span className="review-pill success">Connected</span>
+                <span className="workspace-pill success">Connected</span>
               </div>
               <div className="app-demo-profile">
                 <div className="app-demo-avatar">AD</div>
@@ -216,7 +216,7 @@ export default function TikTokReviewApp() {
                   <p>Creator account</p>
                 </div>
               </div>
-              <ul className="review-metric-list">
+              <ul className="workspace-metric-list">
                 <li>
                   <span>Avatar and display name</span>
                   <strong>user.info.basic</strong>
@@ -237,14 +237,14 @@ export default function TikTokReviewApp() {
 
             <div className="app-demo-stack">
               <section className="app-demo-card">
-                <div className="review-panel-head">
+                <div className="workspace-panel-head">
                   <div>
-                    <p className="review-panel-kicker">Recent public videos</p>
+                    <p className="workspace-panel-kicker">Recent public videos</p>
                     <h2>Duplicate check</h2>
                   </div>
-                  <span className="review-pill">video.list</span>
+                  <span className="workspace-pill">video.list</span>
                 </div>
-                <ul className="review-video-list">
+                <ul className="workspace-video-list">
                   {recentVideos.map((video) => (
                     <li key={video.title}>
                       <span>
@@ -259,19 +259,19 @@ export default function TikTokReviewApp() {
               </section>
 
               <section className="app-demo-card">
-                <div className="review-panel-head">
+                <div className="workspace-panel-head">
                   <div>
-                    <p className="review-panel-kicker">Selected clip</p>
+                    <p className="workspace-panel-kicker">Selected clip</p>
                     <h2>Prepare TikTok action</h2>
                   </div>
-                  <span className="review-pill success">creator_info.loaded</span>
+                  <span className="workspace-pill success">creator_info.loaded</span>
                 </div>
 
-                <div className="review-preview">
-                  <div className="review-preview-media">
+                <div className="workspace-preview">
+                  <div className="workspace-preview-media">
                     <span>9:16 preview</span>
                   </div>
-                  <div className="review-preview-body">
+                  <div className="workspace-preview-body">
                     <label className="app-demo-label">
                       Editable caption
                       <textarea defaultValue="A creator-approved clip, packaged for the next post. #creatorworkflow" />
@@ -324,7 +324,7 @@ export default function TikTokReviewApp() {
                       TikTok music usage requirements before upload.
                     </label>
 
-                    <div className="review-cta-row">
+                    <div className="workspace-cta-row">
                       <button
                         className="btn btn-outline"
                         disabled={!canSubmit}
@@ -347,17 +347,17 @@ export default function TikTokReviewApp() {
               </section>
 
               <section className="app-demo-card">
-                <div className="review-panel-head">
+                <div className="workspace-panel-head">
                   <div>
-                    <p className="review-panel-kicker">Activity log</p>
+                    <p className="workspace-panel-kicker">Activity log</p>
                     <h2>Status feedback</h2>
                   </div>
-                  <span className="review-pill success">Visible to user</span>
+                  <span className="workspace-pill success">Visible to user</span>
                 </div>
-                <div className="review-status-stack">
+                <div className="workspace-status-stack">
                   {events.map((event) => (
-                    <div className="review-status-item" key={event}>
-                      <span className="review-status-dot success" />
+                    <div className="workspace-status-item" key={event}>
+                      <span className="workspace-status-dot success" />
                       <div>
                         <strong>{event}</strong>
                         <p>Shown in the workspace for clear status visibility.</p>

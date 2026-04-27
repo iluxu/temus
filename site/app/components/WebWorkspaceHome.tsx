@@ -92,12 +92,12 @@ const webhookEvents = [
 export default function WebWorkspaceHome() {
   return (
     <>
-      <header className="review-nav">
-        <div className="review-nav-inner">
+      <header className="workspace-nav">
+        <div className="workspace-nav-inner">
           <Link className="nav-logo" href="/">
             adoptan.ai
           </Link>
-          <div className="review-nav-links">
+          <div className="workspace-nav-links">
             <a href="#flow">Flow</a>
             <a href="#workspace">Workspace</a>
             <a href="#capabilities">Capabilities</a>
@@ -109,16 +109,16 @@ export default function WebWorkspaceHome() {
         </div>
       </header>
 
-      <main className="review-page">
-        <section className="review-hero">
-          <div className="review-kicker">TikTok creator workspace</div>
+      <main className="workspace-page">
+        <section className="workspace-hero">
+          <div className="workspace-kicker">TikTok creator workspace</div>
           <h1>Connect TikTok, prepare the video, confirm upload or publish, and track every event</h1>
-          <p className="review-lead">
+          <p className="workspace-lead">
             adoptan.ai gives creators a web workspace for TikTok Login Kit profile context, video
             list checks, Content Posting API draft upload, direct post, status tracking, and
             disconnect.
           </p>
-          <div className="review-badges">
+          <div className="workspace-badges">
             <span>user.info.basic</span>
             <span>user.info.profile</span>
             <span>user.info.stats</span>
@@ -129,18 +129,18 @@ export default function WebWorkspaceHome() {
           </div>
         </section>
 
-        <section id="flow" className="review-section">
-          <div className="review-section-head">
+        <section id="flow" className="workspace-section">
+          <div className="workspace-section-head">
             <h2>How the workflow moves</h2>
             <p>
               The creator starts in the web UI, authorizes TikTok, checks account and
               video context, confirms draft upload or direct post, then sees the outcome.
             </p>
           </div>
-          <div className="review-flow">
+          <div className="workspace-flow">
             {flowSteps.map((step) => (
-              <article className="review-flow-card" key={step.step}>
-                <div className="review-flow-step">{step.step}</div>
+              <article className="workspace-flow-card" key={step.step}>
+                <div className="workspace-flow-step">{step.step}</div>
                 <h3>{step.title}</h3>
                 <p>{step.description}</p>
               </article>
@@ -148,8 +148,8 @@ export default function WebWorkspaceHome() {
           </div>
         </section>
 
-        <section id="workspace" className="review-section">
-          <div className="review-section-head">
+        <section id="workspace" className="workspace-section">
+          <div className="workspace-section-head">
             <h2>Inside the adoptan.ai workspace</h2>
             <p>
               The web app keeps account context, recent TikTok videos, creator_info settings, video
@@ -157,11 +157,11 @@ export default function WebWorkspaceHome() {
             </p>
           </div>
 
-          <div className="review-shell">
-            <aside className="review-sidebar">
-              <div className="review-sidebar-label">Workspace</div>
-              <div className="review-sidebar-title">TikTok Publishing</div>
-              <ul className="review-sidebar-list">
+          <div className="workspace-shell">
+            <aside className="workspace-sidebar">
+              <div className="workspace-sidebar-label">Workspace</div>
+              <div className="workspace-sidebar-title">TikTok Publishing</div>
+              <ul className="workspace-sidebar-list">
                 <li className="active">TikTok publishing</li>
                 <li>Account connection</li>
                 <li>Profile and stats</li>
@@ -171,36 +171,36 @@ export default function WebWorkspaceHome() {
               </ul>
             </aside>
 
-            <div className="review-main">
-              <section className="review-panel">
-                <div className="review-panel-head">
+            <div className="workspace-main">
+              <section className="workspace-panel">
+                <div className="workspace-panel-head">
                   <div>
-                    <p className="review-panel-kicker">Connected account</p>
+                    <p className="workspace-panel-kicker">Connected account</p>
                     <h3>TikTok authorization</h3>
                   </div>
-                  <span className="review-pill success">Connection ready</span>
+                  <span className="workspace-pill success">Connection ready</span>
                 </div>
-                <div className="review-cta-row">
+                <div className="workspace-cta-row">
                   <Link className="btn btn-primary" href="/app">
                     Open creator workspace
                   </Link>
-                  <span className="review-note">
+                  <span className="workspace-note">
                     Requested scopes shown in consent: user.info.basic, user.info.profile,
                     user.info.stats, video.list, video.upload, and video.publish.
                   </span>
                 </div>
               </section>
 
-              <section className="review-grid">
-                <article className="review-panel">
-                  <div className="review-panel-head">
+              <section className="workspace-grid">
+                <article className="workspace-panel">
+                  <div className="workspace-panel-head">
                     <div>
-                      <p className="review-panel-kicker">Profile context</p>
+                      <p className="workspace-panel-kicker">Profile context</p>
                       <h3>@adoptan_demo</h3>
                     </div>
-                    <span className="review-pill">Connected</span>
+                    <span className="workspace-pill">Connected</span>
                   </div>
-                  <ul className="review-metric-list">
+                  <ul className="workspace-metric-list">
                     <li>
                       <span>Avatar and display name</span>
                       <strong>user.info.basic</strong>
@@ -220,15 +220,15 @@ export default function WebWorkspaceHome() {
                   </ul>
                 </article>
 
-                <article className="review-panel">
-                  <div className="review-panel-head">
+                <article className="workspace-panel">
+                  <div className="workspace-panel-head">
                     <div>
-                      <p className="review-panel-kicker">Recent public videos</p>
+                      <p className="workspace-panel-kicker">Recent public videos</p>
                       <h3>Duplicate check before upload</h3>
                     </div>
-                    <span className="review-pill">video.list</span>
+                    <span className="workspace-pill">video.list</span>
                   </div>
-                  <ul className="review-video-list">
+                  <ul className="workspace-video-list">
                     <li>
                       <span>Last public post</span>
                       <strong>Campaign recap - 2h ago</strong>
@@ -245,63 +245,63 @@ export default function WebWorkspaceHome() {
                 </article>
               </section>
 
-              <section className="review-grid review-grid-wide">
-                <article className="review-panel">
-                  <div className="review-panel-head">
+              <section className="workspace-grid workspace-grid-wide">
+                <article className="workspace-panel">
+                  <div className="workspace-panel-head">
                     <div>
-                      <p className="review-panel-kicker">Selected clip</p>
+                      <p className="workspace-panel-kicker">Selected clip</p>
                       <h3>Approved 9:16 creator clip</h3>
                     </div>
-                    <span className="review-pill warning">Ready for TikTok</span>
+                    <span className="workspace-pill warning">Ready for TikTok</span>
                   </div>
-                  <div className="review-preview">
-                    <div className="review-preview-media">
+                  <div className="workspace-preview">
+                    <div className="workspace-preview-media">
                       <span>9:16 preview</span>
                     </div>
-                    <div className="review-preview-body">
-                      <p className="review-preview-title">Caption</p>
-                      <div className="review-input">
+                    <div className="workspace-preview-body">
+                      <p className="workspace-preview-title">Caption</p>
+                      <div className="workspace-input">
                         This clip is ready after creator approval. Caption is editable before TikTok
                         upload starts. #creatorworkflow
                       </div>
-                      <p className="review-preview-title">Publish settings from creator_info</p>
-                      <div className="review-setting-grid">
-                        <div className="review-setting">
+                      <p className="workspace-preview-title">Publish settings from creator_info</p>
+                      <div className="workspace-setting-grid">
+                        <div className="workspace-setting">
                           <span>Privacy</span>
                           <strong>PUBLIC_TO_EVERYONE</strong>
                         </div>
-                        <div className="review-setting">
+                        <div className="workspace-setting">
                           <span>Comments</span>
                           <strong>Allowed</strong>
                         </div>
-                        <div className="review-setting">
+                        <div className="workspace-setting">
                           <span>Duet</span>
                           <strong>Allowed</strong>
                         </div>
-                        <div className="review-setting">
+                        <div className="workspace-setting">
                           <span>Stitch</span>
                           <strong>Disabled</strong>
                         </div>
-                        <div className="review-setting">
+                        <div className="workspace-setting">
                           <span>Commercial content</span>
                           <strong>Not selected</strong>
                         </div>
-                        <div className="review-setting">
+                        <div className="workspace-setting">
                           <span>Consent</span>
                           <strong>Required before upload</strong>
                         </div>
-                        <div className="review-setting">
+                        <div className="workspace-setting">
                           <span>Draft mode</span>
                           <strong>video.upload</strong>
                         </div>
-                        <div className="review-setting">
+                        <div className="workspace-setting">
                           <span>Direct mode</span>
                           <strong>video.publish</strong>
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div className="review-cta-row">
+                  <div className="workspace-cta-row">
                     <button className="btn btn-outline" type="button">
                       Upload as TikTok draft
                     </button>
@@ -311,66 +311,66 @@ export default function WebWorkspaceHome() {
                     <button className="btn btn-outline" type="button">
                       Disconnect TikTok
                     </button>
-                    <span className="review-note">
+                    <span className="workspace-note">
                       Before either draft upload or direct post, the user confirms the selected
                       content, caption, visibility, and TikTok music usage requirements.
                     </span>
                   </div>
                 </article>
 
-                <article className="review-panel">
-                  <div className="review-panel-head">
+                <article className="workspace-panel">
+                  <div className="workspace-panel-head">
                     <div>
-                      <p className="review-panel-kicker">Activity log</p>
+                      <p className="workspace-panel-kicker">Activity log</p>
                       <h3>OAuth, upload, publish, and disconnect feedback</h3>
                     </div>
-                    <span className="review-pill success">Status visible</span>
+                    <span className="workspace-pill success">Status visible</span>
                   </div>
-                  <div className="review-status-stack">
-                    <div className="review-status-item">
-                      <span className="review-status-dot success" />
+                  <div className="workspace-status-stack">
+                    <div className="workspace-status-item">
+                      <span className="workspace-status-dot success" />
                       <div>
                         <strong>oauth.connected</strong>
                         <p>TikTok returned the user to adoptan.ai after consent.</p>
                       </div>
                     </div>
-                    <div className="review-status-item">
-                      <span className="review-status-dot success" />
+                    <div className="workspace-status-item">
+                      <span className="workspace-status-dot success" />
                       <div>
                         <strong>profile.loaded</strong>
                         <p>Basic profile, profile fields, and stats were loaded.</p>
                       </div>
                     </div>
-                    <div className="review-status-item">
-                      <span className="review-status-dot success" />
+                    <div className="workspace-status-item">
+                      <span className="workspace-status-dot success" />
                       <div>
                         <strong>video_list.loaded</strong>
                         <p>Recent public TikTok videos were loaded for duplicate checks.</p>
                       </div>
                     </div>
-                    <div className="review-status-item">
-                      <span className="review-status-dot success" />
+                    <div className="workspace-status-item">
+                      <span className="workspace-status-dot success" />
                       <div>
                         <strong>creator_info.loaded</strong>
                         <p>Privacy, duration, and interaction options were loaded before controls.</p>
                       </div>
                     </div>
-                    <div className="review-status-item">
-                      <span className="review-status-dot success" />
+                    <div className="workspace-status-item">
+                      <span className="workspace-status-dot success" />
                       <div>
                         <strong>draft_upload.completed</strong>
                         <p>The approved clip was sent to TikTok as a draft after user confirmation.</p>
                       </div>
                     </div>
-                    <div className="review-status-item">
-                      <span className="review-status-dot success" />
+                    <div className="workspace-status-item">
+                      <span className="workspace-status-dot success" />
                       <div>
                         <strong>publish.completed</strong>
                         <p>The workspace received the TikTok direct post status and updated the timeline.</p>
                       </div>
                     </div>
                   </div>
-                  <div className="review-inline-tags">
+                  <div className="workspace-inline-tags">
                     {webhookEvents.map((event) => (
                       <span key={event}>{event}</span>
                     ))}
@@ -381,8 +381,8 @@ export default function WebWorkspaceHome() {
           </div>
         </section>
 
-        <section id="capabilities" className="review-section">
-          <div className="review-section-head">
+        <section id="capabilities" className="workspace-section">
+          <div className="workspace-section-head">
             <h2>Core capabilities</h2>
             <p>
               The product is designed around Login Kit and
@@ -390,9 +390,9 @@ export default function WebWorkspaceHome() {
               visible in the UI.
             </p>
           </div>
-          <div className="review-card-grid">
+          <div className="workspace-card-grid">
             {capabilities.map((capability) => (
-              <article className="review-card" key={capability.name}>
+              <article className="workspace-card" key={capability.name}>
                 <h3>{capability.name}</h3>
                 <p>{capability.body}</p>
               </article>
@@ -400,17 +400,17 @@ export default function WebWorkspaceHome() {
           </div>
         </section>
 
-        <section id="controls" className="review-section">
-          <div className="review-section-head">
+        <section id="controls" className="workspace-section">
+          <div className="workspace-section-head">
             <h2>Operator controls and safeguards</h2>
             <p>
               The workspace keeps account, publishing, consent, policy, and disconnect controls
               visible so the workflow stays controlled by humans.
             </p>
           </div>
-          <div className="review-card-grid">
+          <div className="workspace-card-grid">
             {controls.map((control) => (
-              <article className="review-card" key={control.name}>
+              <article className="workspace-card" key={control.name}>
                 <h3>{control.name}</h3>
                 <p>{control.body}</p>
               </article>
@@ -418,15 +418,15 @@ export default function WebWorkspaceHome() {
           </div>
         </section>
 
-        <footer className="review-footer">
-          <div className="review-footer-copy">
+        <footer className="workspace-footer">
+          <div className="workspace-footer-copy">
             <div className="footer-logo">adoptan.ai</div>
             <p>
               Creator-facing web workspace for TikTok account connection, profile context, recent
               video checks, draft upload, direct post, status tracking, and disconnect.
             </p>
           </div>
-          <div className="review-footer-links">
+          <div className="workspace-footer-links">
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
             <Link href="/web/callback">TikTok callback</Link>
