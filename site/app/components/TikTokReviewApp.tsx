@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 
 const DEFAULT_TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY || "sbawmp8ejor8xbhaf1";
 const TIKTOK_REDIRECT_URI = "https://adoptan.ai/web/callback/";
@@ -33,6 +33,13 @@ const sandboxCreator = {
 
 const recentVideos: Array<{ title: string; status: string; duplicate: string }> = [];
 
+type SelectedVideo = {
+  name: string;
+  size: string;
+  type: string;
+  url: string;
+};
+
 function randomHex(bytes: number) {
   const array = new Uint8Array(bytes);
   window.crypto.getRandomValues(array);
@@ -49,11 +56,21 @@ async function sha256Base64Url(value: string) {
     .replace(/=+$/, "");
 }
 
+function formatFileSize(bytes: number) {
+  if (bytes < 1024 * 1024) {
+    return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  }
+
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 export default function TikTokReviewApp() {
   const [signedIn, setSignedIn] = useState(false);
   const [connected, setConnected] = useState(false);
   const [clientKey, setClientKey] = useState(DEFAULT_TIKTOK_CLIENT_KEY);
   const [oauthNotice, setOauthNotice] = useState("");
+  const [oauthRedirecting, setOauthRedirecting] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<SelectedVideo | null>(null);
   const [privacy, setPrivacy] = useState("");
   const [allowComments, setAllowComments] = useState(false);
   const [allowDuet, setAllowDuet] = useState(false);
@@ -83,6 +100,14 @@ export default function TikTokReviewApp() {
     setConnected(connectedFromCallback || window.localStorage.getItem(TIKTOK_CONNECTED_KEY) === "1");
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (selectedVideo?.url) {
+        URL.revokeObjectURL(selectedVideo.url);
+      }
+    };
+  }, [selectedVideo]);
+
   async function buildTikTokAuthUrl() {
     if (!clientKey) {
       return null;
@@ -107,12 +132,13 @@ export default function TikTokReviewApp() {
     return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
   }
 
-  const canSubmit = connected && privacy && consent;
+  const canSubmit = Boolean(connected && selectedVideo && privacy && consent);
   const events = [
     connected ? "oauth.connected" : null,
     connected ? "profile.loaded" : null,
     connected ? "video_list.loaded" : null,
     connected ? "creator_info.loaded" : null,
+    selectedVideo ? `asset.selected / ${selectedVideo.name}` : null,
     draftUploaded ? "draft_upload.completed / SEND_TO_USER_INBOX" : null,
     published ? "publish.started" : null,
     published ? "publish.completed / PUBLISH_COMPLETE" : null
@@ -123,26 +149,37 @@ export default function TikTokReviewApp() {
     setSignedIn(true);
   }
 
-  function connectDemo() {
-    window.localStorage.setItem(SIGNED_IN_KEY, "1");
-    window.localStorage.setItem(TIKTOK_CONNECTED_KEY, "1");
-    setSignedIn(true);
-    setConnected(true);
-    setOauthNotice("");
-  }
-
   async function connectTikTok() {
     const authUrl = await buildTikTokAuthUrl();
 
     if (!authUrl) {
       setOauthNotice(
-        "TikTok OAuth is not configured on this build yet. Add the TikTok Developer Portal Client key before recording the real login, or use the demo connection to show the product flow."
+        "TikTok OAuth is not configured on this build yet. Add the TikTok Developer Portal Client key before recording the login flow."
       );
       return;
     }
 
-    setOauthNotice("");
-    window.location.assign(authUrl);
+    setOauthRedirecting(true);
+    setOauthNotice("Opening TikTok authorization on tiktok.com with the selected scopes...");
+    window.setTimeout(() => window.location.assign(authUrl), 450);
+  }
+
+  function handleVideoSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const url = URL.createObjectURL(file);
+    setSelectedVideo({
+      name: file.name,
+      size: formatFileSize(file.size),
+      type: file.type || "video/mp4",
+      url
+    });
+    setDraftUploaded(false);
+    setPublished(false);
   }
 
   function disconnect() {
@@ -221,12 +258,28 @@ export default function TikTokReviewApp() {
               Login Kit opens TikTok authorization, asks for the selected account permissions, then
               returns the creator to the Adoptan workspace.
             </p>
+            <div className="oauth-route-card">
+              <span>Next screen</span>
+              <strong>tiktok.com authorization</strong>
+              <p>
+                The creator sees TikTok's consent page before returning to
+                {" "}
+                <code>{TIKTOK_REDIRECT_URI}</code>.
+              </p>
+            </div>
+            <div className="oauth-scope-list" aria-label="Requested TikTok scopes">
+              {TIKTOK_SCOPES.map((scope) => (
+                <span key={scope}>{scope}</span>
+              ))}
+            </div>
             <div className="workspace-cta-row">
-              <button className="btn btn-primary" type="button" onClick={connectTikTok}>
-                Connect TikTok
-              </button>
-              <button className="btn btn-outline" type="button" onClick={connectDemo}>
-                Use demo connection
+              <button
+                className="btn btn-primary"
+                disabled={oauthRedirecting}
+                type="button"
+                onClick={connectTikTok}
+              >
+                {oauthRedirecting ? "Opening TikTok..." : "Continue to TikTok authorization"}
               </button>
             </div>
             {oauthNotice ? <p className="workspace-note">{oauthNotice}</p> : null}
@@ -321,9 +374,30 @@ export default function TikTokReviewApp() {
 
                 <div className="workspace-preview">
                   <div className="workspace-preview-media">
-                    <span>9:16 preview</span>
+                    {selectedVideo ? (
+                      <video controls muted playsInline src={selectedVideo.url} />
+                    ) : (
+                      <span>9:16 preview</span>
+                    )}
                   </div>
                   <div className="workspace-preview-body">
+                    <label className="app-demo-label">
+                      Upload video file
+                      <input accept="video/mp4,video/quicktime,video/*" type="file" onChange={handleVideoSelected} />
+                    </label>
+                    {selectedVideo ? (
+                      <div className="workspace-upload-summary">
+                        <strong>{selectedVideo.name}</strong>
+                        <span>
+                          {selectedVideo.type} · {selectedVideo.size}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="workspace-note">
+                        Choose a vertical MP4/MOV clip before sending it to TikTok as a draft or direct post.
+                      </p>
+                    )}
+
                     <label className="app-demo-label">
                       Editable caption
                       <textarea defaultValue="A creator-approved clip, packaged for the next post. #creatorworkflow" />

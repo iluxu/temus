@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 type CallbackPayload = {
   codePresent: boolean;
-  codePreview: string | null;
   state: string | null;
   stateValid: boolean | null;
   scopes: string | null;
@@ -15,7 +14,6 @@ type CallbackPayload = {
 export default function TikTokCallbackPage() {
   const [payload, setPayload] = useState<CallbackPayload>({
     codePresent: false,
-    codePreview: null,
     state: null,
     stateValid: null,
     scopes: null,
@@ -36,7 +34,6 @@ export default function TikTokCallbackPage() {
 
     setPayload({
       codePresent: hasCode,
-      codePreview: code ? `${code.slice(0, 12)}...${code.slice(-8)}` : null,
       state,
       stateValid: expectedState ? expectedState === state : null,
       scopes: params.get("scopes") || params.get("scope"),
@@ -64,27 +61,27 @@ export default function TikTokCallbackPage() {
         <div className="callback-grid">
           <div className="callback-field">
             <span>Status</span>
-            <strong>{hasError ? "error" : hasCode ? "code_received" : "idle"}</strong>
+            <strong>{hasError ? "error" : hasCode ? "connected" : "idle"}</strong>
           </div>
           <div className="callback-field">
             <span>Authorization result</span>
-            <strong>{hasCode ? "yes" : "no"}</strong>
+            <strong>{hasCode ? "approved" : "pending"}</strong>
           </div>
           <div className="callback-field">
-            <span>State present</span>
-            <strong>{payload.state ? "yes" : "no"}</strong>
+            <span>Security check</span>
+            <strong>{payload.stateValid === null ? "pending" : payload.stateValid ? "valid" : "mismatch"}</strong>
           </div>
           <div className="callback-field">
-            <span>State check</span>
-            <strong>{payload.stateValid === null ? "not stored" : payload.stateValid ? "valid" : "mismatch"}</strong>
+            <span>Workspace access</span>
+            <strong>{hasCode ? "enabled" : "locked"}</strong>
           </div>
           <div className="callback-field">
             <span>Scopes returned</span>
             <strong>{payload.scopes || "not returned"}</strong>
           </div>
           <div className="callback-field">
-            <span>Code preview</span>
-            <strong>{payload.codePreview || "--"}</strong>
+            <span>Next action</span>
+            <strong>{hasCode ? "continue" : "authorize"}</strong>
           </div>
         </div>
 

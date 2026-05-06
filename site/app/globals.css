@@ -1187,6 +1187,7 @@ a {
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
+  min-width: 0;
 }
 
 .workspace-panel-kicker {
@@ -1257,11 +1258,23 @@ a {
   display: flex;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
 }
 
 .workspace-metric-list li span,
 .workspace-video-list li span {
   color: hsl(var(--muted-foreground));
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-metric-list li strong,
+.workspace-video-list li strong {
+  flex: 0 1 130px;
+  text-align: right;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .workspace-inline-tags {
@@ -1288,6 +1301,16 @@ a {
   color: white;
   font-weight: 700;
   letter-spacing: 0.06em;
+  overflow: hidden;
+}
+
+.workspace-preview-media video {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: #020617;
 }
 
 .workspace-preview-title {
@@ -1619,6 +1642,12 @@ a {
   padding: 24px;
 }
 
+.app-demo-card h2 {
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
 .app-demo-login {
   max-width: 560px;
   display: grid;
@@ -1634,6 +1663,7 @@ a {
 }
 
 .app-demo-login input,
+.app-demo-label input,
 .app-demo-label textarea,
 .app-demo-label select {
   width: 100%;
@@ -1645,6 +1675,11 @@ a {
   font: inherit;
 }
 
+.app-demo-label input[type="file"] {
+  cursor: pointer;
+  background: white;
+}
+
 .app-demo-label textarea {
   min-height: 112px;
   resize: vertical;
@@ -1652,7 +1687,7 @@ a {
 
 .app-demo-workspace {
   display: grid;
-  grid-template-columns: 340px minmax(0, 1fr);
+  grid-template-columns: 320px minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -1667,6 +1702,22 @@ a {
   align-items: center;
   gap: 14px;
   margin-bottom: 18px;
+  min-width: 0;
+}
+
+.app-demo-profile div:last-child {
+  min-width: 0;
+}
+
+.app-demo-profile strong,
+.app-demo-profile p {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.app-demo-profile p {
+  font-size: 0.92rem;
+  line-height: 1.45;
 }
 
 .app-demo-avatar {
@@ -1720,6 +1771,78 @@ a {
 
 .workspace-empty-state p {
   margin: 0;
+}
+
+.oauth-route-card {
+  margin: 18px 0 14px;
+  border: 1px solid hsl(231 76% 86%);
+  border-radius: 18px;
+  padding: 18px;
+  background: linear-gradient(135deg, hsl(231 76% 98%) 0%, hsl(172 66% 98%) 100%);
+}
+
+.oauth-route-card span {
+  display: block;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.oauth-route-card strong {
+  display: block;
+  color: hsl(var(--foreground));
+  font-size: 1.1rem;
+}
+
+.oauth-route-card p {
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.oauth-route-card code {
+  border-radius: 8px;
+  padding: 2px 6px;
+  color: hsl(231 76% 38%);
+  background: white;
+  overflow-wrap: anywhere;
+}
+
+.oauth-scope-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.oauth-scope-list span {
+  border-radius: 999px;
+  padding: 7px 10px;
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.workspace-upload-summary {
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: hsl(152 69% 97%);
+  display: grid;
+  gap: 4px;
+}
+
+.workspace-upload-summary strong,
+.workspace-upload-summary span {
+  overflow-wrap: anywhere;
+}
+
+.workspace-upload-summary span {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.9rem;
 }
 
 .btn:disabled {
