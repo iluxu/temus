@@ -81,8 +81,17 @@ export default function TikTokReviewApp() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const resetFlow = params.get("reset") === "1";
     const connectedFromCallback = params.get("connected") === "1";
     const clientKeyFromUrl = params.get("tiktok_client_key")?.trim();
+
+    if (resetFlow) {
+      window.localStorage.removeItem(SIGNED_IN_KEY);
+      window.localStorage.removeItem(TIKTOK_CONNECTED_KEY);
+      window.sessionStorage.removeItem(TIKTOK_STATE_STORAGE);
+      window.sessionStorage.removeItem(TIKTOK_CODE_VERIFIER_STORAGE);
+      window.history.replaceState(null, "", "/app");
+    }
 
     if (clientKeyFromUrl) {
       window.localStorage.setItem(TIKTOK_CLIENT_KEY_STORAGE, clientKeyFromUrl);
@@ -91,13 +100,13 @@ export default function TikTokReviewApp() {
       setClientKey(window.localStorage.getItem(TIKTOK_CLIENT_KEY_STORAGE) || DEFAULT_TIKTOK_CLIENT_KEY);
     }
 
-    if (connectedFromCallback) {
+    if (!resetFlow && connectedFromCallback) {
       window.localStorage.setItem(SIGNED_IN_KEY, "1");
       window.localStorage.setItem(TIKTOK_CONNECTED_KEY, "1");
     }
 
-    setSignedIn(connectedFromCallback || window.localStorage.getItem(SIGNED_IN_KEY) === "1");
-    setConnected(connectedFromCallback || window.localStorage.getItem(TIKTOK_CONNECTED_KEY) === "1");
+    setSignedIn(!resetFlow && (connectedFromCallback || window.localStorage.getItem(SIGNED_IN_KEY) === "1"));
+    setConnected(!resetFlow && (connectedFromCallback || window.localStorage.getItem(TIKTOK_CONNECTED_KEY) === "1"));
   }, []);
 
   useEffect(() => {
