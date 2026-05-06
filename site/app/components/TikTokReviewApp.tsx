@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const DEFAULT_TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY || "";
+const DEFAULT_TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY || "sbawmp8ejor8xbhaf1";
 const TIKTOK_REDIRECT_URI = "https://adoptan.ai/web/callback/";
 const SIGNED_IN_KEY = "adoptan.workspace.signed_in";
 const TIKTOK_CONNECTED_KEY = "adoptan.workspace.tiktok_connected";
 const TIKTOK_CLIENT_KEY_STORAGE = "adoptan.workspace.tiktok_client_key";
+const TIKTOK_CODE_VERIFIER_STORAGE = "adoptan.workspace.tiktok_code_verifier";
+const TIKTOK_STATE_STORAGE = "adoptan.workspace.tiktok_state";
 
 const TIKTOK_SCOPES = [
   "user.info.basic",
@@ -18,11 +20,34 @@ const TIKTOK_SCOPES = [
   "video.publish"
 ] as const;
 
-const recentVideos = [
-  { title: "Campaign recap", status: "Published 2h ago", duplicate: "No duplicate" },
-  { title: "Creator highlight", status: "Published yesterday", duplicate: "Different clip" },
-  { title: "Product teaser", status: "Published last week", duplicate: "Different caption" }
-] as const;
+const sandboxCreator = {
+  username: "luciamucciareplay",
+  displayName: "luciamucciareplay",
+  bio: "Replays Lucia a New York",
+  openId: "-0002ZOz...fT5Spa",
+  profileWebLink: "https://www.tiktok.com/@luciamucciareplay",
+  followers: "5",
+  likes: "255",
+  videoCount: "0"
+} as const;
+
+const recentVideos: Array<{ title: string; status: string; duplicate: string }> = [];
+
+function randomHex(bytes: number) {
+  const array = new Uint8Array(bytes);
+  window.crypto.getRandomValues(array);
+  return Array.from(array, (item) => item.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Base64Url(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await window.crypto.subtle.digest("SHA-256", bytes);
+  return window
+    .btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
 
 export default function TikTokReviewApp() {
   const [signedIn, setSignedIn] = useState(false);
@@ -58,18 +83,25 @@ export default function TikTokReviewApp() {
     setConnected(connectedFromCallback || window.localStorage.getItem(TIKTOK_CONNECTED_KEY) === "1");
   }, []);
 
-  function buildTikTokAuthUrl() {
+  async function buildTikTokAuthUrl() {
     if (!clientKey) {
       return null;
     }
 
-    const state = `adoptan_workspace_${Date.now()}`;
+    const state = randomHex(16);
+    const codeVerifier = randomHex(32);
+    const codeChallenge = await sha256Base64Url(codeVerifier);
+    window.sessionStorage.setItem(TIKTOK_STATE_STORAGE, state);
+    window.sessionStorage.setItem(TIKTOK_CODE_VERIFIER_STORAGE, codeVerifier);
+
     const params = new URLSearchParams({
       client_key: clientKey,
       response_type: "code",
       scope: TIKTOK_SCOPES.join(","),
       redirect_uri: TIKTOK_REDIRECT_URI,
-      state
+      state,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256"
     });
 
     return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
@@ -81,9 +113,9 @@ export default function TikTokReviewApp() {
     connected ? "profile.loaded" : null,
     connected ? "video_list.loaded" : null,
     connected ? "creator_info.loaded" : null,
-    draftUploaded ? "draft_upload.completed" : null,
+    draftUploaded ? "draft_upload.completed / SEND_TO_USER_INBOX" : null,
     published ? "publish.started" : null,
-    published ? "publish.completed" : null
+    published ? "publish.completed / PUBLISH_COMPLETE" : null
   ].filter(Boolean);
 
   function signIn() {
@@ -99,8 +131,8 @@ export default function TikTokReviewApp() {
     setOauthNotice("");
   }
 
-  function connectTikTok() {
-    const authUrl = buildTikTokAuthUrl();
+  async function connectTikTok() {
+    const authUrl = await buildTikTokAuthUrl();
 
     if (!authUrl) {
       setOauthNotice(
@@ -205,29 +237,39 @@ export default function TikTokReviewApp() {
               <div className="workspace-panel-head">
                 <div>
                   <p className="workspace-panel-kicker">Connected creator</p>
-                  <h2>@adoptan_demo</h2>
+                  <h2>@{sandboxCreator.username}</h2>
                 </div>
                 <span className="workspace-pill success">Connected</span>
               </div>
               <div className="app-demo-profile">
-                <div className="app-demo-avatar">AD</div>
+                <div className="app-demo-avatar">LR</div>
                 <div>
-                  <strong>Adoptan Demo</strong>
-                  <p>Creator account</p>
+                  <strong>{sandboxCreator.displayName}</strong>
+                  <p>{sandboxCreator.bio}</p>
                 </div>
               </div>
               <ul className="workspace-metric-list">
                 <li>
-                  <span>Avatar and display name</span>
+                  <span>Avatar, display name, masked open_id</span>
                   <strong>user.info.basic</strong>
                 </li>
                 <li>
-                  <span>Bio, profile link, verified</span>
+                  <span>
+                    Bio, profile link, verified
+                    <br />
+                    {sandboxCreator.profileWebLink}
+                  </span>
                   <strong>user.info.profile</strong>
                 </li>
                 <li>
-                  <span>12.4K followers / 184 videos</span>
+                  <span>
+                    {sandboxCreator.followers} followers / {sandboxCreator.likes} likes / {sandboxCreator.videoCount} videos
+                  </span>
                   <strong>user.info.stats</strong>
+                </li>
+                <li>
+                  <span>Open ID</span>
+                  <strong>{sandboxCreator.openId}</strong>
                 </li>
               </ul>
               <button className="btn btn-outline" type="button" onClick={disconnect}>
@@ -244,18 +286,28 @@ export default function TikTokReviewApp() {
                   </div>
                   <span className="workspace-pill">video.list</span>
                 </div>
-                <ul className="workspace-video-list">
-                  {recentVideos.map((video) => (
-                    <li key={video.title}>
-                      <span>
-                        {video.title}
-                        <br />
-                        {video.duplicate}
-                      </span>
-                      <strong>{video.status}</strong>
-                    </li>
-                  ))}
-                </ul>
+                {recentVideos.length > 0 ? (
+                  <ul className="workspace-video-list">
+                    {recentVideos.map((video) => (
+                      <li key={video.title}>
+                        <span>
+                          {video.title}
+                          <br />
+                          {video.duplicate}
+                        </span>
+                        <strong>{video.status}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="workspace-empty-state">
+                    <strong>0 public videos returned</strong>
+                    <p>
+                      The sandbox account is private. video.list still succeeds and returns an empty
+                      public-video list for duplicate checks.
+                    </p>
+                  </div>
+                )}
               </section>
 
               <section className="app-demo-card">
@@ -281,7 +333,7 @@ export default function TikTokReviewApp() {
                       Privacy from creator_info
                       <select value={privacy} onChange={(event) => setPrivacy(event.target.value)}>
                         <option value="">Select privacy</option>
-                        <option value="PUBLIC_TO_EVERYONE">PUBLIC_TO_EVERYONE</option>
+                        <option value="FOLLOWER_OF_CREATOR">FOLLOWER_OF_CREATOR</option>
                         <option value="MUTUAL_FOLLOW_FRIENDS">MUTUAL_FOLLOW_FRIENDS</option>
                         <option value="SELF_ONLY">SELF_ONLY</option>
                       </select>

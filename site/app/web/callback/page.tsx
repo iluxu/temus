@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 
 type CallbackPayload = {
   codePresent: boolean;
+  codePreview: string | null;
   state: string | null;
+  stateValid: boolean | null;
+  scopes: string | null;
   error: string | null;
   errorDescription: string | null;
 };
@@ -12,14 +15,20 @@ type CallbackPayload = {
 export default function TikTokCallbackPage() {
   const [payload, setPayload] = useState<CallbackPayload>({
     codePresent: false,
+    codePreview: null,
     state: null,
+    stateValid: null,
+    scopes: null,
     error: null,
     errorDescription: null
   });
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const hasCode = Boolean(params.get("code"));
+    const code = params.get("code");
+    const hasCode = Boolean(code);
+    const state = params.get("state");
+    const expectedState = window.sessionStorage.getItem("adoptan.workspace.tiktok_state");
     if (hasCode) {
       window.localStorage.setItem("adoptan.workspace.signed_in", "1");
       window.localStorage.setItem("adoptan.workspace.tiktok_connected", "1");
@@ -27,7 +36,10 @@ export default function TikTokCallbackPage() {
 
     setPayload({
       codePresent: hasCode,
-      state: params.get("state"),
+      codePreview: code ? `${code.slice(0, 12)}...${code.slice(-8)}` : null,
+      state,
+      stateValid: expectedState ? expectedState === state : null,
+      scopes: params.get("scopes") || params.get("scope"),
       error: params.get("error"),
       errorDescription: params.get("error_description")
     });
@@ -61,6 +73,18 @@ export default function TikTokCallbackPage() {
           <div className="callback-field">
             <span>State present</span>
             <strong>{payload.state ? "yes" : "no"}</strong>
+          </div>
+          <div className="callback-field">
+            <span>State check</span>
+            <strong>{payload.stateValid === null ? "not stored" : payload.stateValid ? "valid" : "mismatch"}</strong>
+          </div>
+          <div className="callback-field">
+            <span>Scopes returned</span>
+            <strong>{payload.scopes || "not returned"}</strong>
+          </div>
+          <div className="callback-field">
+            <span>Code preview</span>
+            <strong>{payload.codePreview || "--"}</strong>
           </div>
         </div>
 

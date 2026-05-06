@@ -1705,6 +1705,23 @@ a {
   margin-bottom: 16px;
 }
 
+.workspace-empty-state {
+  border: 1px dashed hsl(var(--border));
+  border-radius: 16px;
+  padding: 18px;
+  background: hsl(var(--muted) / 0.7);
+}
+
+.workspace-empty-state strong {
+  display: block;
+  margin-bottom: 6px;
+  color: hsl(var(--foreground));
+}
+
+.workspace-empty-state p {
+  margin: 0;
+}
+
 .btn:disabled {
   cursor: not-allowed;
   opacity: 0.5;
