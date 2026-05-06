@@ -10,6 +10,7 @@ const TIKTOK_CONNECTED_KEY = "adoptan.workspace.tiktok_connected";
 const TIKTOK_CLIENT_KEY_STORAGE = "adoptan.workspace.tiktok_client_key";
 const TIKTOK_CODE_VERIFIER_STORAGE = "adoptan.workspace.tiktok_code_verifier";
 const TIKTOK_STATE_STORAGE = "adoptan.workspace.tiktok_state";
+const TIKTOK_REVIEW_API_BASE = "https://api.adoptan.ai/tiktok-review";
 
 const TIKTOK_SCOPES = [
   "user.info.basic",
@@ -20,7 +21,7 @@ const TIKTOK_SCOPES = [
   "video.publish"
 ] as const;
 
-const sandboxCreator = {
+const fallbackCreator = {
   username: "luciamucciareplay",
   displayName: "luciamucciareplay",
   bio: "Replays Lucia a New York",
@@ -31,13 +32,48 @@ const sandboxCreator = {
   videoCount: "0"
 } as const;
 
-const recentVideos: Array<{ title: string; status: string; duplicate: string }> = [];
-
 type SelectedVideo = {
   name: string;
   size: string;
   type: string;
   url: string;
+  file: File;
+};
+
+type CreatorProfile = {
+  username: string;
+  displayName: string;
+  bio: string;
+  openId: string;
+  profileWebLink: string;
+  followers: string;
+  likes: string;
+  videoCount: string;
+};
+
+type RecentVideo = {
+  title: string;
+  status: string;
+  duplicate: string;
+};
+
+type CreatorInfo = {
+  privacyOptions: string[];
+  commentDisabled: boolean;
+  duetDisabled: boolean;
+  stitchDisabled: boolean;
+};
+
+type PublishResult = {
+  mode: "draft" | "direct";
+  publishId: string;
+  status: {
+    status: string;
+    attempts?: number;
+    failReason?: string;
+    publicalyAvailablePostId?: string;
+    timedOut?: boolean;
+  };
 };
 
 function randomHex(bytes: number) {
@@ -64,6 +100,15 @@ function formatFileSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function maskOpenId(value: unknown) {
+  const raw = String(value || "");
+  if (raw.length <= 12) {
+    return raw;
+  }
+
+  return `${raw.slice(0, 8)}...${raw.slice(-6)}`;
+}
+
 export default function TikTokReviewApp() {
   const [signedIn, setSignedIn] = useState(false);
   const [connected, setConnected] = useState(false);
@@ -71,13 +116,26 @@ export default function TikTokReviewApp() {
   const [oauthNotice, setOauthNotice] = useState("");
   const [oauthRedirecting, setOauthRedirecting] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<SelectedVideo | null>(null);
+  const [creator, setCreator] = useState<CreatorProfile>(fallbackCreator);
+  const [recentVideos, setRecentVideos] = useState<RecentVideo[]>([]);
+  const [creatorInfo, setCreatorInfo] = useState<CreatorInfo>({
+    privacyOptions: ["FOLLOWER_OF_CREATOR", "MUTUAL_FOLLOW_FRIENDS", "SELF_ONLY"],
+    commentDisabled: false,
+    duetDisabled: true,
+    stitchDisabled: true
+  });
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [caption, setCaption] = useState("A creator-approved clip, packaged for the next post. #creatorworkflow");
   const [privacy, setPrivacy] = useState("");
   const [allowComments, setAllowComments] = useState(false);
   const [allowDuet, setAllowDuet] = useState(false);
   const [allowStitch, setAllowStitch] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [draftUploaded, setDraftUploaded] = useState(false);
-  const [published, setPublished] = useState(false);
+  const [activeAction, setActiveAction] = useState<"draft" | "direct" | "">("");
+  const [draftResult, setDraftResult] = useState<PublishResult | null>(null);
+  const [publishResult, setPublishResult] = useState<PublishResult | null>(null);
+  const [publishError, setPublishError] = useState("");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -117,6 +175,82 @@ export default function TikTokReviewApp() {
     };
   }, [selectedVideo]);
 
+  useEffect(() => {
+    if (!connected) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadTikTokProfile() {
+      setProfileError("");
+      try {
+        const response = await fetch(`${TIKTOK_REVIEW_API_BASE}/profile`, {
+          headers: {
+            Accept: "application/json"
+          }
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload?.ok) {
+          throw new Error(payload?.message || payload?.error || "Unable to load TikTok profile.");
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        const user = payload.user || {};
+        const creatorInfoPayload = payload.creatorInfo || {};
+        const privacyOptions = Array.isArray(creatorInfoPayload.privacy_level_options)
+          ? creatorInfoPayload.privacy_level_options
+          : creatorInfo.privacyOptions;
+
+        setCreator({
+          username: user.username || fallbackCreator.username,
+          displayName: user.display_name || fallbackCreator.displayName,
+          bio: user.bio_description || fallbackCreator.bio,
+          openId: maskOpenId(user.open_id) || fallbackCreator.openId,
+          profileWebLink:
+            user.profile_deep_link ||
+            (user.username ? `https://www.tiktok.com/@${user.username}` : fallbackCreator.profileWebLink),
+          followers: String(user.follower_count ?? fallbackCreator.followers),
+          likes: String(user.likes_count ?? fallbackCreator.likes),
+          videoCount: String(user.video_count ?? fallbackCreator.videoCount)
+        });
+        setCreatorInfo({
+          privacyOptions,
+          commentDisabled: Boolean(creatorInfoPayload.comment_disabled),
+          duetDisabled: Boolean(creatorInfoPayload.duet_disabled),
+          stitchDisabled: Boolean(creatorInfoPayload.stitch_disabled)
+        });
+        setRecentVideos(
+          Array.isArray(payload.videos)
+            ? payload.videos.map((video: Record<string, unknown>) => ({
+                title: String(video.title || video.video_description || video.id || "Untitled TikTok"),
+                status: "public",
+                duplicate: video.create_time ? `Posted at ${video.create_time}` : "Returned by video.list"
+              }))
+            : []
+        );
+        setAllowComments(!creatorInfoPayload.comment_disabled);
+        setAllowDuet(!creatorInfoPayload.duet_disabled);
+        setAllowStitch(!creatorInfoPayload.stitch_disabled);
+        setPrivacy(privacyOptions.includes("SELF_ONLY") ? "SELF_ONLY" : privacyOptions[0] || "");
+        setProfileLoaded(true);
+      } catch (error) {
+        if (!cancelled) {
+          setProfileError(error instanceof Error ? error.message : "TikTok profile load failed.");
+        }
+      }
+    }
+
+    loadTikTokProfile();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [connected]);
+
   async function buildTikTokAuthUrl() {
     if (!clientKey) {
       return null;
@@ -141,16 +275,17 @@ export default function TikTokReviewApp() {
     return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
   }
 
-  const canSubmit = Boolean(connected && selectedVideo && privacy && consent);
+  const canSubmit = Boolean(connected && selectedVideo && privacy && consent && !activeAction);
   const events = [
     connected ? "oauth.connected" : null,
-    connected ? "profile.loaded" : null,
-    connected ? "video_list.loaded" : null,
-    connected ? "creator_info.loaded" : null,
+    profileLoaded ? "profile.loaded / user.info.basic + user.info.profile + user.info.stats" : null,
+    profileLoaded ? "video_list.loaded / video.list" : null,
+    profileLoaded ? "creator_info.loaded / privacy and interaction options" : null,
     selectedVideo ? `asset.selected / ${selectedVideo.name}` : null,
-    draftUploaded ? "draft_upload.completed / SEND_TO_USER_INBOX" : null,
-    published ? "publish.started" : null,
-    published ? "publish.completed / PUBLISH_COMPLETE" : null
+    activeAction === "draft" ? "draft_upload.started / real API upload in progress" : null,
+    draftResult ? `draft_upload.completed / ${draftResult.status.status} / ${draftResult.publishId}` : null,
+    activeAction === "direct" ? "publish.started / real API upload in progress" : null,
+    publishResult ? `publish.completed / ${publishResult.status.status} / ${publishResult.publishId}` : null
   ].filter(Boolean);
 
   function signIn() {
@@ -185,17 +320,67 @@ export default function TikTokReviewApp() {
       name: file.name,
       size: formatFileSize(file.size),
       type: file.type || "video/mp4",
-      url
+      url,
+      file
     });
-    setDraftUploaded(false);
-    setPublished(false);
+    setDraftResult(null);
+    setPublishResult(null);
+    setPublishError("");
+  }
+
+  async function sendVideoToTikTok(mode: "draft" | "direct") {
+    if (!selectedVideo || !canSubmit) {
+      return;
+    }
+
+    setActiveAction(mode);
+    setPublishError("");
+    if (mode === "draft") {
+      setDraftResult(null);
+    } else {
+      setPublishResult(null);
+    }
+
+    try {
+      const params = new URLSearchParams({
+        mode,
+        title: caption,
+        privacy_level: privacy,
+        disable_comment: String(!allowComments),
+        disable_duet: String(!allowDuet),
+        disable_stitch: String(!allowStitch)
+      });
+      const response = await fetch(`${TIKTOK_REVIEW_API_BASE}/publish?${params.toString()}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": selectedVideo.type || "video/mp4"
+        },
+        body: selectedVideo.file
+      });
+      const payload = await response.json();
+      if (!response.ok || !payload?.ok) {
+        throw new Error(payload?.message || payload?.error || "TikTok upload failed.");
+      }
+
+      if (mode === "draft") {
+        setDraftResult(payload);
+      } else {
+        setPublishResult(payload);
+      }
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : "TikTok upload failed.");
+    } finally {
+      setActiveAction("");
+    }
   }
 
   function disconnect() {
     window.localStorage.removeItem(TIKTOK_CONNECTED_KEY);
     setConnected(false);
-    setDraftUploaded(false);
-    setPublished(false);
+    setDraftResult(null);
+    setPublishResult(null);
+    setPublishError("");
+    setProfileLoaded(false);
     setConsent(false);
     setPrivacy("");
     setAllowComments(false);
@@ -299,17 +484,20 @@ export default function TikTokReviewApp() {
               <div className="workspace-panel-head">
                 <div>
                   <p className="workspace-panel-kicker">Connected creator</p>
-                  <h2>@{sandboxCreator.username}</h2>
+                  <h2>@{creator.username}</h2>
                 </div>
-                <span className="workspace-pill success">Connected</span>
+                <span className={`workspace-pill ${profileLoaded ? "success" : "warning"}`}>
+                  {profileLoaded ? "Live API" : "Loading"}
+                </span>
               </div>
               <div className="app-demo-profile">
                 <div className="app-demo-avatar">LR</div>
                 <div>
-                  <strong>{sandboxCreator.displayName}</strong>
-                  <p>{sandboxCreator.bio}</p>
+                  <strong>{creator.displayName}</strong>
+                  <p>{creator.bio}</p>
                 </div>
               </div>
+              {profileError ? <p className="workspace-note">{profileError}</p> : null}
               <ul className="workspace-metric-list">
                 <li>
                   <span>Avatar, display name, masked open_id</span>
@@ -319,19 +507,19 @@ export default function TikTokReviewApp() {
                   <span>
                     Bio, profile link, verified
                     <br />
-                    {sandboxCreator.profileWebLink}
+                    {creator.profileWebLink}
                   </span>
                   <strong>user.info.profile</strong>
                 </li>
                 <li>
                   <span>
-                    {sandboxCreator.followers} followers / {sandboxCreator.likes} likes / {sandboxCreator.videoCount} videos
+                    {creator.followers} followers / {creator.likes} likes / {creator.videoCount} videos
                   </span>
                   <strong>user.info.stats</strong>
                 </li>
                 <li>
                   <span>Open ID</span>
-                  <strong>{sandboxCreator.openId}</strong>
+                  <strong>{creator.openId}</strong>
                 </li>
               </ul>
               <button className="btn btn-outline" type="button" onClick={disconnect}>
@@ -378,7 +566,9 @@ export default function TikTokReviewApp() {
                     <p className="workspace-panel-kicker">Selected clip</p>
                     <h2>Prepare TikTok action</h2>
                   </div>
-                  <span className="workspace-pill success">creator_info.loaded</span>
+                  <span className={`workspace-pill ${profileLoaded ? "success" : "warning"}`}>
+                    {profileLoaded ? "creator_info.loaded" : "loading creator_info"}
+                  </span>
                 </div>
 
                 <div className="workspace-preview">
@@ -409,16 +599,18 @@ export default function TikTokReviewApp() {
 
                     <label className="app-demo-label">
                       Editable caption
-                      <textarea defaultValue="A creator-approved clip, packaged for the next post. #creatorworkflow" />
+                      <textarea value={caption} onChange={(event) => setCaption(event.target.value)} />
                     </label>
 
                     <label className="app-demo-label">
                       Privacy from creator_info
                       <select value={privacy} onChange={(event) => setPrivacy(event.target.value)}>
                         <option value="">Select privacy</option>
-                        <option value="FOLLOWER_OF_CREATOR">FOLLOWER_OF_CREATOR</option>
-                        <option value="MUTUAL_FOLLOW_FRIENDS">MUTUAL_FOLLOW_FRIENDS</option>
-                        <option value="SELF_ONLY">SELF_ONLY</option>
+                        {creatorInfo.privacyOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
                       </select>
                     </label>
 
@@ -426,6 +618,7 @@ export default function TikTokReviewApp() {
                       <label>
                         <input
                           checked={allowComments}
+                          disabled={creatorInfo.commentDisabled}
                           onChange={(event) => setAllowComments(event.target.checked)}
                           type="checkbox"
                         />
@@ -434,6 +627,7 @@ export default function TikTokReviewApp() {
                       <label>
                         <input
                           checked={allowDuet}
+                          disabled={creatorInfo.duetDisabled}
                           onChange={(event) => setAllowDuet(event.target.checked)}
                           type="checkbox"
                         />
@@ -442,6 +636,7 @@ export default function TikTokReviewApp() {
                       <label>
                         <input
                           checked={allowStitch}
+                          disabled={creatorInfo.stitchDisabled}
                           onChange={(event) => setAllowStitch(event.target.checked)}
                           type="checkbox"
                         />
@@ -459,22 +654,24 @@ export default function TikTokReviewApp() {
                       TikTok music usage requirements before upload.
                     </label>
 
+                    {publishError ? <p className="workspace-note error">{publishError}</p> : null}
+
                     <div className="workspace-cta-row">
                       <button
                         className="btn btn-outline"
                         disabled={!canSubmit}
                         type="button"
-                        onClick={() => setDraftUploaded(true)}
+                        onClick={() => sendVideoToTikTok("draft")}
                       >
-                        Upload as TikTok draft
+                        {activeAction === "draft" ? "Uploading draft..." : "Upload as TikTok draft"}
                       </button>
                       <button
                         className="btn btn-primary"
                         disabled={!canSubmit}
                         type="button"
-                        onClick={() => setPublished(true)}
+                        onClick={() => sendVideoToTikTok("direct")}
                       >
-                        Confirm and publish to TikTok
+                        {activeAction === "direct" ? "Publishing..." : "Confirm and publish to TikTok"}
                       </button>
                     </div>
                   </div>
@@ -495,7 +692,7 @@ export default function TikTokReviewApp() {
                       <span className="workspace-status-dot success" />
                       <div>
                         <strong>{event}</strong>
-                        <p>Shown in the workspace for clear status visibility.</p>
+                        <p>Returned by the Adoptan server after calling TikTok APIs.</p>
                       </div>
                     </div>
                   ))}

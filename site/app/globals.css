@@ -1233,6 +1233,11 @@ a {
   color: hsl(var(--muted-foreground));
 }
 
+.workspace-note.error {
+  color: #b91c1c;
+  font-weight: 700;
+}
+
 .workspace-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
