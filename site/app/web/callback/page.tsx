@@ -2,6 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+const TIKTOK_REVIEW_API_BASE = "https://api.adoptan.ai/tiktok-review";
+const TIKTOK_REDIRECT_URI = "https://adoptan.ai/web/callback/";
+const SIGNED_IN_KEY = "adoptan.workspace.signed_in";
+const TIKTOK_CONNECTED_KEY = "adoptan.workspace.tiktok_connected";
+const TIKTOK_CODE_VERIFIER_STORAGE = "adoptan.workspace.tiktok_code_verifier";
+const TIKTOK_STATE_STORAGE = "adoptan.workspace.tiktok_state";
+
 type CallbackPayload = {
   codePresent: boolean;
   state: string | null;
@@ -9,6 +16,8 @@ type CallbackPayload = {
   scopes: string | null;
   error: string | null;
   errorDescription: string | null;
+  exchangeStatus: "idle" | "exchanging" | "completed" | "failed";
+  exchangeMessage: string | null;
 };
 
 export default function TikTokCallbackPage() {
@@ -18,7 +27,9 @@ export default function TikTokCallbackPage() {
     stateValid: null,
     scopes: null,
     error: null,
-    errorDescription: null
+    errorDescription: null,
+    exchangeStatus: "idle",
+    exchangeMessage: null
   });
 
   useEffect(() => {
@@ -26,42 +37,108 @@ export default function TikTokCallbackPage() {
     const code = params.get("code");
     const hasCode = Boolean(code);
     const state = params.get("state");
-    const expectedState = window.sessionStorage.getItem("adoptan.workspace.tiktok_state");
-    if (hasCode) {
-      window.localStorage.setItem("adoptan.workspace.signed_in", "1");
-      window.localStorage.setItem("adoptan.workspace.tiktok_connected", "1");
-    }
+    const expectedState = window.sessionStorage.getItem(TIKTOK_STATE_STORAGE);
+    const codeVerifier = window.sessionStorage.getItem(TIKTOK_CODE_VERIFIER_STORAGE);
+    const stateValid = expectedState ? expectedState === state : null;
 
     setPayload({
       codePresent: hasCode,
       state,
-      stateValid: expectedState ? expectedState === state : null,
+      stateValid,
       scopes: params.get("scopes") || params.get("scope"),
       error: params.get("error"),
-      errorDescription: params.get("error_description")
+      errorDescription: params.get("error_description"),
+      exchangeStatus: hasCode ? "exchanging" : "idle",
+      exchangeMessage: hasCode ? "Exchanging the TikTok authorization code on the Adoptan server." : null
     });
+
+    if (!hasCode || params.get("error")) {
+      return;
+    }
+
+    if (stateValid === false) {
+      setPayload((current) => ({
+        ...current,
+        exchangeStatus: "failed",
+        exchangeMessage: "OAuth state mismatch. Return to the workspace and start TikTok authorization again."
+      }));
+      return;
+    }
+
+    if (!codeVerifier) {
+      setPayload((current) => ({
+        ...current,
+        exchangeStatus: "failed",
+        exchangeMessage: "Missing PKCE verifier. Return to the workspace and start TikTok authorization again in the same browser tab."
+      }));
+      return;
+    }
+
+    fetch(`${TIKTOK_REVIEW_API_BASE}/oauth/exchange`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        code,
+        codeVerifier,
+        redirectUri: TIKTOK_REDIRECT_URI
+      })
+    })
+      .then(async (response) => {
+        const body = await response.json().catch(() => ({}));
+        if (!response.ok || !body?.ok) {
+          throw new Error(body?.message || body?.error || "TikTok token exchange failed.");
+        }
+        window.localStorage.setItem(SIGNED_IN_KEY, "1");
+        window.localStorage.setItem(TIKTOK_CONNECTED_KEY, "1");
+        setPayload((current) => ({
+          ...current,
+          exchangeStatus: "completed",
+          exchangeMessage: "Server token exchange completed. The workspace can now load creator_info."
+        }));
+      })
+      .catch((error) => {
+        setPayload((current) => ({
+          ...current,
+          exchangeStatus: "failed",
+          exchangeMessage: error instanceof Error ? error.message : "TikTok token exchange failed."
+        }));
+      });
   }, []);
 
   const hasCode = payload.codePresent;
   const hasError = Boolean(payload.error);
+  const connectionComplete = payload.exchangeStatus === "completed";
+  const connectionFailed = hasError || payload.exchangeStatus === "failed";
 
   return (
     <main className="callback-page">
       <div className="callback-card">
         <div className="callback-kicker">adoptan.ai / TikTok Login Kit</div>
-        <h1>{hasError ? "TikTok connection failed" : hasCode ? "TikTok account connected" : "Waiting for TikTok callback"}</h1>
+        <h1>
+          {connectionFailed
+            ? "TikTok connection failed"
+            : connectionComplete
+              ? "TikTok account connected"
+              : hasCode
+                ? "Connecting TikTok account"
+                : "Waiting for TikTok callback"}
+        </h1>
         <p className="callback-lead">
-          {hasError
+          {connectionFailed
             ? "TikTok returned an error to the web callback. The user can return to the workspace and retry the connection."
-            : hasCode
-              ? "TikTok redirected back to adoptan.ai after the user approved the requested scopes. The workspace can now show the connected account and publishing controls."
+            : connectionComplete
+              ? "TikTok redirected back to adoptan.ai and the server token exchange completed. The workspace can now show the connected account and publishing controls."
+              : hasCode
+                ? "TikTok redirected back to adoptan.ai after consent. Adoptan is exchanging the authorization code before enabling the workspace."
               : "This page is the redirect target used after TikTok authorization for the adoptan.ai web workflow."}
         </p>
 
         <div className="callback-grid">
           <div className="callback-field">
             <span>Status</span>
-            <strong>{hasError ? "error" : hasCode ? "connected" : "idle"}</strong>
+            <strong>{connectionFailed ? "error" : connectionComplete ? "connected" : hasCode ? "exchanging" : "idle"}</strong>
           </div>
           <div className="callback-field">
             <span>Authorization result</span>
@@ -73,7 +150,7 @@ export default function TikTokCallbackPage() {
           </div>
           <div className="callback-field">
             <span>Workspace access</span>
-            <strong>{hasCode ? "enabled" : "locked"}</strong>
+            <strong>{connectionComplete ? "enabled" : "locked"}</strong>
           </div>
           <div className="callback-field">
             <span>Scopes returned</span>
@@ -81,24 +158,29 @@ export default function TikTokCallbackPage() {
           </div>
           <div className="callback-field">
             <span>Next action</span>
-            <strong>{hasCode ? "continue" : "authorize"}</strong>
+            <strong>{connectionComplete ? "continue" : hasCode ? "wait" : "authorize"}</strong>
           </div>
         </div>
 
         <div className="callback-panel">
           <p className="callback-panel-title">Connection summary</p>
           <p>
-            {hasError
+            {payload.exchangeMessage ||
+              (hasError
               ? payload.errorDescription || payload.error || "The TikTok connection was not completed."
-            : hasCode
-              ? "TikTok consent completed. The user can continue to the workspace to inspect creator_info settings and confirm publishing."
-                : "Waiting for TikTok to return the authorization result."}
+              : hasCode
+                ? "TikTok consent completed. Waiting for server token exchange before continuing."
+                : "Waiting for TikTok to return the authorization result.")}
           </p>
         </div>
 
         <div className="callback-actions">
-          <a className="btn btn-primary" href="/app?connected=1">
-            Continue to workspace
+          <a
+            aria-disabled={!connectionComplete}
+            className={`btn btn-primary${connectionComplete ? "" : " disabled"}`}
+            href={connectionComplete ? "/app?connected=1" : "#"}
+          >
+            {connectionComplete ? "Continue to workspace" : "Waiting for server exchange"}
           </a>
           <a className="btn btn-outline" href="/">
             Back to adoptan.ai

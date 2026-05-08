@@ -1917,10 +1917,12 @@ a {
   font-size: 0.9rem;
 }
 
-.btn:disabled {
+.btn:disabled,
+.btn.disabled {
   cursor: not-allowed;
   opacity: 0.5;
   transform: none;
+  pointer-events: none;
 }
 
 @media (max-width: 780px) {

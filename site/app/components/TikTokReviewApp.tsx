@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState, type ChangeEvent } from "react";
 
-const DEFAULT_TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY || "sbawmp8ejor8xbhaf1";
+const DEFAULT_TIKTOK_CLIENT_KEY = process.env.NEXT_PUBLIC_TIKTOK_CLIENT_KEY || "awrnl023cyzodxg8";
 const TIKTOK_REDIRECT_URI = "https://adoptan.ai/web/callback/";
 const SIGNED_IN_KEY = "adoptan.workspace.signed_in";
 const TIKTOK_CONNECTED_KEY = "adoptan.workspace.tiktok_connected";
