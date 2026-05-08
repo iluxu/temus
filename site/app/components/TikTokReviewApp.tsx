@@ -11,6 +11,9 @@ const TIKTOK_CLIENT_KEY_STORAGE = "adoptan.workspace.tiktok_client_key";
 const TIKTOK_CODE_VERIFIER_STORAGE = "adoptan.workspace.tiktok_code_verifier";
 const TIKTOK_STATE_STORAGE = "adoptan.workspace.tiktok_state";
 const TIKTOK_REVIEW_API_BASE = "https://api.adoptan.ai/tiktok-review";
+const BRANDED_CONTENT_PRIVATE_PROMPT = "Branded content visibility cannot be set to private.";
+const COMMERCIAL_SELECTION_PROMPT =
+  "You need to indicate if your content promotes yourself, a third party, or both.";
 
 const TIKTOK_SCOPES = [
   "user.info.basic",
@@ -131,6 +134,9 @@ export default function TikTokReviewApp() {
   const [allowComments, setAllowComments] = useState(false);
   const [allowDuet, setAllowDuet] = useState(false);
   const [allowStitch, setAllowStitch] = useState(false);
+  const [commercialDisclosure, setCommercialDisclosure] = useState(false);
+  const [brandOrganic, setBrandOrganic] = useState(false);
+  const [brandContent, setBrandContent] = useState(false);
   const [consent, setConsent] = useState(false);
   const [activeAction, setActiveAction] = useState<"draft" | "direct" | "">("");
   const [draftResult, setDraftResult] = useState<PublishResult | null>(null);
@@ -232,10 +238,10 @@ export default function TikTokReviewApp() {
               }))
             : []
         );
-        setAllowComments(!creatorInfoPayload.comment_disabled);
-        setAllowDuet(!creatorInfoPayload.duet_disabled);
-        setAllowStitch(!creatorInfoPayload.stitch_disabled);
-        setPrivacy(privacyOptions.includes("SELF_ONLY") ? "SELF_ONLY" : privacyOptions[0] || "");
+        setAllowComments(false);
+        setAllowDuet(false);
+        setAllowStitch(false);
+        setPrivacy("");
         setProfileLoaded(true);
       } catch (error) {
         if (!cancelled) {
@@ -275,7 +281,27 @@ export default function TikTokReviewApp() {
     return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
   }
 
-  const canSubmit = Boolean(connected && selectedVideo && privacy && consent && !activeAction);
+  const commercialSelectionMissing = commercialDisclosure && !brandOrganic && !brandContent;
+  const brandedContentPrivateConflict = commercialDisclosure && brandContent && privacy === "SELF_ONLY";
+  const consentText =
+    commercialDisclosure && brandContent
+      ? "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation."
+      : "By posting, you agree to TikTok's Music Usage Confirmation.";
+  const commercialLabelText = !commercialDisclosure
+    ? ""
+    : brandContent
+      ? "Your photo/video will be labeled as 'Paid partnership'"
+      : brandOrganic
+        ? "Your photo/video will be labeled as 'Promotional content'"
+        : "";
+  const complianceIssues = [
+    !profileLoaded ? "Load creator_info before rendering publish controls." : "",
+    !privacy ? "Select a privacy status manually from the creator_info dropdown." : "",
+    commercialSelectionMissing ? COMMERCIAL_SELECTION_PROMPT : "",
+    brandedContentPrivateConflict ? BRANDED_CONTENT_PRIVATE_PROMPT : "",
+    !consent ? "Confirm TikTok's required posting declaration before publishing." : ""
+  ].filter(Boolean);
+  const canSubmit = Boolean(connected && profileLoaded && selectedVideo && privacy && consent && !activeAction && complianceIssues.length === 0);
   const events = [
     connected ? "oauth.connected" : null,
     profileLoaded ? "profile.loaded / user.info.basic + user.info.profile + user.info.stats" : null,
@@ -328,6 +354,21 @@ export default function TikTokReviewApp() {
     setPublishError("");
   }
 
+  function handleCommercialDisclosureChange(checked: boolean) {
+    setCommercialDisclosure(checked);
+    if (!checked) {
+      setBrandOrganic(false);
+      setBrandContent(false);
+    }
+  }
+
+  function handleBrandContentChange(checked: boolean) {
+    setBrandContent(checked);
+    if (checked && privacy === "SELF_ONLY") {
+      setPrivacy("");
+    }
+  }
+
   async function sendVideoToTikTok(mode: "draft" | "direct") {
     if (!selectedVideo || !canSubmit) {
       return;
@@ -348,7 +389,9 @@ export default function TikTokReviewApp() {
         privacy_level: privacy,
         disable_comment: String(!allowComments),
         disable_duet: String(!allowDuet),
-        disable_stitch: String(!allowStitch)
+        disable_stitch: String(!allowStitch),
+        brand_organic_toggle: String(commercialDisclosure && brandOrganic),
+        brand_content_toggle: String(commercialDisclosure && brandContent)
       });
       const response = await fetch(`${TIKTOK_REVIEW_API_BASE}/publish?${params.toString()}`, {
         method: "POST",
@@ -386,6 +429,9 @@ export default function TikTokReviewApp() {
     setAllowComments(false);
     setAllowDuet(false);
     setAllowStitch(false);
+    setCommercialDisclosure(false);
+    setBrandOrganic(false);
+    setBrandContent(false);
   }
 
   return (
@@ -605,43 +651,125 @@ export default function TikTokReviewApp() {
                     <label className="app-demo-label">
                       Privacy from creator_info
                       <select value={privacy} onChange={(event) => setPrivacy(event.target.value)}>
-                        <option value="">Select privacy</option>
+                        <option value="">Select privacy manually</option>
                         {creatorInfo.privacyOptions.map((option) => (
-                          <option key={option} value={option}>
+                          <option
+                            disabled={commercialDisclosure && brandContent && option === "SELF_ONLY"}
+                            key={option}
+                            title={
+                              commercialDisclosure && brandContent && option === "SELF_ONLY"
+                                ? BRANDED_CONTENT_PRIVATE_PROMPT
+                                : undefined
+                            }
+                            value={option}
+                          >
                             {option}
                           </option>
                         ))}
                       </select>
+                      <span className="workspace-note">
+                        Options are rendered from TikTok creator_info. No privacy value is selected by default.
+                      </span>
                     </label>
 
-                    <div className="app-demo-checks">
-                      <label>
+                    <div className="app-demo-policy-block">
+                      <div>
+                        <p className="app-demo-setting-title">Interaction Ability</p>
+                        <p className="workspace-note">
+                          Allow Comment, Duet, and Stitch are off by default. The user must turn them on manually.
+                        </p>
+                      </div>
+                      <div className="app-demo-checks">
+                        <label className={creatorInfo.commentDisabled ? "is-disabled" : ""}>
+                          <input
+                            checked={allowComments}
+                            disabled={creatorInfo.commentDisabled}
+                            onChange={(event) => setAllowComments(event.target.checked)}
+                            type="checkbox"
+                          />
+                          <span>
+                            Allow comments
+                            <small>{creatorInfo.commentDisabled ? "Disabled by TikTok creator_info" : "Manual opt-in"}</small>
+                          </span>
+                        </label>
+                        <label className={creatorInfo.duetDisabled ? "is-disabled" : ""}>
+                          <input
+                            checked={allowDuet}
+                            disabled={creatorInfo.duetDisabled}
+                            onChange={(event) => setAllowDuet(event.target.checked)}
+                            type="checkbox"
+                          />
+                          <span>
+                            Allow duet
+                            <small>{creatorInfo.duetDisabled ? "Disabled by TikTok creator_info" : "Manual opt-in"}</small>
+                          </span>
+                        </label>
+                        <label className={creatorInfo.stitchDisabled ? "is-disabled" : ""}>
+                          <input
+                            checked={allowStitch}
+                            disabled={creatorInfo.stitchDisabled}
+                            onChange={(event) => setAllowStitch(event.target.checked)}
+                            type="checkbox"
+                          />
+                          <span>
+                            Allow stitch
+                            <small>{creatorInfo.stitchDisabled ? "Disabled by TikTok creator_info" : "Manual opt-in"}</small>
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="app-demo-policy-block">
+                      <label className="app-demo-consent">
                         <input
-                          checked={allowComments}
-                          disabled={creatorInfo.commentDisabled}
-                          onChange={(event) => setAllowComments(event.target.checked)}
+                          checked={commercialDisclosure}
+                          onChange={(event) => handleCommercialDisclosureChange(event.target.checked)}
                           type="checkbox"
                         />
-                        Allow comments
+                        <span>
+                          Content Disclosure Setting
+                          <small>
+                            Off by default. Turn on only if this content promotes yourself, a brand, product, or service.
+                          </small>
+                        </span>
                       </label>
-                      <label>
-                        <input
-                          checked={allowDuet}
-                          disabled={creatorInfo.duetDisabled}
-                          onChange={(event) => setAllowDuet(event.target.checked)}
-                          type="checkbox"
-                        />
-                        Allow duet
-                      </label>
-                      <label>
-                        <input
-                          checked={allowStitch}
-                          disabled={creatorInfo.stitchDisabled}
-                          onChange={(event) => setAllowStitch(event.target.checked)}
-                          type="checkbox"
-                        />
-                        Allow stitch
-                      </label>
+
+                      {commercialDisclosure ? (
+                        <>
+                          <div className="app-demo-checks two">
+                            <label>
+                              <input
+                                checked={brandOrganic}
+                                onChange={(event) => setBrandOrganic(event.target.checked)}
+                                type="checkbox"
+                              />
+                              <span>
+                                Your brand
+                                <small>You are promoting yourself or your own business.</small>
+                              </span>
+                            </label>
+                            <label title={privacy === "SELF_ONLY" ? BRANDED_CONTENT_PRIVATE_PROMPT : undefined}>
+                              <input
+                                checked={brandContent}
+                                onChange={(event) => handleBrandContentChange(event.target.checked)}
+                                type="checkbox"
+                              />
+                              <span>
+                                Branded content
+                                <small>You are promoting another brand or third party.</small>
+                              </span>
+                            </label>
+                          </div>
+                          {commercialLabelText ? (
+                            <p className="workspace-note success">{commercialLabelText}</p>
+                          ) : (
+                            <p className="workspace-note error">{COMMERCIAL_SELECTION_PROMPT}</p>
+                          )}
+                          {brandContent ? (
+                            <p className="workspace-note">Private visibility is disabled for branded content.</p>
+                          ) : null}
+                        </>
+                      ) : null}
                     </div>
 
                     <label className="app-demo-consent">
@@ -650,9 +778,19 @@ export default function TikTokReviewApp() {
                         onChange={(event) => setConsent(event.target.checked)}
                         type="checkbox"
                       />
-                      I confirm the selected content, caption, visibility, interaction settings, and
-                      TikTok music usage requirements before upload.
+                      <span>{consentText}</span>
                     </label>
+
+                    {complianceIssues.length > 0 ? (
+                      <div className="workspace-policy-errors">
+                        <strong>Publishing is disabled until these TikTok UX requirements are complete:</strong>
+                        <ul>
+                          {complianceIssues.map((issue) => (
+                            <li key={issue}>{issue}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : null}
 
                     {publishError ? <p className="workspace-note error">{publishError}</p> : null}
 

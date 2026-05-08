@@ -1238,6 +1238,11 @@ a {
   font-weight: 700;
 }
 
+.workspace-note.success {
+  color: hsl(152 69% 28%);
+  font-weight: 700;
+}
+
 .workspace-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1744,6 +1749,10 @@ a {
   margin: 16px 0;
 }
 
+.app-demo-checks.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .app-demo-checks label,
 .app-demo-consent {
   display: flex;
@@ -1757,8 +1766,66 @@ a {
   font-size: 0.92rem;
 }
 
+.app-demo-checks label.is-disabled {
+  color: hsl(var(--muted-foreground));
+  background: hsl(var(--muted));
+}
+
+.app-demo-checks label span,
+.app-demo-consent span {
+  display: grid;
+  gap: 3px;
+}
+
+.app-demo-checks small,
+.app-demo-consent small {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
 .app-demo-consent {
   margin-bottom: 16px;
+}
+
+.app-demo-policy-block {
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  padding: 16px;
+  background: hsl(var(--background));
+}
+
+.app-demo-policy-block + .app-demo-policy-block {
+  margin-top: 14px;
+}
+
+.app-demo-setting-title {
+  color: hsl(var(--foreground));
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.workspace-policy-errors {
+  border: 1px solid hsl(0 72% 82%);
+  border-radius: 16px;
+  background: hsl(0 86% 97%);
+  color: #991b1b;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.workspace-policy-errors strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.workspace-policy-errors ul {
+  margin-left: 18px;
+}
+
+.workspace-policy-errors li + li {
+  margin-top: 4px;
 }
 
 .workspace-empty-state {
