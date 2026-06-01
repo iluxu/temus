@@ -1,0 +1,1717 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Go/No-Go TDAH</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f4;
+      --panel: #ffffff;
+      --ink: #17211d;
+      --muted: #5f6b66;
+      --line: #dce3dd;
+      --soft: #edf2ef;
+      --primary: #0d6b65;
+      --primary-ink: #ffffff;
+      --accent: #b45228;
+      --accent-soft: #f9e8df;
+      --blue: #245e9c;
+      --blue-soft: #e4eef9;
+      --ok: #176b3a;
+      --warn: #9a5a00;
+      --bad: #9f2f24;
+      --shadow: 0 16px 36px rgba(27, 39, 34, 0.08);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(246, 247, 244, 0.95)),
+        radial-gradient(circle at top left, rgba(13, 107, 101, 0.12), transparent 34rem),
+        var(--bg);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 16px 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 22px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      color: var(--primary-ink);
+      background: var(--primary);
+      box-shadow: var(--shadow);
+      flex: 0 0 auto;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: clamp(1.35rem, 2.5vw, 2rem);
+      letter-spacing: 0;
+      line-height: 1.08;
+    }
+
+    .brand p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.72);
+      color: var(--muted);
+      font-size: 0.88rem;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel-header {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-header h2,
+    .panel-header h3 {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: 0;
+    }
+
+    .panel-header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .panel-body {
+      padding: 18px;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field.full {
+      grid-column: 1 / -1;
+    }
+
+    label,
+    .label {
+      color: #31403b;
+      font-size: 0.82rem;
+      font-weight: 650;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      padding: 9px 10px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(13, 107, 101, 0.14);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .segmented button {
+      min-height: 34px;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 650;
+      font-size: 0.86rem;
+    }
+
+    .segmented button.active {
+      background: var(--panel);
+      color: var(--primary);
+      box-shadow: 0 3px 10px rgba(23, 33, 29, 0.08);
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 7px;
+      background: var(--soft);
+      color: var(--ink);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      color: var(--primary-ink);
+    }
+
+    .btn.accent {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid var(--line);
+    }
+
+    .btn svg {
+      width: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .notes {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .note {
+      padding: 12px;
+      border-radius: 8px;
+      background: var(--blue-soft);
+      color: #23415d;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .note.warn {
+      background: var(--accent-soft);
+      color: #663114;
+    }
+
+    .stage {
+      overflow: hidden;
+    }
+
+    .task-shell {
+      display: grid;
+      grid-template-rows: auto minmax(420px, 64vh) auto;
+      min-height: 620px;
+    }
+
+    .task-status {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .status-item {
+      min-width: 0;
+      background: #fbfcfb;
+      padding: 12px 14px;
+    }
+
+    .status-label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .status-value {
+      display: block;
+      margin-top: 4px;
+      font-size: 1rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .task-area {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 420px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0.92)),
+        repeating-linear-gradient(90deg, rgba(23, 33, 29, 0.025) 0, rgba(23, 33, 29, 0.025) 1px, transparent 1px, transparent 72px);
+      outline: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .task-area:focus-visible {
+      box-shadow: inset 0 0 0 3px rgba(13, 107, 101, 0.35);
+    }
+
+    .ready {
+      width: min(680px, calc(100% - 36px));
+      text-align: center;
+    }
+
+    .ready h2 {
+      margin: 0;
+      font-size: clamp(1.8rem, 5vw, 3.2rem);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .ready p {
+      margin: 14px auto 0;
+      color: var(--muted);
+      max-width: 56ch;
+      line-height: 1.55;
+    }
+
+    .rule-strip {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 22px auto 0;
+      max-width: 600px;
+    }
+
+    .rule-card {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      min-height: 118px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .rule-card strong {
+      font-size: 0.95rem;
+    }
+
+    .mini-stimulus {
+      display: grid;
+      place-items: center;
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--primary);
+      font-size: 2rem;
+      font-weight: 900;
+    }
+
+    .mini-stimulus.no-go {
+      color: var(--accent);
+    }
+
+    .stimulus {
+      display: grid;
+      place-items: center;
+      width: min(220px, 42vw);
+      height: min(220px, 42vw);
+      min-width: 126px;
+      min-height: 126px;
+      transform: scale(1);
+      transition: transform 80ms ease, opacity 120ms ease;
+    }
+
+    .stimulus.hidden {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+
+    .letter {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      border-radius: 8px;
+      border: 5px solid currentColor;
+      background: #fff;
+      color: var(--blue);
+      font-size: clamp(4.5rem, 16vw, 9rem);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .letter.no-go {
+      color: var(--accent);
+    }
+
+    .shape {
+      width: 82%;
+      height: 82%;
+      background: var(--blue);
+      border-radius: 50%;
+      box-shadow: inset 0 -14px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .shape.no-go {
+      background: var(--accent);
+      border-radius: 13%;
+      clip-path: polygon(50% 0, 92% 25%, 92% 75%, 50% 100%, 8% 75%, 8% 25%);
+    }
+
+    .fixation {
+      font-size: clamp(3rem, 10vw, 6rem);
+      color: #8c9994;
+      font-weight: 350;
+    }
+
+    .feedback {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      min-width: min(420px, calc(100% - 36px));
+      padding: 10px 14px;
+      border-radius: 8px;
+      background: rgba(23, 33, 29, 0.88);
+      color: #fff;
+      text-align: center;
+      font-weight: 750;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+    }
+
+    .feedback.visible {
+      opacity: 1;
+    }
+
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-top: 1px solid var(--line);
+      background: #fbfcfb;
+    }
+
+    .progress {
+      flex: 1 1 auto;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--soft);
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--blue));
+      transition: width 180ms ease;
+    }
+
+    .results {
+      display: none;
+      margin-top: 18px;
+    }
+
+    .results.visible {
+      display: block;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      min-height: 104px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 750;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 8px;
+      font-size: clamp(1.4rem, 3vw, 2.1rem);
+      line-height: 1;
+    }
+
+    .metric small {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .interpretation {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .flag {
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #fff;
+      line-height: 1.45;
+    }
+
+    .flag.ok {
+      border-color: rgba(23, 107, 58, 0.28);
+      background: rgba(23, 107, 58, 0.08);
+    }
+
+    .flag.warn {
+      border-color: rgba(154, 90, 0, 0.28);
+      background: rgba(154, 90, 0, 0.08);
+    }
+
+    .flag.bad {
+      border-color: rgba(159, 47, 36, 0.28);
+      background: rgba(159, 47, 36, 0.08);
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 0.88rem;
+    }
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    th:first-child,
+    td:first-child {
+      text-align: left;
+    }
+
+    th {
+      background: #f7faf8;
+      color: #34443e;
+      font-size: 0.76rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .screen-only {
+      display: initial;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .brand,
+      .pill {
+        width: 100%;
+      }
+
+      .pill {
+        display: block;
+        border-radius: 8px;
+        line-height: 1.35;
+        overflow-wrap: anywhere;
+        white-space: normal;
+      }
+
+      .brand p {
+        max-width: 32ch;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .task-shell {
+        min-height: 560px;
+        grid-template-rows: auto minmax(360px, 58vh) auto;
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 14px 10px 36px;
+      }
+
+      .field-grid,
+      .rule-strip,
+      .task-status,
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .task-footer {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    @media print {
+      body {
+        background: #fff;
+      }
+
+      .app {
+        width: 100%;
+        padding: 0;
+      }
+
+      .topbar,
+      .config,
+      .stage,
+      .screen-only {
+        display: none !important;
+      }
+
+      .layout {
+        display: block;
+      }
+
+      .results {
+        display: block !important;
+        box-shadow: none;
+        border: 0;
+      }
+
+      .panel-header,
+      .panel-body {
+        padding: 12px 0;
+      }
+
+      .metrics-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .metric,
+      .flag,
+      .table-wrap {
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 18h6"></path>
+            <path d="M10 22h4"></path>
+            <path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2Z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1>Go/No-Go TDAH</h1>
+          <p>Tâche informatisée d'inhibition de réponse et d'attention soutenue.</p>
+        </div>
+      </div>
+      <div class="pill">Usage clinique encadré - pas un diagnostic autonome</div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel config">
+        <div class="panel-header">
+          <h2>Paramètres de passation</h2>
+          <p>Le participant répond aux stimuli Go et inhibe sa réponse aux stimuli No-Go.</p>
+        </div>
+        <div class="panel-body">
+          <div class="field-grid">
+            <div class="field full">
+              <label for="participant">Identifiant patient</label>
+              <input id="participant" autocomplete="off" placeholder="Ex. P-2026-014">
+            </div>
+            <div class="field">
+              <label for="age">Age</label>
+              <input id="age" type="number" min="4" max="99" inputmode="numeric" placeholder="Age">
+            </div>
+            <div class="field">
+              <label for="examiner">Examinateur</label>
+              <input id="examiner" autocomplete="off" placeholder="Initiales">
+            </div>
+            <div class="field full">
+              <span class="label">Type de stimuli</span>
+              <div class="segmented" role="group" aria-label="Type de stimuli">
+                <button id="modeLetters" class="active" type="button">Lettres</button>
+                <button id="modeShapes" type="button">Formes</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="trials">Essais test</label>
+              <select id="trials">
+                <option value="60">60 court</option>
+                <option value="120" selected>120 standard</option>
+                <option value="180">180 long</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="nogoRatio">No-Go</label>
+              <select id="nogoRatio">
+                <option value="0.20" selected>20 %</option>
+                <option value="0.25">25 %</option>
+                <option value="0.30">30 %</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="stimMs">Affichage stimulus</label>
+              <select id="stimMs">
+                <option value="350">350 ms</option>
+                <option value="500" selected>500 ms</option>
+                <option value="650">650 ms</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="isiMs">Intervalle</label>
+              <select id="isiMs">
+                <option value="800">800-1200 ms</option>
+                <option value="1000" selected>1000-1500 ms</option>
+                <option value="1300">1300-1900 ms</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="practiceBtn" class="btn primary" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+              </svg>
+              Entraînement
+            </button>
+            <button id="testBtn" class="btn accent" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 19.5V4.5"></path>
+                <path d="M4 5h13l-1.5 4L17 13H4"></path>
+              </svg>
+              Démarrer test
+            </button>
+            <button id="fullscreenBtn" class="btn ghost" type="button">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 3H5a2 2 0 0 0-2 2v3"></path>
+                <path d="M16 3h3a2 2 0 0 1 2 2v3"></path>
+                <path d="M8 21H5a2 2 0 0 1-2-2v-3"></path>
+                <path d="M16 21h3a2 2 0 0 0 2-2v-3"></path>
+              </svg>
+              Plein écran
+            </button>
+          </div>
+
+          <div class="notes">
+            <div class="note">
+              Réponse: barre espace, clic souris ou appui tactile. L'entraînement donne un feedback; le test n'en donne pas.
+            </div>
+            <div class="note warn">
+              Les scores de commission, omission, temps de réaction et variabilité doivent être interprétés avec entretien clinique, anamnèse, échelles standardisées et normes adaptées.
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <section>
+        <div class="panel stage">
+          <div class="task-shell">
+            <div class="task-status">
+              <div class="status-item">
+                <span class="status-label">Phase</span>
+                <span id="phaseStatus" class="status-value">Prêt</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Essai</span>
+                <span id="trialStatus" class="status-value">0/0</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Consigne</span>
+                <span id="ruleStatus" class="status-value">Go sauf X</span>
+              </div>
+              <div class="status-item">
+                <span class="status-label">Chrono</span>
+                <span id="timeStatus" class="status-value">-</span>
+              </div>
+            </div>
+
+            <div id="taskArea" class="task-area" tabindex="0" aria-live="polite">
+              <div id="readyScreen" class="ready">
+                <h2>Répondre vite, inhiber quand il faut</h2>
+                <p id="instructionText">Appuyez sur espace pour chaque lettre sauf X. Quand X apparaît, ne répondez pas.</p>
+                <div class="rule-strip">
+                  <div class="rule-card">
+                    <div id="goExample" class="mini-stimulus">A</div>
+                    <strong>Go: répondre</strong>
+                  </div>
+                  <div class="rule-card">
+                    <div id="nogoExample" class="mini-stimulus no-go">X</div>
+                    <strong>No-Go: ne pas répondre</strong>
+                  </div>
+                </div>
+              </div>
+              <div id="stimulus" class="stimulus hidden" aria-hidden="true"></div>
+              <div id="feedback" class="feedback"></div>
+            </div>
+
+            <div class="task-footer">
+              <div class="progress" aria-label="Progression"><span id="progressBar"></span></div>
+              <button id="stopBtn" class="btn ghost" type="button" disabled>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="6" y="6" width="12" height="12"></rect>
+                </svg>
+                Stop
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <section id="results" class="panel results" aria-live="polite">
+          <div class="panel-header">
+            <h3>Résultats</h3>
+            <p id="summaryLine">Aucune passation terminée.</p>
+          </div>
+          <div class="panel-body">
+            <div id="metricsGrid" class="metrics-grid"></div>
+            <div id="interpretation" class="interpretation"></div>
+            <div class="actions screen-only">
+              <button id="downloadCsvBtn" class="btn primary" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <path d="M7 10l5 5 5-5"></path>
+                  <path d="M12 15V3"></path>
+                </svg>
+                CSV essais
+              </button>
+              <button id="downloadJsonBtn" class="btn ghost" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <path d="M14 2v6h6"></path>
+                  <path d="M10 13l-2 2 2 2"></path>
+                  <path d="M14 17l2-2-2-2"></path>
+                </svg>
+                JSON complet
+              </button>
+              <button id="printBtn" class="btn ghost" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M6 9V2h12v7"></path>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                  <path d="M6 14h12v8H6z"></path>
+                </svg>
+                Imprimer
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Bloc</th>
+                    <th>Go</th>
+                    <th>No-Go</th>
+                    <th>Omissions</th>
+                    <th>Commissions</th>
+                    <th>RT moyen</th>
+                    <th>Variabilité RT</th>
+                  </tr>
+                </thead>
+                <tbody id="blocksTable"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    const $ = (selector) => document.querySelector(selector);
+
+    const els = {
+      participant: $("#participant"),
+      age: $("#age"),
+      examiner: $("#examiner"),
+      trials: $("#trials"),
+      nogoRatio: $("#nogoRatio"),
+      stimMs: $("#stimMs"),
+      isiMs: $("#isiMs"),
+      modeLetters: $("#modeLetters"),
+      modeShapes: $("#modeShapes"),
+      practiceBtn: $("#practiceBtn"),
+      testBtn: $("#testBtn"),
+      fullscreenBtn: $("#fullscreenBtn"),
+      stopBtn: $("#stopBtn"),
+      taskArea: $("#taskArea"),
+      readyScreen: $("#readyScreen"),
+      stimulus: $("#stimulus"),
+      feedback: $("#feedback"),
+      phaseStatus: $("#phaseStatus"),
+      trialStatus: $("#trialStatus"),
+      ruleStatus: $("#ruleStatus"),
+      timeStatus: $("#timeStatus"),
+      progressBar: $("#progressBar"),
+      instructionText: $("#instructionText"),
+      goExample: $("#goExample"),
+      nogoExample: $("#nogoExample"),
+      results: $("#results"),
+      summaryLine: $("#summaryLine"),
+      metricsGrid: $("#metricsGrid"),
+      interpretation: $("#interpretation"),
+      blocksTable: $("#blocksTable"),
+      downloadCsvBtn: $("#downloadCsvBtn"),
+      downloadJsonBtn: $("#downloadJsonBtn"),
+      printBtn: $("#printBtn")
+    };
+
+    const letters = ["A", "E", "H", "K", "M", "N", "O", "R", "S", "T", "V", "Z"];
+    const state = {
+      mode: "letters",
+      running: false,
+      timers: [],
+      trials: [],
+      currentTrial: null,
+      currentIndex: -1,
+      startedAt: 0,
+      elapsedTimer: null,
+      phase: "Prêt",
+      lastResult: null,
+      blurEvents: 0
+    };
+
+    function setMode(mode) {
+      state.mode = mode;
+      els.modeLetters.classList.toggle("active", mode === "letters");
+      els.modeShapes.classList.toggle("active", mode === "shapes");
+      if (mode === "letters") {
+        els.instructionText.textContent = "Appuyez sur espace pour chaque lettre sauf X. Quand X apparaît, ne répondez pas.";
+        els.goExample.className = "mini-stimulus";
+        els.nogoExample.className = "mini-stimulus no-go";
+        els.goExample.textContent = "A";
+        els.nogoExample.textContent = "X";
+        els.ruleStatus.textContent = "Go sauf X";
+      } else {
+        els.instructionText.textContent = "Appuyez sur espace pour le cercle bleu. Quand l'hexagone orange apparaît, ne répondez pas.";
+        els.goExample.className = "mini-stimulus";
+        els.nogoExample.className = "mini-stimulus no-go";
+        els.goExample.innerHTML = '<span class="shape" style="width:34px;height:34px"></span>';
+        els.nogoExample.innerHTML = '<span class="shape no-go" style="width:38px;height:38px"></span>';
+        els.ruleStatus.textContent = "Cercle = Go";
+      }
+    }
+
+    function getSettings(kind) {
+      const totalTrials = kind === "practice" ? 16 : Number(els.trials.value);
+      const nogoRatio = Number(els.nogoRatio.value);
+      const stimMs = Number(els.stimMs.value);
+      const isiBase = Number(els.isiMs.value);
+      return {
+        kind,
+        mode: state.mode,
+        totalTrials,
+        nogoRatio: kind === "practice" ? 0.25 : nogoRatio,
+        stimMs,
+        isiMin: isiBase,
+        isiMax: Math.round(isiBase * 1.5),
+        responseFloorMs: 150,
+        createdAt: new Date().toISOString(),
+        participant: els.participant.value.trim(),
+        age: els.age.value.trim(),
+        examiner: els.examiner.value.trim()
+      };
+    }
+
+    function makeTrials(settings) {
+      const noGoCount = Math.max(1, Math.round(settings.totalTrials * settings.nogoRatio));
+      const goCount = settings.totalTrials - noGoCount;
+      const base = [];
+
+      for (let i = 0; i < goCount; i += 1) {
+        base.push(makeTrial(false, settings.mode));
+      }
+      for (let i = 0; i < noGoCount; i += 1) {
+        base.push(makeTrial(true, settings.mode));
+      }
+
+      let shuffled = shuffle(base);
+      shuffled = preventLongRuns(shuffled, settings.mode);
+      return shuffled.map((trial, index) => ({
+        ...trial,
+        index: index + 1,
+        isiMs: randomInt(settings.isiMin, settings.isiMax),
+        response: null,
+        rtMs: null,
+        responded: false,
+        correct: null,
+        errorType: "",
+        onset: null,
+        offset: null
+      }));
+    }
+
+    function makeTrial(isNoGo, mode) {
+      if (mode === "letters") {
+        return {
+          isNoGo,
+          stimulus: isNoGo ? "X" : letters[randomInt(0, letters.length - 1)]
+        };
+      }
+
+      return {
+        isNoGo,
+        stimulus: isNoGo ? "HEXAGON" : "CIRCLE"
+      };
+    }
+
+    function preventLongRuns(trials, mode) {
+      const output = [...trials];
+      for (let i = 2; i < output.length; i += 1) {
+        const run = output[i].isNoGo === output[i - 1].isNoGo && output[i].isNoGo === output[i - 2].isNoGo;
+        if (!run) continue;
+        const swapIndex = output.findIndex((trial, idx) => idx > i && trial.isNoGo !== output[i].isNoGo);
+        if (swapIndex > -1) {
+          [output[i], output[swapIndex]] = [output[swapIndex], output[i]];
+        }
+      }
+
+      return output.map((trial) => ({
+        ...trial,
+        stimulus: trial.isNoGo ? (mode === "letters" ? "X" : "HEXAGON") : trial.stimulus
+      }));
+    }
+
+    function shuffle(items) {
+      const output = [...items];
+      for (let i = output.length - 1; i > 0; i -= 1) {
+        const j = randomInt(0, i);
+        [output[i], output[j]] = [output[j], output[i]];
+      }
+      return output;
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function startRun(kind) {
+      if (state.running) return;
+      const settings = getSettings(kind);
+      state.running = true;
+      state.phase = kind === "practice" ? "Entraînement" : "Test";
+      state.trials = makeTrials(settings);
+      state.currentTrial = null;
+      state.currentIndex = -1;
+      state.startedAt = performance.now();
+      state.blurEvents = 0;
+      state.lastResult = null;
+      state.settings = settings;
+
+      setControls(false);
+      els.taskArea.focus();
+      els.results.classList.remove("visible");
+      els.phaseStatus.textContent = state.phase;
+      els.trialStatus.textContent = `0/${state.trials.length}`;
+      els.progressBar.style.width = "0%";
+      startElapsedTimer();
+      countdown(3, () => nextTrial());
+    }
+
+    function countdown(seconds, done) {
+      showReady(`Départ dans ${seconds}`, "Gardez les doigts prêts. Répondez uniquement aux stimuli Go.");
+      if (seconds <= 0) {
+        done();
+        return;
+      }
+      const timer = setTimeout(() => countdown(seconds - 1, done), 850);
+      state.timers.push(timer);
+    }
+
+    function nextTrial() {
+      if (!state.running) return;
+
+      if (state.currentTrial) {
+        finalizeTrial(state.currentTrial);
+      }
+
+      state.currentIndex += 1;
+      if (state.currentIndex >= state.trials.length) {
+        finishRun();
+        return;
+      }
+
+      const trial = state.trials[state.currentIndex];
+      state.currentTrial = trial;
+      els.trialStatus.textContent = `${trial.index}/${state.trials.length}`;
+      els.progressBar.style.width = `${((trial.index - 1) / state.trials.length) * 100}%`;
+      showFixation();
+
+      const preTimer = setTimeout(() => {
+        if (!state.running) return;
+        showStimulus(trial);
+        trial.onset = performance.now();
+
+        const hideTimer = setTimeout(() => hideStimulus(), state.settings.stimMs);
+        const nextTimer = setTimeout(() => nextTrial(), state.settings.stimMs + trial.isiMs);
+        state.timers.push(hideTimer, nextTimer);
+      }, 260);
+      state.timers.push(preTimer);
+    }
+
+    function finalizeTrial(trial) {
+      if (trial.correct !== null) return;
+      if (trial.isNoGo) {
+        trial.correct = !trial.responded;
+        trial.errorType = trial.responded ? "commission" : "";
+      } else {
+        trial.correct = trial.responded;
+        trial.errorType = trial.responded ? "" : "omission";
+      }
+      trial.offset = performance.now();
+      if (state.settings.kind === "practice") {
+          showFeedback(trial.correct ? "Correct" : trial.errorType === "commission" ? "Il fallait inhiber" : "Réponse manquée");
+      }
+    }
+
+    function recordResponse(source) {
+      if (!state.running || !state.currentTrial || !state.currentTrial.onset) return;
+      const trial = state.currentTrial;
+      if (trial.responded) return;
+
+      const rt = Math.round(performance.now() - trial.onset);
+      trial.responded = true;
+      trial.response = source;
+      trial.rtMs = rt;
+
+      if (state.settings.kind === "practice") {
+        if (trial.isNoGo) {
+          showFeedback("No-Go: ne pas répondre");
+        } else if (rt < state.settings.responseFloorMs) {
+          showFeedback("Trop tôt");
+        } else {
+          showFeedback("OK");
+        }
+      }
+    }
+
+    function showReady(title, text) {
+      els.readyScreen.style.display = "block";
+      els.readyScreen.querySelector("h2").textContent = title;
+      els.readyScreen.querySelector("p").textContent = text;
+      els.stimulus.className = "stimulus hidden";
+      els.stimulus.innerHTML = "";
+    }
+
+    function showFixation() {
+      els.readyScreen.style.display = "none";
+      els.stimulus.className = "stimulus";
+      els.stimulus.innerHTML = '<div class="fixation">+</div>';
+    }
+
+    function showStimulus(trial) {
+      els.readyScreen.style.display = "none";
+      els.stimulus.className = "stimulus";
+      if (state.settings.mode === "letters") {
+        const className = trial.isNoGo ? "letter no-go" : "letter";
+        els.stimulus.innerHTML = `<div class="${className}">${trial.stimulus}</div>`;
+      } else {
+        const className = trial.isNoGo ? "shape no-go" : "shape";
+        els.stimulus.innerHTML = `<div class="${className}"></div>`;
+      }
+    }
+
+    function hideStimulus() {
+      els.stimulus.classList.add("hidden");
+    }
+
+    function showFeedback(message) {
+      els.feedback.textContent = message;
+      els.feedback.classList.add("visible");
+      const timer = setTimeout(() => els.feedback.classList.remove("visible"), 420);
+      state.timers.push(timer);
+    }
+
+    function finishRun() {
+      if (state.currentTrial) {
+        finalizeTrial(state.currentTrial);
+      }
+      clearTimers();
+      state.running = false;
+      stopElapsedTimer();
+      setControls(true);
+      els.phaseStatus.textContent = "Termine";
+      els.trialStatus.textContent = `${state.trials.length}/${state.trials.length}`;
+      els.progressBar.style.width = "100%";
+      showReady("Passation terminée", "Les résultats sont disponibles sous la zone de test.");
+
+      if (state.settings.kind !== "practice") {
+        state.lastResult = analyze(state.trials, state.settings, state.blurEvents);
+        renderResults(state.lastResult);
+      }
+    }
+
+    function stopRun() {
+      if (!state.running) return;
+      clearTimers();
+      state.running = false;
+      stopElapsedTimer();
+      setControls(true);
+      els.phaseStatus.textContent = "Arrete";
+      showReady("Passation arrêtée", "Relancez un entraînement ou un test quand le participant est prêt.");
+    }
+
+    function setControls(enabled) {
+      [
+        els.practiceBtn,
+        els.testBtn,
+        els.modeLetters,
+        els.modeShapes,
+        els.trials,
+        els.nogoRatio,
+        els.stimMs,
+        els.isiMs,
+        els.participant,
+        els.age,
+        els.examiner
+      ].forEach((element) => {
+        element.disabled = !enabled;
+      });
+      els.stopBtn.disabled = enabled;
+    }
+
+    function clearTimers() {
+      state.timers.forEach((timer) => clearTimeout(timer));
+      state.timers = [];
+    }
+
+    function startElapsedTimer() {
+      stopElapsedTimer();
+      state.elapsedTimer = setInterval(() => {
+        const seconds = Math.max(0, Math.round((performance.now() - state.startedAt) / 1000));
+        els.timeStatus.textContent = formatDuration(seconds);
+      }, 250);
+    }
+
+    function stopElapsedTimer() {
+      if (state.elapsedTimer) {
+        clearInterval(state.elapsedTimer);
+        state.elapsedTimer = null;
+      }
+    }
+
+    function formatDuration(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, "0");
+      const seconds = (totalSeconds % 60).toString().padStart(2, "0");
+      return `${minutes}:${seconds}`;
+    }
+
+    function analyze(trials, settings, blurEvents) {
+      const completed = trials.filter((trial) => trial.correct !== null);
+      const go = completed.filter((trial) => !trial.isNoGo);
+      const nogo = completed.filter((trial) => trial.isNoGo);
+      const hits = go.filter((trial) => trial.responded);
+      const omissions = go.filter((trial) => !trial.responded);
+      const commissions = nogo.filter((trial) => trial.responded);
+      const correctRejections = nogo.filter((trial) => !trial.responded);
+      const validRts = hits
+        .map((trial) => trial.rtMs)
+        .filter((rt) => Number.isFinite(rt) && rt >= settings.responseFloorMs);
+      const fastResponses = completed.filter((trial) => trial.responded && trial.rtMs < settings.responseFloorMs);
+      const hitRate = rate(hits.length, go.length);
+      const falseAlarmRate = rate(commissions.length, nogo.length);
+      const dPrime = calcDPrime(hits.length, go.length, commissions.length, nogo.length);
+      const meanRt = mean(validRts);
+      const sdRt = std(validRts);
+      const medianRt = median(validRts);
+      const cvRt = meanRt ? sdRt / meanRt : null;
+      const blocks = splitIntoBlocks(completed, 4).map((block, index) => summarizeBlock(block, index + 1, settings.responseFloorMs));
+
+      return {
+        settings,
+        participant: settings.participant,
+        age: settings.age,
+        examiner: settings.examiner,
+        date: new Date().toISOString(),
+        blurEvents,
+        counts: {
+          completed: completed.length,
+          go: go.length,
+          nogo: nogo.length,
+          hits: hits.length,
+          omissions: omissions.length,
+          commissions: commissions.length,
+          correctRejections: correctRejections.length,
+          fastResponses: fastResponses.length
+        },
+        rates: {
+          hitRate,
+          omissionRate: rate(omissions.length, go.length),
+          commissionRate: falseAlarmRate,
+          correctRejectionRate: rate(correctRejections.length, nogo.length)
+        },
+        rt: {
+          mean: meanRt,
+          median: medianRt,
+          sd: sdRt,
+          cv: cvRt
+        },
+        dPrime,
+        blocks,
+        trials: completed
+      };
+    }
+
+    function summarizeBlock(block, number, responseFloorMs) {
+      const go = block.filter((trial) => !trial.isNoGo);
+      const nogo = block.filter((trial) => trial.isNoGo);
+      const hits = go.filter((trial) => trial.responded);
+      const omissions = go.filter((trial) => !trial.responded);
+      const commissions = nogo.filter((trial) => trial.responded);
+      const validRts = hits
+        .map((trial) => trial.rtMs)
+        .filter((rt) => Number.isFinite(rt) && rt >= responseFloorMs);
+
+      return {
+        number,
+        go: go.length,
+        nogo: nogo.length,
+        omissions: omissions.length,
+        commissions: commissions.length,
+        meanRt: mean(validRts),
+        sdRt: std(validRts)
+      };
+    }
+
+    function splitIntoBlocks(items, count) {
+      const size = Math.ceil(items.length / count);
+      const blocks = [];
+      for (let i = 0; i < count; i += 1) {
+        blocks.push(items.slice(i * size, (i + 1) * size));
+      }
+      return blocks.filter((block) => block.length);
+    }
+
+    function rate(value, total) {
+      return total ? value / total : null;
+    }
+
+    function mean(values) {
+      if (!values.length) return null;
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function median(values) {
+      if (!values.length) return null;
+      const sorted = [...values].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+
+    function std(values) {
+      if (values.length < 2) return null;
+      const avg = mean(values);
+      const variance = values.reduce((sum, value) => sum + ((value - avg) ** 2), 0) / (values.length - 1);
+      return Math.sqrt(variance);
+    }
+
+    function calcDPrime(hits, goTotal, falseAlarms, nogoTotal) {
+      if (!goTotal || !nogoTotal) return null;
+      const hitRate = (hits + 0.5) / (goTotal + 1);
+      const faRate = (falseAlarms + 0.5) / (nogoTotal + 1);
+      return inverseNormal(hitRate) - inverseNormal(faRate);
+    }
+
+    function inverseNormal(p) {
+      const a1 = -39.6968302866538;
+      const a2 = 220.946098424521;
+      const a3 = -275.928510446969;
+      const a4 = 138.357751867269;
+      const a5 = -30.6647980661472;
+      const a6 = 2.50662827745924;
+      const b1 = -54.4760987982241;
+      const b2 = 161.585836858041;
+      const b3 = -155.698979859887;
+      const b4 = 66.8013118877197;
+      const b5 = -13.2806815528857;
+      const c1 = -0.00778489400243029;
+      const c2 = -0.322396458041136;
+      const c3 = -2.40075827716184;
+      const c4 = -2.54973253934373;
+      const c5 = 4.37466414146497;
+      const c6 = 2.93816398269878;
+      const d1 = 0.00778469570904146;
+      const d2 = 0.32246712907004;
+      const d3 = 2.445134137143;
+      const d4 = 3.75440866190742;
+      const pLow = 0.02425;
+      const pHigh = 1 - pLow;
+      let q;
+      let r;
+
+      if (p < pLow) {
+        q = Math.sqrt(-2 * Math.log(p));
+        return (((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+          ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+      }
+      if (p <= pHigh) {
+        q = p - 0.5;
+        r = q * q;
+        return (((((a1 * r + a2) * r + a3) * r + a4) * r + a5) * r + a6) * q /
+          (((((b1 * r + b2) * r + b3) * r + b4) * r + b5) * r + 1);
+      }
+      q = Math.sqrt(-2 * Math.log(1 - p));
+      return -(((((c1 * q + c2) * q + c3) * q + c4) * q + c5) * q + c6) /
+        ((((d1 * q + d2) * q + d3) * q + d4) * q + 1);
+    }
+
+    function renderResults(result) {
+      const omissionPct = pct(result.rates.omissionRate);
+      const commissionPct = pct(result.rates.commissionRate);
+      const rtMean = ms(result.rt.mean);
+      const rtSd = ms(result.rt.sd);
+      const dPrime = number(result.dPrime, 2);
+      const cv = result.rt.cv === null ? "-" : `${Math.round(result.rt.cv * 100)} %`;
+
+      els.results.classList.add("visible");
+      els.summaryLine.textContent = [
+        result.participant ? `Patient ${result.participant}` : "Patient non renseigne",
+        `${result.counts.completed} essais`,
+        `${new Date(result.date).toLocaleString("fr-FR")}`
+      ].join(" - ");
+
+      els.metricsGrid.innerHTML = [
+        metric("Omissions", omissionPct, `${result.counts.omissions}/${result.counts.go} essais Go sans réponse`),
+        metric("Commissions", commissionPct, `${result.counts.commissions}/${result.counts.nogo} essais No-Go avec réponse`),
+        metric("RT moyen", rtMean, `Mediane ${ms(result.rt.median)} - ET ${rtSd}`),
+        metric("Variabilité", cv, `d' ${dPrime}`)
+      ].join("");
+
+      els.interpretation.innerHTML = buildFlags(result).map((flag) => (
+        `<div class="flag ${flag.level}"><strong>${flag.title}</strong><br>${flag.text}</div>`
+      )).join("");
+
+      els.blocksTable.innerHTML = result.blocks.map((block) => `
+        <tr>
+          <td>Bloc ${block.number}</td>
+          <td>${block.go}</td>
+          <td>${block.nogo}</td>
+          <td>${block.omissions}</td>
+          <td>${block.commissions}</td>
+          <td>${ms(block.meanRt)}</td>
+          <td>${ms(block.sdRt)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function metric(label, value, detail) {
+      return `
+        <div class="metric">
+          <span>${label}</span>
+          <strong>${value}</strong>
+          <small>${detail}</small>
+        </div>
+      `;
+    }
+
+    function buildFlags(result) {
+      const flags = [];
+      const omission = result.rates.omissionRate ?? 0;
+      const commission = result.rates.commissionRate ?? 0;
+      const cv = result.rt.cv ?? 0;
+
+      if (commission >= 0.35) {
+        flags.push({
+          level: "bad",
+          title: "Inhibition à examiner",
+          text: "Le taux de commissions est élevé. À interpréter comme indice possible de difficulté d'inhibition, selon l'âge, la fatigue, la compréhension et les normes disponibles."
+        });
+      } else if (commission >= 0.18) {
+        flags.push({
+          level: "warn",
+          title: "Commissions moderees",
+          text: "Des réponses sur No-Go sont présentes. Examiner le profil avec les autres mesures attentionnelles et les observations comportementales."
+        });
+      }
+
+      if (omission >= 0.20) {
+        flags.push({
+          level: "bad",
+          title: "Attention soutenue à examiner",
+          text: "Le taux d'omissions est élevé. Cela peut refléter des fluctuations attentionnelles, une incompréhension, une lenteur ou un état de fatigue."
+        });
+      } else if (omission >= 0.10) {
+        flags.push({
+          level: "warn",
+          title: "Omissions moderees",
+          text: "Quelques stimuli Go n'ont pas reçu de réponse. Comparer avec les blocs et les observations pendant la passation."
+        });
+      }
+
+      if (cv >= 0.30) {
+        flags.push({
+          level: "warn",
+          title: "Variabilité réactionnelle",
+          text: "La variabilité des temps de réaction est marquée, un élément souvent pertinent dans l'analyse des fluctuations attentionnelles."
+        });
+      }
+
+      if (result.counts.fastResponses > Math.max(3, result.counts.completed * 0.05)) {
+        flags.push({
+          level: "warn",
+          title: "Réponses très rapides",
+          text: "Plusieurs réponses sont inférieures à 150 ms. Vérifier une stratégie d'appui continu, une anticipation ou une mauvaise compréhension de la consigne."
+        });
+      }
+
+      if (result.blurEvents > 0) {
+        flags.push({
+          level: "warn",
+          title: "Focus de fenêtre perdu",
+          text: `La fenêtre a perdu le focus ${result.blurEvents} fois pendant la passation. La validité technique est à discuter.`
+        });
+      }
+
+      if (!flags.length) {
+        flags.push({
+          level: "ok",
+          title: "Profil sans alerte automatique",
+          text: "Aucun seuil heuristique interne n'est dépassé. Cela ne conclut pas à l'absence ou à la présence d'un TDAH."
+        });
+      }
+
+      flags.push({
+        level: "warn",
+        title: "Interprétation clinique",
+        text: "Cet outil ne fournit pas de normes diagnostiques. Il documente une performance Go/No-Go et doit rester un complément à l'évaluation psychologique."
+      });
+      return flags;
+    }
+
+    function pct(value) {
+      return value === null ? "-" : `${Math.round(value * 100)} %`;
+    }
+
+    function ms(value) {
+      return value === null ? "-" : `${Math.round(value)} ms`;
+    }
+
+    function number(value, decimals) {
+      return value === null ? "-" : value.toFixed(decimals).replace(".", ",");
+    }
+
+    function downloadCsv() {
+      if (!state.lastResult) return;
+      const rows = [
+        ["participant", "age", "examiner", "date", "trial", "stimulus", "is_nogo", "responded", "rt_ms", "correct", "error_type", "isi_ms"]
+      ];
+      state.lastResult.trials.forEach((trial) => {
+        rows.push([
+          state.lastResult.participant,
+          state.lastResult.age,
+          state.lastResult.examiner,
+          state.lastResult.date,
+          trial.index,
+          trial.stimulus,
+          trial.isNoGo,
+          trial.responded,
+          trial.rtMs ?? "",
+          trial.correct,
+          trial.errorType,
+          trial.isiMs
+        ]);
+      });
+
+      const csv = rows.map((row) => row.map(csvCell).join(",")).join("\n");
+      downloadBlob(csv, fileBaseName("go-nogo", "csv"), "text/csv;charset=utf-8");
+    }
+
+    function csvCell(value) {
+      const text = String(value ?? "");
+      if (/[",\n]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    }
+
+    function downloadJson() {
+      if (!state.lastResult) return;
+      downloadBlob(JSON.stringify(state.lastResult, null, 2), fileBaseName("go-nogo", "json"), "application/json;charset=utf-8");
+    }
+
+    function downloadBlob(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function fileBaseName(prefix, extension) {
+      const participant = (state.lastResult?.participant || "patient").replace(/[^a-z0-9_-]+/gi, "_");
+      const date = new Date().toISOString().slice(0, 10);
+      return `${prefix}_${participant}_${date}.${extension}`;
+    }
+
+    els.modeLetters.addEventListener("click", () => setMode("letters"));
+    els.modeShapes.addEventListener("click", () => setMode("shapes"));
+    els.practiceBtn.addEventListener("click", () => startRun("practice"));
+    els.testBtn.addEventListener("click", () => startRun("test"));
+    els.stopBtn.addEventListener("click", stopRun);
+    els.fullscreenBtn.addEventListener("click", () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen?.();
+      } else {
+        document.exitFullscreen?.();
+      }
+    });
+    els.taskArea.addEventListener("pointerdown", () => recordResponse("pointer"));
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "Space") {
+        event.preventDefault();
+        recordResponse("space");
+      }
+      if (event.code === "Escape" && state.running) {
+        stopRun();
+      }
+    });
+    window.addEventListener("blur", () => {
+      if (state.running) state.blurEvents += 1;
+    });
+    els.downloadCsvBtn.addEventListener("click", downloadCsv);
+    els.downloadJsonBtn.addEventListener("click", downloadJson);
+    els.printBtn.addEventListener("click", () => window.print());
+
+    setMode("letters");
+  </script>
+</body>
+</html>
