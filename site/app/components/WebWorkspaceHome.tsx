@@ -103,6 +103,7 @@ export default function WebWorkspaceHome() {
             <a href="#capabilities">Capabilities</a>
             <a href="#controls">Controls</a>
             <Link href="/screen-share">Screen share</Link>
+            <Link href="/mini-obs">Mini OBS</Link>
             <Link href="/app">Open app</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
@@ -429,6 +430,7 @@ export default function WebWorkspaceHome() {
           </div>
           <div className="workspace-footer-links">
             <Link href="/screen-share">Screen share</Link>
+            <Link href="/mini-obs">Mini OBS</Link>
             <Link href="/privacy">Privacy Policy</Link>
             <Link href="/terms">Terms of Service</Link>
             <Link href="/web/callback">TikTok callback</Link>
