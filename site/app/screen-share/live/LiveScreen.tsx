@@ -49,7 +49,7 @@ const DEFAULT_OPTIONS: ViewerOptions = {
   audio: true,
   mirror: false,
   rotation: 0,
-  scale: 46,
+  scale: 36,
   position: "right-center",
   cornerRadius: 12,
   showOffline: false,

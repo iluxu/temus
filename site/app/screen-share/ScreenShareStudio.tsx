@@ -8,7 +8,7 @@ import styles from "./screen-share.module.css";
 const MEDIA_ROOT = "https://api.adoptan.ai/screen-media/screen/lucia";
 const PUBLISHER_SCRIPT = `${MEDIA_ROOT}/publisher.js`;
 const VIEWER_BASE = "https://adoptan.ai/screen-share/live";
-const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v4";
+const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v5";
 const TOKEN_STORAGE_KEY = "adoptan-screen-share-key-v1";
 
 type Status = "idle" | "permission" | "connecting" | "live" | "reconnecting" | "error";
@@ -137,7 +137,7 @@ const DEFAULT_SETTINGS: ScreenSettings = {
   viewerAudio: true,
   viewerMirror: false,
   viewerRotation: 0,
-  viewerScale: 46,
+  viewerScale: 36,
   viewerPosition: "right-center",
   viewerCornerRadius: 12,
   showOfflineLabel: false,
@@ -397,7 +397,11 @@ export default function ScreenShareStudio() {
         },
         onConnected: () => {
           setStatus("live");
-          setMessage("Diffusion active. Moblin reçoit l’écran via l’URL source navigateur.");
+          setMessage(
+            settings.displaySurface === "browser"
+              ? "Diffusion active. Tu peux rester sur l’onglet YouTube sélectionné."
+              : "Diffusion active. N’affiche pas Meet ou l’aperçu de ton propre partage sur l’écran capturé : cela crée une boucle."
+          );
           applySenderPreferences(publisher.pc, settings);
         }
       });
@@ -651,7 +655,9 @@ export default function ScreenShareStudio() {
                 </strong>
                 <span>
                   Le direct sera refusé si tu sélectionnes un autre type de source. Pour passer
-                  librement de Chrome à YouTube ou à une autre application, utilise Écran entier.
+                  librement entre plusieurs applications, utilise Écran entier sans afficher
+                  l’aperçu de ton propre partage. Pour YouTube uniquement, choisis Onglet navigateur
+                  afin d’éviter tout effet miroir.
                 </span>
               </div>
 
@@ -949,7 +955,7 @@ export default function ScreenShareStudio() {
                     onClick={() =>
                       setSettings((current) => ({
                         ...current,
-                        viewerScale: 46,
+                        viewerScale: 36,
                         viewerPosition: "right-center",
                         viewerCornerRadius: 12,
                         viewerBackground: "transparent",
@@ -976,7 +982,8 @@ export default function ScreenShareStudio() {
                 </div>
                 <p className={styles.layoutHelp}>
                   « Caméra + écran » laisse le fond transparent : la caméra Moblin reste visible
-                  derrière l’écran du Mac.
+                  derrière l’écran du Mac. Dans Moblin, le widget Browser doit garder une taille de
+                  scène de 100 % et être aligné à droite.
                 </p>
 
                 <RangeField
@@ -1145,7 +1152,10 @@ export default function ScreenShareStudio() {
                 </li>
                 <li>
                   <span>2</span>
-                  <p>Colle l’URL ci-dessus et saisis la largeur / hauteur recommandées.</p>
+                  <p>
+                    Colle l’URL, puis règle son <strong>Layout</strong> sur taille 100 %,
+                    alignement milieu-droite et position 0.
+                  </p>
                 </li>
                 <li>
                   <span>3</span>
