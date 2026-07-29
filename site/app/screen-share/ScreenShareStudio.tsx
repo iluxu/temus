@@ -8,7 +8,7 @@ import styles from "./screen-share.module.css";
 const MEDIA_ROOT = "https://api.adoptan.ai/screen-media/screen/lucia";
 const PUBLISHER_SCRIPT = `${MEDIA_ROOT}/publisher.js`;
 const VIEWER_BASE = "https://adoptan.ai/screen-share/live";
-const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v2";
+const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v3";
 const TOKEN_STORAGE_KEY = "adoptan-screen-share-key-v1";
 
 type Status = "idle" | "permission" | "connecting" | "live" | "reconnecting" | "error";
@@ -100,7 +100,7 @@ const DEFAULT_SETTINGS: ScreenSettings = {
   frameRate: 30,
   videoBitrate: 8000,
   videoCodec: "h264/90000",
-  strictResolution: true,
+  strictResolution: false,
   sourceFit: "contain",
   canvasBackground: "#05030a",
   contentHint: "detail",
@@ -525,8 +525,8 @@ export default function ScreenShareStudio() {
               />
 
               <Toggle
-                label="Résolution de sortie stricte"
-                description="Redimensionne réellement l’image au format choisi, même si macOS partage un écran Retina."
+                label="Cadrage exact par canvas · avancé"
+                description="Désactivé par défaut pour que le flux reste fluide lorsque le studio passe en arrière-plan."
                 checked={settings.strictResolution}
                 disabled={isBusy || isBroadcasting}
                 onChange={(checked) => updateSetting("strictResolution", checked)}
@@ -1348,6 +1348,7 @@ async function createScaledVideoTrack(sourceTrack: MediaStreamTrack, settings: S
 
   let stopped = false;
   let animationFrame = 0;
+  let videoFrame = 0;
   let lastDraw = 0;
   const interval = 1000 / settings.frameRate;
 
@@ -1357,9 +1358,17 @@ async function createScaledVideoTrack(sourceTrack: MediaStreamTrack, settings: S
       drawScaledFrame(context, sourceVideo, canvas, settings.sourceFit, settings.canvasBackground);
       lastDraw = timestamp;
     }
-    animationFrame = window.requestAnimationFrame(draw);
+    if ("requestVideoFrameCallback" in sourceVideo) {
+      videoFrame = sourceVideo.requestVideoFrameCallback(draw);
+    } else {
+      animationFrame = window.requestAnimationFrame(draw);
+    }
   };
-  animationFrame = window.requestAnimationFrame(draw);
+  if ("requestVideoFrameCallback" in sourceVideo) {
+    videoFrame = sourceVideo.requestVideoFrameCallback(draw);
+  } else {
+    animationFrame = window.requestAnimationFrame(draw);
+  }
 
   const canvasStream = canvas.captureStream(settings.frameRate);
   const track = canvasStream.getVideoTracks()[0];
@@ -1368,6 +1377,9 @@ async function createScaledVideoTrack(sourceTrack: MediaStreamTrack, settings: S
     stop: () => {
       stopped = true;
       window.cancelAnimationFrame(animationFrame);
+      if (videoFrame && "cancelVideoFrameCallback" in sourceVideo) {
+        sourceVideo.cancelVideoFrameCallback(videoFrame);
+      }
       sourceVideo.pause();
       sourceVideo.srcObject = null;
       stopStream(canvasStream);
