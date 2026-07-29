@@ -1,0 +1,53 @@
+.live {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.video {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  background: transparent;
+  transform-origin: center;
+}
+
+.offline {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 40px;
+  color: #fff;
+  text-align: center;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+  text-shadow: 0 4px 22px rgba(0, 0, 0, 0.7);
+}
+
+.offline span {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: #ff5ca8;
+  box-shadow: 0 0 0 9px rgba(255, 92, 168, 0.18), 0 0 30px rgba(255, 92, 168, 0.55);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.offline strong {
+  font-size: clamp(18px, 3vw, 42px);
+  letter-spacing: -0.03em;
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(0.72);
+    opacity: 0.55;
+  }
+}
