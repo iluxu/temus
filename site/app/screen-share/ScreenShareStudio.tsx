@@ -8,14 +8,20 @@ import styles from "./screen-share.module.css";
 const MEDIA_ROOT = "https://api.adoptan.ai/screen-media/screen/lucia";
 const PUBLISHER_SCRIPT = `${MEDIA_ROOT}/publisher.js`;
 const VIEWER_BASE = "https://adoptan.ai/screen-share/live";
-const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v3";
+const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v4";
 const TOKEN_STORAGE_KEY = "adoptan-screen-share-key-v1";
 
 type Status = "idle" | "permission" | "connecting" | "live" | "reconnecting" | "error";
 type ScaleMode = "contain" | "cover" | "stretch";
 type ContentHint = "detail" | "text" | "motion";
 type ViewerTransport = "webrtc" | "hls";
-type ViewerPosition = "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+type ViewerPosition =
+  | "center"
+  | "right-center"
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right";
 
 type ScreenSettings = {
   width: number;
@@ -131,8 +137,8 @@ const DEFAULT_SETTINGS: ScreenSettings = {
   viewerAudio: true,
   viewerMirror: false,
   viewerRotation: 0,
-  viewerScale: 70,
-  viewerPosition: "top-right",
+  viewerScale: 46,
+  viewerPosition: "right-center",
   viewerCornerRadius: 12,
   showOfflineLabel: false,
   offlineLabel: "Écran en attente…"
@@ -943,10 +949,12 @@ export default function ScreenShareStudio() {
                     onClick={() =>
                       setSettings((current) => ({
                         ...current,
-                        viewerScale: 70,
-                        viewerPosition: "top-right",
+                        viewerScale: 46,
+                        viewerPosition: "right-center",
                         viewerCornerRadius: 12,
-                        viewerBackground: "transparent"
+                        viewerBackground: "transparent",
+                        viewerMirror: false,
+                        viewerRotation: 0
                       }))
                     }
                   >
@@ -990,6 +998,7 @@ export default function ScreenShareStudio() {
                       }
                     >
                       <option value="center">Centre</option>
+                      <option value="right-center">À droite · centré</option>
                       <option value="top-left">En haut à gauche</option>
                       <option value="top-right">En haut à droite</option>
                       <option value="bottom-left">En bas à gauche</option>
@@ -1140,7 +1149,10 @@ export default function ScreenShareStudio() {
                 </li>
                 <li>
                   <span>3</span>
-                  <p>Laisse cette page ouverte sur le Mac pendant le live.</p>
+                  <p>
+                    Garde un seul widget Browser actif dans la scène, puis laisse cette page
+                    ouverte sur le Mac.
+                  </p>
                 </li>
               </ol>
             </section>

@@ -30,7 +30,13 @@ type ViewerOptions = {
   mirror: boolean;
   rotation: 0 | 90 | 180 | 270;
   scale: number;
-  position: "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  position:
+    | "center"
+    | "right-center"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   cornerRadius: number;
   showOffline: boolean;
   label: string;
@@ -43,8 +49,8 @@ const DEFAULT_OPTIONS: ViewerOptions = {
   audio: true,
   mirror: false,
   rotation: 0,
-  scale: 70,
-  position: "top-right",
+  scale: 46,
+  position: "right-center",
   cornerRadius: 12,
   showOffline: false,
   label: "Écran en attente…"
@@ -158,6 +164,7 @@ function parseViewerOptions(): ViewerOptions {
   const positionValue = query.get("position");
   const position =
     positionValue === "center" ||
+    positionValue === "right-center" ||
     positionValue === "top-left" ||
     positionValue === "top-right" ||
     positionValue === "bottom-left" ||
@@ -184,6 +191,7 @@ function calculateVideoPosition(scale: number, position: ViewerOptions["position
   const edge = Math.min(2, (100 - scale) / 2);
   const near = scale / 2 + edge;
   const far = 100 - scale / 2 - edge;
+  if (position === "right-center") return { x: far, y: 50 };
   return {
     x: position.endsWith("left") ? near : far,
     y: position.startsWith("top") ? near : far
