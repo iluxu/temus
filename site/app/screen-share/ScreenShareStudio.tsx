@@ -15,6 +15,7 @@ type Status = "idle" | "permission" | "connecting" | "live" | "reconnecting" | "
 type ScaleMode = "contain" | "cover" | "stretch";
 type ContentHint = "detail" | "text" | "motion";
 type ViewerTransport = "webrtc" | "hls";
+type ViewerPosition = "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 type ScreenSettings = {
   width: number;
@@ -49,6 +50,9 @@ type ScreenSettings = {
   viewerAudio: boolean;
   viewerMirror: boolean;
   viewerRotation: 0 | 90 | 180 | 270;
+  viewerScale: number;
+  viewerPosition: ViewerPosition;
+  viewerCornerRadius: number;
   showOfflineLabel: boolean;
   offlineLabel: string;
 };
@@ -127,6 +131,9 @@ const DEFAULT_SETTINGS: ScreenSettings = {
   viewerAudio: true,
   viewerMirror: false,
   viewerRotation: 0,
+  viewerScale: 70,
+  viewerPosition: "top-right",
+  viewerCornerRadius: 12,
   showOfflineLabel: false,
   offlineLabel: "Écran en attente…"
 };
@@ -930,7 +937,73 @@ export default function ScreenShareStudio() {
 
               <details className={styles.viewerSettings} open>
                 <summary>Personnaliser le rendu dans Moblin</summary>
+                <div className={styles.layoutPresets}>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSettings((current) => ({
+                        ...current,
+                        viewerScale: 70,
+                        viewerPosition: "top-right",
+                        viewerCornerRadius: 12,
+                        viewerBackground: "transparent"
+                      }))
+                    }
+                  >
+                    Caméra + écran
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setSettings((current) => ({
+                        ...current,
+                        viewerScale: 100,
+                        viewerPosition: "center",
+                        viewerCornerRadius: 0
+                      }))
+                    }
+                  >
+                    Écran plein
+                  </button>
+                </div>
+                <p className={styles.layoutHelp}>
+                  « Caméra + écran » laisse le fond transparent : la caméra Moblin reste visible
+                  derrière l’écran du Mac.
+                </p>
+
+                <RangeField
+                  label="Taille de l’écran dans Moblin"
+                  value={settings.viewerScale}
+                  min={25}
+                  max={100}
+                  step={1}
+                  display={`${settings.viewerScale}%`}
+                  onChange={(value) => updateSetting("viewerScale", value)}
+                />
+
                 <div className={styles.twoColumns}>
+                  <Field label="Position de l’écran">
+                    <select
+                      value={settings.viewerPosition}
+                      onChange={(event) =>
+                        updateSetting("viewerPosition", event.target.value as ViewerPosition)
+                      }
+                    >
+                      <option value="center">Centre</option>
+                      <option value="top-left">En haut à gauche</option>
+                      <option value="top-right">En haut à droite</option>
+                      <option value="bottom-left">En bas à gauche</option>
+                      <option value="bottom-right">En bas à droite</option>
+                    </select>
+                  </Field>
+                  <NumberField
+                    label="Coins arrondis"
+                    value={settings.viewerCornerRadius}
+                    min={0}
+                    max={80}
+                    suffix="px"
+                    onChange={(value) => updateSetting("viewerCornerRadius", value)}
+                  />
                   <Field label="Transport">
                     <select
                       value={settings.viewerTransport}
@@ -1261,6 +1334,9 @@ function buildViewerUrl(settings: ScreenSettings) {
   query.set("fit", settings.viewerFit);
   query.set("bg", settings.viewerBackground);
   query.set("audio", settings.viewerAudio ? "1" : "0");
+  query.set("scale", String(settings.viewerScale));
+  query.set("position", settings.viewerPosition);
+  query.set("radius", String(settings.viewerCornerRadius));
   if (settings.viewerMirror) query.set("mirror", "1");
   if (settings.viewerRotation) query.set("rotate", String(settings.viewerRotation));
   if (settings.showOfflineLabel) {

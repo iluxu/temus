@@ -29,6 +29,9 @@ type ViewerOptions = {
   audio: boolean;
   mirror: boolean;
   rotation: 0 | 90 | 180 | 270;
+  scale: number;
+  position: "center" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  cornerRadius: number;
   showOffline: boolean;
   label: string;
 };
@@ -40,6 +43,9 @@ const DEFAULT_OPTIONS: ViewerOptions = {
   audio: true,
   mirror: false,
   rotation: 0,
+  scale: 70,
+  position: "top-right",
+  cornerRadius: 12,
   showOffline: false,
   label: "Écran en attente…"
 };
@@ -98,7 +104,8 @@ export default function LiveScreen() {
   }, [options, readerReady]);
 
   const rotated = options.rotation === 90 || options.rotation === 270;
-  const transform = `translate(-50%, -50%) rotate(${options.rotation}deg) scaleX(${options.mirror ? -1 : 1})`;
+  const transform = `translate(-50%, -50%) rotate(${options.rotation}deg) scale(${options.scale / 100}) scaleX(${options.mirror ? -1 : 1})`;
+  const position = calculateVideoPosition(options.scale, options.position);
 
   return (
     <>
@@ -121,6 +128,9 @@ export default function LiveScreen() {
             objectFit: options.fit,
             width: rotated ? "100vh" : "100vw",
             height: rotated ? "100vw" : "100vh",
+            left: `${position.x}%`,
+            top: `${position.y}%`,
+            borderRadius: `${options.cornerRadius}px`,
             transform
           }}
         />
@@ -144,6 +154,16 @@ function parseViewerOptions(): ViewerOptions {
   const rotationValue = Number(query.get("rotate"));
   const rotation =
     rotationValue === 90 || rotationValue === 180 || rotationValue === 270 ? rotationValue : 0;
+  const scale = clamp(Number(query.get("scale") || DEFAULT_OPTIONS.scale), 25, 100);
+  const positionValue = query.get("position");
+  const position =
+    positionValue === "center" ||
+    positionValue === "top-left" ||
+    positionValue === "top-right" ||
+    positionValue === "bottom-left" ||
+    positionValue === "bottom-right"
+      ? positionValue
+      : DEFAULT_OPTIONS.position;
   return {
     transport,
     fit,
@@ -151,14 +171,33 @@ function parseViewerOptions(): ViewerOptions {
     audio: query.get("audio") !== "0",
     mirror: query.get("mirror") === "1",
     rotation,
+    scale,
+    position,
+    cornerRadius: clamp(Number(query.get("radius") || DEFAULT_OPTIONS.cornerRadius), 0, 80),
     showOffline: query.get("offline") === "1",
     label: (query.get("label") || DEFAULT_OPTIONS.label).slice(0, 80)
+  };
+}
+
+function calculateVideoPosition(scale: number, position: ViewerOptions["position"]) {
+  if (position === "center") return { x: 50, y: 50 };
+  const edge = Math.min(2, (100 - scale) / 2);
+  const near = scale / 2 + edge;
+  const far = 100 - scale / 2 - edge;
+  return {
+    x: position.endsWith("left") ? near : far,
+    y: position.startsWith("top") ? near : far
   };
 }
 
 function sanitizeBackground(value: string | null) {
   if (!value || value === "transparent") return "transparent";
   return /^#[0-9a-f]{6}$/i.test(value) ? value : "#000000";
+}
+
+function clamp(value: number, min: number, max: number) {
+  if (!Number.isFinite(value)) return min;
+  return Math.min(max, Math.max(min, value));
 }
 
 function startHls(
