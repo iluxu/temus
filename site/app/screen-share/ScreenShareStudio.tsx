@@ -8,7 +8,7 @@ import styles from "./screen-share.module.css";
 const MEDIA_ROOT = "https://api.adoptan.ai/screen-media/screen/lucia";
 const PUBLISHER_SCRIPT = `${MEDIA_ROOT}/publisher.js`;
 const VIEWER_BASE = "https://adoptan.ai/screen-share/live";
-const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v1";
+const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v2";
 const TOKEN_STORAGE_KEY = "adoptan-screen-share-key-v1";
 
 type Status = "idle" | "permission" | "connecting" | "live" | "reconnecting" | "error";
@@ -107,7 +107,7 @@ const DEFAULT_SETTINGS: ScreenSettings = {
   cursor: "always",
   displaySurface: "monitor",
   preferCurrentTab: false,
-  allowSurfaceSwitching: true,
+  allowSurfaceSwitching: false,
   excludeCurrentTab: true,
   includeMonitorSurfaces: true,
   degradationPreference: "maintain-resolution",
@@ -159,7 +159,13 @@ export default function ScreenShareStudio() {
   const [libraryReady, setLibraryReady] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [copied, setCopied] = useState("");
-  const [actual, setActual] = useState({ width: 0, height: 0, frameRate: 0, audio: false });
+  const [actual, setActual] = useState({
+    width: 0,
+    height: 0,
+    frameRate: 0,
+    audio: false,
+    source: ""
+  });
   const [stats, setStats] = useState<StreamStats>({
     bitrateMbps: 0,
     fps: 0,
@@ -245,7 +251,7 @@ export default function ScreenShareStudio() {
     stopStatsTimer(statsTimerRef);
     closeActiveBroadcast(publisherRef, resourcesRef, previewRef);
     previousStatsRef.current = { bytes: 0, timestamp: 0 };
-    setActual({ width: 0, height: 0, frameRate: 0, audio: false });
+    setActual({ width: 0, height: 0, frameRate: 0, audio: false, source: "" });
     setStats({ bitrateMbps: 0, fps: 0, width: 0, height: 0, rttMs: 0, packetsLost: 0 });
     setStatus("idle");
     setMessage("Diffusion arrêtée. L’URL Moblin est prête pour le prochain partage.");
@@ -271,7 +277,7 @@ export default function ScreenShareStudio() {
     closeActiveBroadcast(publisherRef, resourcesRef, previewRef);
     stopStatsTimer(statsTimerRef);
     setStatus("permission");
-    setMessage("Dans la fenêtre macOS, choisis l’écran ou la fenêtre à montrer.");
+    setMessage(capturePickerInstruction(settings.displaySurface));
 
     let displayStream: MediaStream | null = null;
     let microphoneStream: MediaStream | null = null;
@@ -287,6 +293,8 @@ export default function ScreenShareStudio() {
       if (!sourceVideoTrack) {
         throw new Error("Aucune piste vidéo n’a été sélectionnée.");
       }
+      const selectedSurface = sourceVideoTrack.getSettings().displaySurface;
+      assertSelectedDisplaySurface(settings.displaySurface, selectedSurface);
 
       try {
         await sourceVideoTrack.applyConstraints({
@@ -346,7 +354,8 @@ export default function ScreenShareStudio() {
         width: Number(trackSettings.width || settings.width),
         height: Number(trackSettings.height || settings.height),
         frameRate: Number(trackSettings.frameRate || settings.frameRate),
-        audio: Boolean(mixedAudio.track)
+        audio: Boolean(mixedAudio.track),
+        source: displaySurfaceLabel(selectedSurface || settings.displaySurface)
       });
 
       if (previewRef.current) {
@@ -601,7 +610,7 @@ export default function ScreenShareStudio() {
                     <option value="never">Masqué</option>
                   </select>
                 </Field>
-                <Field label="Source préférée">
+                <Field label="Type de source obligatoire">
                   <select
                     value={settings.displaySurface}
                     disabled={isBusy || isBroadcasting}
@@ -619,11 +628,25 @@ export default function ScreenShareStudio() {
                 </Field>
               </div>
 
+              <div className={styles.captureNotice}>
+                <strong>
+                  {settings.displaySurface === "monitor"
+                    ? "Dans Chrome : choisis « Écran entier »"
+                    : settings.displaySurface === "window"
+                      ? "Dans Chrome : choisis « Fenêtre »"
+                      : "Dans Chrome : choisis l’onglet YouTube"}
+                </strong>
+                <span>
+                  Le direct sera refusé si tu sélectionnes un autre type de source. Pour passer
+                  librement de Chrome à YouTube ou à une autre application, utilise Écran entier.
+                </span>
+              </div>
+
               <details className={styles.advanced}>
                 <summary>Options avancées de sélection macOS</summary>
                 <Toggle
                   label="Autoriser le changement de fenêtre"
-                  description="Chrome peut proposer de changer de source sans couper le direct."
+                  description="Chrome peut proposer de remplacer la source pendant le direct."
                   checked={settings.allowSurfaceSwitching}
                   disabled={isBusy || isBroadcasting}
                   onChange={(checked) => updateSetting("allowSurfaceSwitching", checked)}
@@ -824,6 +847,7 @@ export default function ScreenShareStudio() {
                 />
                 <Metric label="Latence réseau" value={stats.rttMs ? `${stats.rttMs} ms` : "—"} />
                 <Metric label="Audio" value={actual.audio ? "Actif" : "Silencieux"} />
+                <Metric label="Source" value={actual.source || displaySurfaceLabel(settings.displaySurface)} />
               </div>
 
               <div className={styles.actions}>
@@ -835,7 +859,11 @@ export default function ScreenShareStudio() {
                     disabled={isBusy}
                   >
                     <span className={styles.broadcastGlyph} />
-                    {isBusy ? "Connexion…" : "Partager mon écran"}
+                    {isBusy
+                      ? "Connexion…"
+                      : settings.displaySurface === "monitor"
+                        ? "Choisir l’écran entier"
+                        : "Choisir la source"}
                   </button>
                 ) : (
                   <button className={styles.stopButton} type="button" onClick={stopBroadcast}>
@@ -1264,6 +1292,39 @@ function buildDisplayMediaOptions(settings: ScreenSettings) {
     monitorTypeSurfaces: settings.includeMonitorSurfaces ? "include" : "exclude",
     systemAudio: settings.systemAudio ? "include" : "exclude"
   };
+}
+
+function capturePickerInstruction(surface: ScreenSettings["displaySurface"]) {
+  if (surface === "monitor") {
+    return "Dans Chrome, ouvre « Écran entier » et clique sur l’écran du Mac. Ne choisis pas « Cet onglet ».";
+  }
+  if (surface === "window") {
+    return "Dans Chrome, ouvre « Fenêtre » et sélectionne précisément l’application à montrer.";
+  }
+  return "Dans Chrome, ouvre « Onglet Chrome » et sélectionne l’onglet YouTube, pas adoptan.ai.";
+}
+
+function assertSelectedDisplaySurface(
+  expected: ScreenSettings["displaySurface"],
+  selected: MediaTrackSettings["displaySurface"]
+) {
+  if (!selected || selected === expected) return;
+  throw new Error(
+    `Mauvaise source sélectionnée : ${displaySurfaceLabel(selected)}. Recommence et choisis ${displaySurfacePickerLabel(expected)}.`
+  );
+}
+
+function displaySurfaceLabel(surface: string) {
+  if (surface === "monitor") return "Écran entier";
+  if (surface === "window") return "Fenêtre";
+  if (surface === "browser") return "Onglet";
+  return "Non détectée";
+}
+
+function displaySurfacePickerLabel(surface: ScreenSettings["displaySurface"]) {
+  if (surface === "monitor") return "« Écran entier » dans Chrome";
+  if (surface === "window") return "« Fenêtre » dans Chrome";
+  return "l’onglet YouTube dans Chrome";
 }
 
 async function createScaledVideoTrack(sourceTrack: MediaStreamTrack, settings: ScreenSettings) {

@@ -480,6 +480,27 @@
   padding-top: 15px;
 }
 
+.captureNotice {
+  display: grid;
+  gap: 4px;
+  margin-top: 13px;
+  padding: 12px 13px;
+  border: 1px solid rgba(115, 232, 221, 0.24);
+  border-radius: 11px;
+  background: rgba(115, 232, 221, 0.07);
+}
+
+.captureNotice strong {
+  color: #c9f4ef;
+  font-size: 0.76rem;
+}
+
+.captureNotice span {
+  color: #9dadaf;
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
 .advanced summary,
 .viewerSettings summary {
   color: #c8c2d2;
@@ -704,7 +725,7 @@
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 7px;
   margin-top: 12px;
 }
