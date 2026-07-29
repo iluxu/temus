@@ -8,7 +8,7 @@ import styles from "./screen-share.module.css";
 const MEDIA_ROOT = "https://api.adoptan.ai/screen-media/screen/lucia";
 const PUBLISHER_SCRIPT = `${MEDIA_ROOT}/publisher.js`;
 const VIEWER_BASE = "https://adoptan.ai/screen-share/live";
-const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v6";
+const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v7";
 const TOKEN_STORAGE_KEY = "adoptan-screen-share-key-v1";
 
 type Status = "idle" | "permission" | "connecting" | "live" | "reconnecting" | "error";
@@ -115,7 +115,7 @@ const DEFAULT_SETTINGS: ScreenSettings = {
   canvasBackground: "#05030a",
   contentHint: "detail",
   cursor: "always",
-  displaySurface: "browser",
+  displaySurface: "monitor",
   preferCurrentTab: false,
   allowSurfaceSwitching: false,
   excludeCurrentTab: true,
@@ -167,7 +167,7 @@ export default function ScreenShareStudio() {
   const [token, setToken] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState(
-    "Configure ton image, puis lance le partage. L’URL Moblin reste toujours la même."
+    "Lance le partage, puis choisis « Écran entier » pour envoyer tout le Mac au Mini OBS."
   );
   const [libraryReady, setLibraryReady] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -267,7 +267,7 @@ export default function ScreenShareStudio() {
     setActual({ width: 0, height: 0, frameRate: 0, audio: false, source: "" });
     setStats({ bitrateMbps: 0, fps: 0, width: 0, height: 0, rttMs: 0, packetsLost: 0 });
     setStatus("idle");
-    setMessage("Diffusion arrêtée. L’URL Moblin est prête pour le prochain partage.");
+    setMessage("Diffusion arrêtée. Le Mini OBS attend le prochain partage du Mac.");
   };
 
   const startBroadcast = async () => {
@@ -399,8 +399,10 @@ export default function ScreenShareStudio() {
           setStatus("live");
           setMessage(
             settings.displaySurface === "browser"
-              ? "Diffusion active. Tu peux rester sur l’onglet YouTube sélectionné."
-              : "Diffusion active. N’affiche pas Meet ou l’aperçu de ton propre partage sur l’écran capturé : cela crée une boucle."
+              ? "L’onglet choisi est envoyé au Mini OBS."
+              : settings.displaySurface === "monitor"
+                ? "Tout l’écran du Mac est envoyé au Mini OBS. Tu peux maintenant changer librement d’application."
+                : "La fenêtre choisie est envoyée au Mini OBS."
           );
           applySenderPreferences(publisher.pc, settings);
         }
@@ -442,7 +444,7 @@ export default function ScreenShareStudio() {
           </Link>
           <div className={styles.navMeta}>
             <span className={styles.securePill}>Relais chiffré</span>
-            <span>Mac → Moblin</span>
+            <span>Mac → Mini OBS</span>
           </div>
         </nav>
 
@@ -456,8 +458,8 @@ export default function ScreenShareStudio() {
             </h1>
           </div>
           <p>
-            Une source navigateur stable pour Moblin, avec WebRTC faible latence, résolution
-            contrôlée, audio optionnel et aperçu exact avant diffusion.
+            Partage tout le bureau du Mac dans le Mini OBS de l’iPhone, avec WebRTC faible
+            latence, résolution contrôlée, audio optionnel et aperçu exact avant diffusion.
           </p>
         </header>
 
@@ -523,7 +525,7 @@ export default function ScreenShareStudio() {
                       updateSetting("videoCodec", event.target.value as ScreenSettings["videoCodec"])
                     }
                   >
-                    <option value="h264/90000">H.264 · recommandé Moblin</option>
+                    <option value="h264/90000">H.264 · recommandé Mini OBS</option>
                     <option value="vp8/90000">VP8 · compatible</option>
                     <option value="vp9/90000">VP9 · expérimental</option>
                   </select>
@@ -627,7 +629,7 @@ export default function ScreenShareStudio() {
                     <option value="never">Masqué</option>
                   </select>
                 </Field>
-                <Field label="Type de source obligatoire">
+                <Field label="Ce que tu veux partager">
                   <select
                     value={settings.displaySurface}
                     disabled={isBusy || isBroadcasting}
@@ -638,9 +640,9 @@ export default function ScreenShareStudio() {
                       )
                     }
                   >
-                    <option value="monitor">Écran complet</option>
-                    <option value="window">Fenêtre</option>
-                    <option value="browser">Onglet navigateur</option>
+                    <option value="monitor">Tout l’écran du Mac · recommandé</option>
+                    <option value="window">Une fenêtre seulement</option>
+                    <option value="browser">Un onglet seulement</option>
                   </select>
                 </Field>
               </div>
@@ -648,16 +650,15 @@ export default function ScreenShareStudio() {
               <div className={styles.captureNotice}>
                 <strong>
                   {settings.displaySurface === "monitor"
-                    ? "Dans Chrome : choisis « Écran entier »"
+                    ? "Choisis « Écran entier », puis l’écran du Mac"
                     : settings.displaySurface === "window"
-                      ? "Dans Chrome : choisis « Fenêtre »"
-                      : "Recommandé : choisis uniquement l’onglet YouTube"}
+                      ? "Choisis « Fenêtre », puis l’application"
+                      : "Choisis l’onglet précis à montrer"}
                 </strong>
                 <span>
-                  Le direct sera refusé si tu sélectionnes un autre type de source. Pour passer
-                  librement entre plusieurs applications, utilise Écran entier sans afficher
-                  l’aperçu de ton propre partage. Pour YouTube uniquement, choisis Onglet navigateur
-                  afin d’éviter tout effet miroir.
+                  Pour montrer Safari, YouTube, le bureau et toutes les autres applications sans
+                  relancer le partage, garde « Tout l’écran du Mac ». Le direct sera refusé si tu
+                  sélectionnes par erreur un onglet ou une fenêtre.
                 </span>
               </div>
 
@@ -705,7 +706,7 @@ export default function ScreenShareStudio() {
 
               <Toggle
                 label="Audio de l’écran / de l’onglet"
-                description="Si macOS le permet, l’audio rejoint la même source Moblin."
+                description="Si macOS le permet, l’audio rejoint le même flux Mini OBS."
                 checked={settings.systemAudio}
                 disabled={isBusy || isBroadcasting}
                 onChange={(checked) => updateSetting("systemAudio", checked)}
@@ -881,9 +882,9 @@ export default function ScreenShareStudio() {
                     {isBusy
                       ? "Connexion…"
                       : settings.displaySurface === "monitor"
-                        ? "Choisir l’écran entier"
+                        ? "Partager tout l’écran du Mac"
                         : settings.displaySurface === "browser"
-                          ? "Choisir l’onglet YouTube"
+                          ? "Choisir un onglet"
                           : "Choisir la source"}
                   </button>
                 ) : (
@@ -922,25 +923,25 @@ export default function ScreenShareStudio() {
               <div className={styles.cardHeading}>
                 <span>04</span>
                 <div>
-                  <h2>Source navigateur Moblin</h2>
-                  <p>Copie cette URL dans un widget Browser / source navigateur.</p>
+                  <h2>Connexion au Mini OBS</h2>
+                  <p>Le Mini OBS de l’iPhone récupère automatiquement cet écran.</p>
                 </div>
               </div>
 
               <div className={styles.moblinUrl}>
                 <code>{viewerUrl}</code>
                 <button type="button" onClick={() => copyValue(viewerUrl, "url")}>
-                  {copied === "url" ? "Copiée ✓" : "Copier l’URL"}
+                  {copied === "url" ? "Copiée ✓" : "Copier l’aperçu"}
                 </button>
               </div>
 
               <div className={styles.moblinRecommendation}>
                 <div>
-                  <span>Largeur Moblin</span>
+                  <span>Largeur</span>
                   <strong>{settings.width}</strong>
                 </div>
                 <div>
-                  <span>Hauteur Moblin</span>
+                  <span>Hauteur</span>
                   <strong>{settings.height}</strong>
                 </div>
                 <div>
@@ -950,7 +951,7 @@ export default function ScreenShareStudio() {
               </div>
 
               <details className={styles.viewerSettings} open>
-                <summary>Personnaliser le rendu dans Moblin</summary>
+                <summary>Personnaliser l’aperçu navigateur optionnel</summary>
                 <div className={styles.layoutPresets}>
                   <button
                     type="button"
@@ -983,13 +984,12 @@ export default function ScreenShareStudio() {
                   </button>
                 </div>
                 <p className={styles.layoutHelp}>
-                  « Caméra + écran » laisse le fond transparent : la caméra Moblin reste visible
-                  derrière l’écran du Mac. Dans Moblin, le widget Browser doit garder une taille de
-                  scène de 100 % et être aligné à droite.
+                  Ces réglages concernent uniquement l’URL d’aperçu ci-dessus. Dans le Mini OBS,
+                  la taille et la position de l’écran se règlent directement depuis l’iPhone.
                 </p>
 
                 <RangeField
-                  label="Taille de l’écran dans Moblin"
+                  label="Taille dans l’aperçu"
                   value={settings.viewerScale}
                   min={25}
                   max={100}
@@ -1102,7 +1102,7 @@ export default function ScreenShareStudio() {
 
                 <div className={styles.checkGrid}>
                   <MiniCheck
-                    label="Audio dans Moblin"
+                    label="Audio dans l’aperçu"
                     checked={settings.viewerAudio}
                     onChange={(checked) => updateSetting("viewerAudio", checked)}
                   />
@@ -1146,27 +1146,26 @@ export default function ScreenShareStudio() {
             </section>
 
             <section className={styles.stepsCard}>
-              <h2>Dans Moblin</h2>
+              <h2>Pour partager tout le Mac</h2>
               <ol>
                 <li>
                   <span>1</span>
                   <p>
-                    Supprime l’ancien widget, puis crée un seul widget <strong>Browser</strong> avec
-                    l’URL simple <strong>adoptan.ai/screen-share/moblin</strong>.
+                    Garde <strong>Tout l’écran du Mac</strong> dans « Ce que tu veux partager ».
                   </p>
                 </li>
                 <li>
                   <span>2</span>
                   <p>
-                    Colle l’URL, puis règle son <strong>Layout</strong> sur taille 100 %,
-                    alignement milieu-droite et position 0.
+                    Clique sur <strong>Partager tout l’écran du Mac</strong>. Dans la fenêtre
+                    Chrome, ouvre l’onglet <strong>Écran entier</strong>.
                   </p>
                 </li>
                 <li>
                   <span>3</span>
                   <p>
-                    Garde un seul widget Browser actif dans la scène, puis laisse cette page
-                    ouverte sur le Mac.
+                    Clique sur la vignette de ton écran puis sur <strong>Partager</strong>. Garde
+                    cette page ouverte pendant le live.
                   </p>
                 </li>
               </ol>
@@ -1399,12 +1398,12 @@ function buildDisplayMediaOptions(settings: ScreenSettings) {
 
 function capturePickerInstruction(surface: ScreenSettings["displaySurface"]) {
   if (surface === "monitor") {
-    return "Dans Chrome, ouvre « Écran entier » et clique sur l’écran du Mac. Ne choisis pas « Cet onglet ».";
+    return "Dans la fenêtre Chrome, ouvre « Écran entier », clique sur la vignette de l’écran du Mac, puis sur « Partager ». Ne choisis pas un onglet.";
   }
   if (surface === "window") {
     return "Dans Chrome, ouvre « Fenêtre » et sélectionne précisément l’application à montrer.";
   }
-  return "Dans Chrome, ouvre « Onglet Chrome » et sélectionne l’onglet YouTube, pas adoptan.ai.";
+  return "Dans Chrome, ouvre « Onglet Chrome » et sélectionne l’onglet voulu, pas adoptan.ai.";
 }
 
 function assertSelectedDisplaySurface(
@@ -1427,7 +1426,7 @@ function displaySurfaceLabel(surface: string) {
 function displaySurfacePickerLabel(surface: ScreenSettings["displaySurface"]) {
   if (surface === "monitor") return "« Écran entier » dans Chrome";
   if (surface === "window") return "« Fenêtre » dans Chrome";
-  return "l’onglet YouTube dans Chrome";
+  return "l’onglet voulu dans Chrome";
 }
 
 async function createScaledVideoTrack(sourceTrack: MediaStreamTrack, settings: ScreenSettings) {
