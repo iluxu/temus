@@ -15,6 +15,8 @@ final class StreamEngine: ObservableObject {
     @Published private(set) var liveState: LiveState = .idle
     @Published private(set) var isCaptureReady = false
     @Published private(set) var isConfiguring = false
+    @Published private(set) var cameraHasFrames = false
+    @Published private(set) var cameraStatusText = "Recherche de la caméra iPhone…"
     @Published var message = "Initialisation…"
 
     @Published var selectedCameraID = ""
@@ -58,6 +60,8 @@ final class StreamEngine: ObservableObject {
     private var session: (any Session)?
     private var activeStream: (any StreamConvertible)?
     private var readyStateTask: Task<Void, Never>?
+    private var cameraMonitorTask: Task<Void, Never>?
+    private var deviceObservers: [NSObjectProtocol] = []
     private var hasStartedMixer = false
 
     @ScreenActor private var overlayObject: VideoTrackScreenObject?
@@ -66,6 +70,7 @@ final class StreamEngine: ObservableObject {
 
     init() {
         restorePreferences()
+        observeDeviceChanges()
     }
 
     func prepare() async {
@@ -98,15 +103,14 @@ final class StreamEngine: ObservableObject {
     }
 
     func refreshSources() async {
-        cameraDevices = AVCaptureDevice.devices(for: .video)
-        microphonesFromSystem()
+        cameraDevices = discoverVideoDevices()
+        microphoneDevices = discoverAudioDevices()
 
         cameras = cameraDevices.map { device in
-            let normalized = device.localizedName.lowercased()
             return CaptureDeviceOption(
                 id: device.uniqueID,
                 name: device.localizedName,
-                isIPhone: normalized.contains("iphone") || normalized.contains("continuity")
+                isIPhone: isIPhoneCamera(device)
             )
         }
         .sorted {
@@ -120,7 +124,15 @@ final class StreamEngine: ObservableObject {
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
         if !cameras.contains(where: { $0.id == selectedCameraID }) {
-            selectedCameraID = cameras.first(where: \.isIPhone)?.id ?? cameras.first?.id ?? ""
+            selectedCameraID = preferredCamera()?.uniqueID
+                ?? cameras.first(where: \.isIPhone)?.id
+                ?? cameras.first?.id
+                ?? ""
+        } else if let continuityCamera = cameraDevices.first(where: isIPhoneCamera),
+                  cameras.first(where: { $0.id == selectedCameraID })?.isIPhone != true {
+            // The app is specifically designed around the iPhone camera. If it becomes
+            // available after launch, prefer it automatically instead of keeping FaceTime HD.
+            selectedCameraID = continuityCamera.uniqueID
         }
         if !microphones.contains(where: { $0.id == selectedMicrophoneID }) {
             selectedMicrophoneID = microphones.first?.id ?? ""
@@ -163,6 +175,9 @@ final class StreamEngine: ObservableObject {
 
         isConfiguring = true
         isCaptureReady = false
+        cameraHasFrames = false
+        cameraStatusText = "Configuration de la caméra…"
+        cameraMonitorTask?.cancel()
         savePreferences()
         await screenCapture.stop()
 
@@ -196,11 +211,21 @@ final class StreamEngine: ObservableObject {
         await configureComposition()
 
         if let camera = cameraDevices.first(where: { $0.uniqueID == selectedCameraID }) {
+            if camera.isInUseByAnotherApplication {
+                cameraStatusText = "\(camera.localizedName) est utilisée par une autre application."
+            } else if camera.isSuspended {
+                cameraStatusText = "\(camera.localizedName) est momentanément suspendue."
+            } else {
+                cameraStatusText = "\(camera.localizedName) détectée — attente de l’image…"
+            }
             do {
                 try await mixer.attachVideo(camera, track: 1)
             } catch {
+                cameraStatusText = "Connexion caméra impossible : \(error.localizedDescription)"
                 message = "Caméra indisponible : \(error.localizedDescription)"
             }
+        } else {
+            cameraStatusText = "Aucune caméra iPhone détectée."
         }
 
         if includeMicrophone,
@@ -243,8 +268,9 @@ final class StreamEngine: ObservableObject {
 
         isCaptureReady = true
         isConfiguring = false
+        monitorCameraFrames()
         if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {
-            message = "Prêt — caméra iPhone connectée."
+            message = "Caméra iPhone détectée — vérification du signal vidéo…"
         } else if cameras.isEmpty {
             message = "Écran prêt, mais aucune caméra n’est détectée."
         } else {
@@ -363,6 +389,10 @@ final class StreamEngine: ObservableObject {
     }
 
     func shutdown() {
+        cameraMonitorTask?.cancel()
+        cameraMonitorTask = nil
+        deviceObservers.forEach(NotificationCenter.default.removeObserver)
+        deviceObservers.removeAll()
         Task {
             await stopLive()
             await screenCapture.stop()
@@ -488,8 +518,120 @@ final class StreamEngine: ObservableObject {
         }
     }
 
-    private func microphonesFromSystem() {
-        microphoneDevices = AVCaptureDevice.devices(for: .audio)
+    private func discoverVideoDevices() -> [AVCaptureDevice] {
+        let deviceTypes: [AVCaptureDevice.DeviceType]
+        if #available(macOS 14.0, *) {
+            deviceTypes = [
+                .builtInWideAngleCamera,
+                .continuityCamera,
+                .external,
+                .deskViewCamera
+            ]
+        } else {
+            deviceTypes = [
+                .builtInWideAngleCamera,
+                .externalUnknown
+            ]
+        }
+        return AVCaptureDevice.DiscoverySession(
+            deviceTypes: deviceTypes,
+            mediaType: .video,
+            position: .unspecified
+        ).devices
+    }
+
+    private func discoverAudioDevices() -> [AVCaptureDevice] {
+        let deviceTypes: [AVCaptureDevice.DeviceType]
+        if #available(macOS 14.0, *) {
+            deviceTypes = [.microphone, .external]
+        } else {
+            deviceTypes = [.builtInMicrophone, .externalUnknown]
+        }
+        return AVCaptureDevice.DiscoverySession(
+            deviceTypes: deviceTypes,
+            mediaType: .audio,
+            position: .unspecified
+        ).devices
+    }
+
+    private func preferredCamera() -> AVCaptureDevice? {
+        if let iPhone = cameraDevices.first(where: isIPhoneCamera) {
+            return iPhone
+        }
+        if let preferred = AVCaptureDevice.systemPreferredCamera,
+           cameraDevices.contains(where: { $0.uniqueID == preferred.uniqueID }) {
+            return preferred
+        }
+        return cameraDevices.first
+    }
+
+    private func isIPhoneCamera(_ device: AVCaptureDevice) -> Bool {
+        if #available(macOS 14.0, *), device.isContinuityCamera {
+            return true
+        }
+        let identity = [
+            device.localizedName,
+            device.manufacturer,
+            device.modelID
+        ]
+        .joined(separator: " ")
+        .lowercased()
+        return identity.contains("iphone") ||
+            identity.contains("continuity") ||
+            identity.contains("continuité")
+    }
+
+    private func observeDeviceChanges() {
+        let center = NotificationCenter.default
+        for name in [
+            AVCaptureDevice.wasConnectedNotification,
+            AVCaptureDevice.wasDisconnectedNotification
+        ] {
+            let observer = center.addObserver(
+                forName: name,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self else { return }
+                Task { @MainActor in
+                    let changedDevice = notification.object as? AVCaptureDevice
+                    await self.refreshSources()
+                    if let changedDevice,
+                       self.isIPhoneCamera(changedDevice),
+                       name == AVCaptureDevice.wasConnectedNotification {
+                        self.selectedCameraID = changedDevice.uniqueID
+                        self.message = "iPhone détecté. Activation automatique de sa caméra…"
+                        await self.configureCapture()
+                    }
+                }
+            }
+            deviceObservers.append(observer)
+        }
+    }
+
+    private func monitorCameraFrames() {
+        cameraMonitorTask?.cancel()
+        guard !selectedCameraID.isEmpty else { return }
+        let cameraName = cameras.first(where: { $0.id == selectedCameraID })?.name ?? "Caméra"
+        cameraMonitorTask = Task {
+            for _ in 0..<24 {
+                guard !Task.isCancelled else { return }
+                let inputFormats = await mixer.videoInputFormats
+                if inputFormats[1] != nil {
+                    cameraHasFrames = true
+                    cameraStatusText = "\(cameraName) transmet bien l’image."
+                    if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {
+                        message = "Prêt — image de l’iPhone reçue."
+                    }
+                    return
+                }
+                try? await Task.sleep(nanoseconds: 250_000_000)
+            }
+            guard !Task.isCancelled else { return }
+            cameraHasFrames = false
+            cameraStatusText = "\(cameraName) est sélectionnée, mais aucun signal vidéo n’arrive."
+            message = "Déverrouille l’iPhone, rapproche-le du Mac, puis clique sur Appliquer à la capture."
+        }
     }
 
     private func requestAccess(for mediaType: AVMediaType) async -> Bool {

@@ -19,15 +19,17 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.1.1</string>
+    <string>0.1.2</string>
     <key>CFBundleVersion</key>
-    <string>2</string>
+    <string>3</string>
     <key>LSApplicationCategoryType</key>
     <string>public.app-category.video</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>NSCameraUsageDescription</key>
     <string>Adoptan Mini OBS utilise la caméra de l’iPhone ou du Mac dans votre direct.</string>
+    <key>NSCameraUseContinuityCameraDeviceType</key>
+    <true/>
     <key>NSMicrophoneUsageDescription</key>
     <string>Adoptan Mini OBS mixe votre microphone avec le son du Mac.</string>
     <key>NSScreenCaptureUsageDescription</key>

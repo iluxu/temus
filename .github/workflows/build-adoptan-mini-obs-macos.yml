@@ -118,5 +118,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.1.1" \
-            --notes "Première version macOS native : caméra iPhone, écran entier, audio Mac + micro, scènes et diffusion RTMPS Kick/Twitch."
+            --title "Adoptan Mini OBS 0.1.2" \
+            --notes "Correction Caméra de continuité : détection explicite de l’iPhone, activation automatique et diagnostic du signal vidéo."

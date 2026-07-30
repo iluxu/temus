@@ -92,6 +92,21 @@ struct ContentView: View {
                         .tag(camera.id)
                 }
             }
+            .onChange(of: engine.selectedCameraID) { _ in
+                guard engine.isCaptureReady, !engine.isConfiguring else { return }
+                Task { await engine.configureCapture() }
+            }
+
+            HStack(alignment: .top, spacing: 7) {
+                Circle()
+                    .fill(engine.cameraHasFrames ? Color.green : Color.orange)
+                    .frame(width: 8, height: 8)
+                    .padding(.top, 4)
+                Text(engine.cameraStatusText)
+                    .font(.caption)
+                    .foregroundStyle(engine.cameraHasFrames ? Color.green : Color.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
             Picker("Écran", selection: $engine.selectedDisplayID) {
                 if engine.displays.isEmpty {
