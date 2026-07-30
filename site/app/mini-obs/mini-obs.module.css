@@ -670,6 +670,53 @@
   margin-top: 14px;
 }
 
+.stablePreset {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(87, 225, 188, 0.2);
+  border-radius: 12px;
+  background: rgba(87, 225, 188, 0.055);
+}
+
+.stablePreset > div {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.stablePreset strong {
+  color: #c9faed;
+  font-size: 0.68rem;
+}
+
+.stablePreset small {
+  color: #7f9e96;
+  font-size: 0.58rem;
+  line-height: 1.35;
+}
+
+.stablePreset button {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(87, 225, 188, 0.23);
+  border-radius: 9px;
+  color: #bff7e8;
+  background: rgba(87, 225, 188, 0.08);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.61rem;
+  font-weight: 850;
+}
+
+.stablePreset button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
 .field {
   min-width: 0;
   display: grid;
@@ -757,9 +804,73 @@
   font-size: 1.2rem;
 }
 
+.kickTestMode {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 14px 14px;
+  padding: 12px;
+  border: 1px solid rgba(87, 225, 188, 0.18);
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(87, 225, 188, 0.07), rgba(155, 119, 255, 0.04));
+}
+
+.kickTestMode > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.kickTestMode small {
+  color: var(--green);
+  font-size: 0.52rem;
+  font-weight: 900;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.kickTestMode strong {
+  font-size: 0.67rem;
+}
+
+.kickTestMode span {
+  color: var(--faint);
+  font-size: 0.56rem;
+  line-height: 1.35;
+}
+
+.kickTestMode button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 0 11px;
+  border: 1px solid rgba(87, 225, 188, 0.22);
+  border-radius: 9px;
+  color: #c9faed;
+  background: rgba(87, 225, 188, 0.08);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.6rem;
+  font-weight: 900;
+}
+
 .destinationForm {
   padding: 0 18px 18px;
   border-top: 1px solid var(--line);
+}
+
+.kickDashboardLink {
+  display: block;
+  margin-top: 13px;
+  color: #bff7e8;
+  font-size: 0.61rem;
+  font-weight: 750;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.kickDashboardLink:hover {
+  text-decoration: underline;
 }
 
 .saveDestination {
@@ -767,6 +878,14 @@
   margin-top: 14px;
   color: #25121f;
   background: linear-gradient(120deg, #ff75b8, #b99bff);
+}
+
+.destinationError {
+  margin: 10px 0 0;
+  color: #ff9494;
+  font-size: 0.59rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .privateKey {
@@ -867,6 +986,17 @@
 
   .telemetry {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .stablePreset,
+  .kickTestMode {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .stablePreset button,
+  .kickTestMode button {
+    width: 100%;
   }
 
   .mainActions {

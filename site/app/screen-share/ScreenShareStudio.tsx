@@ -8,7 +8,7 @@ import styles from "./screen-share.module.css";
 const MEDIA_ROOT = "https://api.adoptan.ai/screen-media/screen/lucia";
 const PUBLISHER_SCRIPT = `${MEDIA_ROOT}/publisher.js`;
 const VIEWER_BASE = "https://adoptan.ai/screen-share/live";
-const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v7";
+const SETTINGS_STORAGE_KEY = "adoptan-screen-share-settings-v8";
 const TOKEN_STORAGE_KEY = "adoptan-screen-share-key-v1";
 
 type Status = "idle" | "permission" | "connecting" | "live" | "reconnecting" | "error";
@@ -105,10 +105,10 @@ type StreamStats = {
 };
 
 const DEFAULT_SETTINGS: ScreenSettings = {
-  width: 1920,
-  height: 1080,
+  width: 1280,
+  height: 720,
   frameRate: 30,
-  videoBitrate: 8000,
+  videoBitrate: 3000,
   videoCodec: "h264/90000",
   strictResolution: false,
   sourceFit: "contain",
@@ -120,7 +120,7 @@ const DEFAULT_SETTINGS: ScreenSettings = {
   allowSurfaceSwitching: false,
   excludeCurrentTab: true,
   includeMonitorSurfaces: true,
-  degradationPreference: "maintain-resolution",
+  degradationPreference: "balanced",
   systemAudio: true,
   microphone: false,
   microphoneDeviceId: "",
@@ -145,9 +145,10 @@ const DEFAULT_SETTINGS: ScreenSettings = {
 };
 
 const PRESETS = [
-  { label: "Full HD · 30 fps", width: 1920, height: 1080, frameRate: 30, bitrate: 8000 },
+  { label: "HD stable · 30 fps", width: 1280, height: 720, frameRate: 30, bitrate: 3000 },
+  { label: "Full HD · 30 fps", width: 1920, height: 1080, frameRate: 30, bitrate: 4500 },
   { label: "Full HD · 60 fps", width: 1920, height: 1080, frameRate: 60, bitrate: 12000 },
-  { label: "HD · 30 fps", width: 1280, height: 720, frameRate: 30, bitrate: 4500 },
+  { label: "HD · 30 fps qualité", width: 1280, height: 720, frameRate: 30, bitrate: 4000 },
   { label: "HD · 60 fps", width: 1280, height: 720, frameRate: 60, bitrate: 7000 },
   { label: "QHD · 30 fps", width: 2560, height: 1440, frameRate: 30, bitrate: 14000 },
   { label: "Vertical · 30 fps", width: 1080, height: 1920, frameRate: 30, bitrate: 8000 }
@@ -470,7 +471,7 @@ export default function ScreenShareStudio() {
                 <span>01</span>
                 <div>
                   <h2>Qualité vidéo</h2>
-                  <p>Le réglage Full HD 30 fps est le plus sûr pour commencer.</p>
+                  <p>Le profil HD stable limite les pertes réseau et les gels.</p>
                 </div>
               </div>
 

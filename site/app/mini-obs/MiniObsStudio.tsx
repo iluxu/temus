@@ -9,7 +9,8 @@ const API_ROOT = "https://api.adoptan.ai/mini-obs";
 const STUDIO_MEDIA_ROOT = "https://api.adoptan.ai/screen-media/studio/lucia";
 const SCREEN_MEDIA_ROOT = "https://api.adoptan.ai/screen-media/screen/lucia";
 const TOKEN_STORAGE_KEY = "adoptan-mini-obs-key-v1";
-const SETTINGS_STORAGE_KEY = "adoptan-mini-obs-settings-v1";
+const SETTINGS_STORAGE_KEY = "adoptan-mini-obs-settings-v2";
+const KICK_TEST_MODE = true;
 
 type StudioStatus = "idle" | "permission" | "connecting" | "ready" | "live" | "error";
 type SceneMode = "camera" | "screen-camera" | "camera-screen" | "split";
@@ -69,9 +70,32 @@ type LiveStatus = {
   configured: boolean;
   platform: Platform;
   destinationHost: string;
+  configuredPlatforms: Platform[];
   running: boolean;
   startedAt: string;
   lastError: string;
+  output: {
+    fps: number;
+    bitrateKbps: number;
+    droppedFrames: number;
+    duplicatedFrames: number;
+    speed: number;
+  };
+};
+
+type StudioStats = {
+  bitrate: number;
+  fps: number;
+  rtt: number;
+  lossPercent: number;
+  packetsLost: number;
+};
+
+type StatsHistory = {
+  bytes: number;
+  timestamp: number;
+  packetsSent: number;
+  packetsLost: number;
 };
 
 type ActiveStudio = {
@@ -93,7 +117,7 @@ const DEFAULT_SETTINGS: StudioSettings = {
   width: 1280,
   height: 720,
   frameRate: 30,
-  videoBitrate: 5000,
+  videoBitrate: 3500,
   facingMode: "user",
   mirrorFrontCamera: true,
   cameraFit: "cover",
@@ -113,7 +137,7 @@ const DEFAULT_SETTINGS: StudioSettings = {
 const PLATFORM_DEFAULTS: Record<Platform, string> = {
   twitch: "rtmp://live.twitch.tv/app",
   youtube: "rtmp://a.rtmp.youtube.com/live2",
-  kick: "rtmps://fa723fc1b171.global-contribute.live-video.net/app",
+  kick: "rtmps://fa723fc1b171.global-contribute.live-video.net:443/app",
   custom: ""
 };
 
@@ -138,17 +162,25 @@ export default function MiniObsStudio() {
   const [cameraOnline, setCameraOnline] = useState(false);
   const [liveStatus, setLiveStatus] = useState<LiveStatus>({
     configured: false,
-    platform: "twitch",
+    platform: "kick",
     destinationHost: "",
+    configuredPlatforms: [],
     running: false,
     startedAt: "",
-    lastError: ""
+    lastError: "",
+    output: {
+      fps: 0,
+      bitrateKbps: 0,
+      droppedFrames: 0,
+      duplicatedFrames: 0,
+      speed: 0
+    }
   });
-  const [platform, setPlatform] = useState<Platform>("twitch");
-  const [serverUrl, setServerUrl] = useState(PLATFORM_DEFAULTS.twitch);
+  const [platform, setPlatform] = useState<Platform>("kick");
+  const [serverUrl, setServerUrl] = useState(PLATFORM_DEFAULTS.kick);
   const [streamKey, setStreamKey] = useState("");
   const [showDestination, setShowDestination] = useState(false);
-  const [stats, setStats] = useState({ bitrate: 0, fps: 0, rtt: 0 });
+  const [stats, setStats] = useState<StudioStats>(emptyStudioStats());
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
@@ -160,7 +192,12 @@ export default function MiniObsStudio() {
   const activeRef = useRef<ActiveStudio | null>(null);
   const statsTimerRef = useRef<number | null>(null);
   const statusTimerRef = useRef<number | null>(null);
-  const previousBytesRef = useRef({ bytes: 0, timestamp: 0 });
+  const previousBytesRef = useRef<StatsHistory>({
+    bytes: 0,
+    timestamp: 0,
+    packetsSent: 0,
+    packetsLost: 0
+  });
 
   const stageActive = status === "connecting" || status === "ready" || status === "live";
   const busy = status === "permission" || status === "connecting";
@@ -275,6 +312,8 @@ export default function MiniObsStudio() {
     }
 
     stopTimers(statsTimerRef);
+    previousBytesRef.current = emptyStatsHistory();
+    setStats(emptyStudioStats());
     closeStudio(publisherRef, activeRef, cameraStreamRef, cameraVideoRef, canvasRef);
     setStatus("permission");
     setMessage("Autorise maintenant la caméra et le microphone de l’iPhone.");
@@ -283,8 +322,8 @@ export default function MiniObsStudio() {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: settings.facingMode },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { ideal: settings.width, max: settings.width },
+          height: { ideal: settings.height, max: settings.height },
           frameRate: { ideal: settings.frameRate, max: settings.frameRate }
         },
         audio: {
@@ -316,7 +355,7 @@ export default function MiniObsStudio() {
       const outputVideoTrack = canvasStream.getVideoTracks()[0];
       if (!outputVideoTrack) throw new Error("Safari n’a pas créé la sortie vidéo.");
       try {
-        outputVideoTrack.contentHint = "motion";
+        outputVideoTrack.contentHint = "detail";
       } catch {
         // Safari can expose contentHint as read-only.
       }
@@ -386,7 +425,8 @@ export default function MiniObsStudio() {
     closeStudio(publisherRef, activeRef, cameraStreamRef, cameraVideoRef, canvasRef);
     setCameraOnline(false);
     setStatus("idle");
-    setStats({ bitrate: 0, fps: 0, rtt: 0 });
+    setStats(emptyStudioStats());
+    previousBytesRef.current = emptyStatsHistory();
     setMessage("Régie arrêtée. Rien n’est diffusé.");
   };
 
@@ -402,8 +442,8 @@ export default function MiniObsStudio() {
       const nextVideo = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
+          width: { ideal: settings.width, max: settings.width },
+          height: { ideal: settings.height, max: settings.height },
           frameRate: { ideal: settings.frameRate, max: settings.frameRate }
         },
         audio: false
@@ -430,7 +470,18 @@ export default function MiniObsStudio() {
 
   const saveDestination = async () => {
     if (!streamKey.trim()) {
-      setMessage("Colle la clé de stream avant d’enregistrer la destination.");
+      if (!liveStatus.configuredPlatforms?.includes(platform)) {
+        setMessage(`Colle d’abord la clé de stream ${platformLabel(platform)}.`);
+        return;
+      }
+      try {
+        const next = await apiRequest<LiveStatus>(token, "/destination/select", { platform });
+        setLiveStatus(next);
+        setShowDestination(false);
+        setMessage(`Destination ${platformLabel(platform)} activée. La clé enregistrée a été conservée.`);
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Destination indisponible.");
+      }
       return;
     }
     try {
@@ -442,15 +493,33 @@ export default function MiniObsStudio() {
       setLiveStatus(next);
       setStreamKey("");
       setShowDestination(false);
-      setMessage("Destination enregistrée en sécurité sur le serveur.");
+      setMessage(
+        `Destination ${platformLabel(platform)} enregistrée. Les autres clés restent conservées.`
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Destination invalide.");
     }
   };
 
+  const prepareKickTest = () => {
+    setPlatform("kick");
+    setServerUrl(PLATFORM_DEFAULTS.kick);
+    setShowDestination(true);
+    setMessage(
+      liveStatus.configuredPlatforms?.includes("kick")
+        ? "La clé Kick est déjà enregistrée : appuie sur « Utiliser Kick »."
+        : "Récupère la clé dans le Creator Dashboard Kick, puis colle-la ici une seule fois."
+    );
+  };
+
   const startLive = async () => {
     if (status !== "ready") {
       setMessage("Active d’abord la régie et attends le statut « Prête ».");
+      return;
+    }
+    if (KICK_TEST_MODE && liveStatus.platform !== "kick") {
+      prepareKickTest();
+      setMessage("Mode test actif : configure ou sélectionne Kick avant tout live Twitch.");
       return;
     }
     if (!liveStatus.configured) {
@@ -462,7 +531,9 @@ export default function MiniObsStudio() {
       const next = await apiRequest<LiveStatus>(token, "/live/start", {});
       setLiveStatus(next);
       setStatus("live");
-      setMessage("LIVE démarré. Le serveur envoie maintenant le programme final.");
+      setMessage(
+        `${platformLabel(next.platform)} est en direct. Surveille « Réseau » et les images perdues.`
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Le live n’a pas démarré.");
     }
@@ -557,12 +628,19 @@ export default function MiniObsStudio() {
               <video ref={screenVideoRef} className={styles.hiddenMedia} playsInline muted />
 
               <div className={styles.telemetry}>
-                <Metric label="Débit" value={stats.bitrate ? `${stats.bitrate.toFixed(1)} Mb/s` : "—"} />
+                <Metric
+                  label="Débit WebRTC"
+                  value={stats.bitrate ? `${stats.bitrate.toFixed(1)} Mb/s` : "—"}
+                />
                 <Metric label="FPS" value={stats.fps ? String(stats.fps) : String(settings.frameRate)} />
-                <Metric label="Latence" value={stats.rtt ? `${stats.rtt} ms` : "—"} />
+                <Metric label="Réseau" value={networkHealthLabel(stats)} />
                 <Metric
                   label="Sortie"
-                  value={liveStatus.running ? liveStatus.destinationHost || "Active" : "Coupée"}
+                  value={
+                    liveStatus.running
+                      ? `${platformLabel(liveStatus.platform)} · ${Math.round(liveStatus.output?.fps || 0)} fps`
+                      : "Coupée"
+                  }
                 />
               </div>
 
@@ -602,7 +680,7 @@ export default function MiniObsStudio() {
                     onClick={() => void startLive()}
                     disabled={status !== "ready"}
                   >
-                    Démarrer le live
+                    {KICK_TEST_MODE ? "Démarrer le test Kick" : "Démarrer le live"}
                   </button>
                 )}
               </div>
@@ -740,6 +818,27 @@ export default function MiniObsStudio() {
                   <p>720p30 est le mode mobile le plus stable.</p>
                 </div>
               </div>
+              <div className={styles.stablePreset}>
+                <div>
+                  <strong>Profil anti-freeze recommandé</strong>
+                  <small>720p · 30 fps · 3 500 kb/s · priorité à la fluidité</small>
+                </div>
+                <button
+                  type="button"
+                  disabled={stageActive}
+                  onClick={() =>
+                    setSettings((current) => ({
+                      ...current,
+                      width: 1280,
+                      height: 720,
+                      frameRate: 30,
+                      videoBitrate: 3500
+                    }))
+                  }
+                >
+                  Appliquer
+                </button>
+              </div>
               <div className={styles.twoColumns}>
                 <Field label="Résolution">
                   <select
@@ -811,6 +910,16 @@ export default function MiniObsStudio() {
                 </span>
                 <b>{showDestination ? "−" : "+"}</b>
               </button>
+              <div className={styles.kickTestMode}>
+                <div>
+                  <small>Mode de validation actif</small>
+                  <strong>Les essais partent uniquement vers Kick</strong>
+                  <span>La clé Twitch reste enregistrée séparément et ne sera pas utilisée.</span>
+                </div>
+                <button type="button" onClick={prepareKickTest}>
+                  {liveStatus.platform === "kick" ? "Kick sélectionné" : "Préparer Kick"}
+                </button>
+              </div>
               {showDestination && (
                 <div className={styles.destinationForm}>
                   <Field label="Plateforme">
@@ -822,12 +931,22 @@ export default function MiniObsStudio() {
                         if (value !== "custom") setServerUrl(PLATFORM_DEFAULTS[value]);
                       }}
                     >
+                      <option value="kick">Kick</option>
                       <option value="twitch">Twitch</option>
                       <option value="youtube">YouTube</option>
-                      <option value="kick">Kick</option>
                       <option value="custom">RTMP personnalisé</option>
                     </select>
                   </Field>
+                  {platform === "kick" && (
+                    <a
+                      className={styles.kickDashboardLink}
+                      href="https://dashboard.kick.com"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ouvrir le Creator Dashboard Kick → Channel → Stream URL and Key
+                    </a>
+                  )}
                   <Field label="Serveur RTMP">
                     <input
                       value={serverUrl}
@@ -844,9 +963,18 @@ export default function MiniObsStudio() {
                       onChange={(event) => setStreamKey(event.target.value)}
                     />
                   </Field>
-                  <button type="button" className={styles.saveDestination} onClick={() => void saveDestination()}>
-                    Enregistrer en sécurité
+                  <button
+                    type="button"
+                    className={styles.saveDestination}
+                    onClick={() => void saveDestination()}
+                  >
+                    {!streamKey.trim() && liveStatus.configuredPlatforms?.includes(platform)
+                      ? `Utiliser ${platformLabel(platform)}`
+                      : `Enregistrer ${platformLabel(platform)}`}
                   </button>
+                  {liveStatus.lastError && (
+                    <p className={styles.destinationError}>{liveStatus.lastError}</p>
+                  )}
                 </div>
               )}
             </section>
@@ -1266,6 +1394,11 @@ function applySenderSettings(pc: RTCPeerConnection | null, settings: StudioSetti
   for (const sender of pc.getSenders()) {
     if (sender.track?.kind !== "video") continue;
     const parameters = sender.getParameters();
+    (
+      parameters as RTCRtpSendParameters & {
+        degradationPreference?: "maintain-framerate" | "maintain-resolution" | "balanced";
+      }
+    ).degradationPreference = "maintain-framerate";
     if (!parameters.encodings?.length) parameters.encodings = [{}];
     parameters.encodings[0].maxBitrate = settings.videoBitrate * 1000;
     parameters.encodings[0].maxFramerate = settings.frameRate;
@@ -1277,8 +1410,8 @@ function applySenderSettings(pc: RTCPeerConnection | null, settings: StudioSetti
 function startStats(
   publisherRef: React.MutableRefObject<PublisherInstance | null>,
   timerRef: React.MutableRefObject<number | null>,
-  previousRef: React.MutableRefObject<{ bytes: number; timestamp: number }>,
-  setStats: React.Dispatch<React.SetStateAction<{ bitrate: number; fps: number; rtt: number }>>
+  previousRef: React.MutableRefObject<StatsHistory>,
+  setStats: React.Dispatch<React.SetStateAction<StudioStats>>
 ) {
   timerRef.current = window.setInterval(async () => {
     const pc = publisherRef.current?.pc;
@@ -1288,24 +1421,45 @@ function startStats(
       let bitrate = 0;
       let fps = 0;
       let rtt = 0;
+      let packetsSent = previousRef.current.packetsSent;
+      let packetsLost = previousRef.current.packetsLost;
+      let bytes = previousRef.current.bytes;
+      let timestamp = previousRef.current.timestamp;
+      let outboundFound = false;
       reports.forEach((report) => {
         if (report.type === "outbound-rtp" && report.kind === "video") {
-          const elapsed = Number(report.timestamp) - previousRef.current.timestamp;
-          const bytes = Number(report.bytesSent || 0);
+          outboundFound = true;
+          timestamp = Number(report.timestamp);
+          bytes = Number(report.bytesSent || 0);
+          packetsSent = Number(report.packetsSent || 0);
+          const elapsed = timestamp - previousRef.current.timestamp;
           if (elapsed > 0 && previousRef.current.timestamp) {
             bitrate = ((bytes - previousRef.current.bytes) * 8) / elapsed / 1000;
           }
-          previousRef.current = { bytes, timestamp: Number(report.timestamp) };
           fps = Math.round(Number(report.framesPerSecond || 0));
         }
+        if (report.type === "remote-inbound-rtp" && report.kind === "video") {
+          packetsLost = Math.max(0, Number(report.packetsLost || 0));
+          if (Number(report.roundTripTime) > 0) {
+            rtt = Math.round(Number(report.roundTripTime) * 1000);
+          }
+        }
         if (report.type === "candidate-pair" && report.state === "succeeded" && report.nominated) {
-          rtt = Math.round(Number(report.currentRoundTripTime || 0) * 1000);
+          if (!rtt) rtt = Math.round(Number(report.currentRoundTripTime || 0) * 1000);
         }
       });
+      if (!outboundFound) return;
+      const sentDelta = Math.max(0, packetsSent - previousRef.current.packetsSent);
+      const lostDelta = Math.max(0, packetsLost - previousRef.current.packetsLost);
+      const packetTotal = sentDelta + lostDelta;
+      const lossPercent = packetTotal ? (lostDelta / packetTotal) * 100 : 0;
+      previousRef.current = { bytes, timestamp, packetsSent, packetsLost };
       setStats((current) => ({
         bitrate: bitrate || current.bitrate,
         fps: fps || current.fps,
-        rtt: rtt || current.rtt
+        rtt: rtt || current.rtt,
+        lossPercent,
+        packetsLost
       }));
     } catch {
       // The next interval retries.
@@ -1361,7 +1515,18 @@ async function refreshLiveStatus(
   setStatus: (status: LiveStatus) => void
 ) {
   try {
-    setStatus(await apiRequest<LiveStatus>(token, "/status"));
+    const status = await apiRequest<LiveStatus>(token, "/status");
+    setStatus({
+      ...status,
+      configuredPlatforms: status.configuredPlatforms || (status.configured ? [status.platform] : []),
+      output: status.output || {
+        fps: 0,
+        bitrateKbps: 0,
+        droppedFrames: 0,
+        duplicatedFrames: 0,
+        speed: 0
+      }
+    });
   } catch {
     // Temporary network errors are shown by action buttons when relevant.
   }
@@ -1393,6 +1558,43 @@ function friendlyCameraError(error: unknown) {
     return "La caméra est déjà utilisée par une autre application. Ferme-la puis réessaie.";
   }
   return value.message || "La régie n’a pas pu démarrer.";
+}
+
+function emptyStudioStats(): StudioStats {
+  return {
+    bitrate: 0,
+    fps: 0,
+    rtt: 0,
+    lossPercent: 0,
+    packetsLost: 0
+  };
+}
+
+function emptyStatsHistory(): StatsHistory {
+  return {
+    bytes: 0,
+    timestamp: 0,
+    packetsSent: 0,
+    packetsLost: 0
+  };
+}
+
+function networkHealthLabel(stats: StudioStats) {
+  if (!stats.rtt && !stats.packetsLost) return "Mesure…";
+  if (stats.lossPercent >= 3 || stats.rtt >= 300) {
+    return `Instable · ${stats.lossPercent.toFixed(1)} %`;
+  }
+  if (stats.lossPercent >= 1 || stats.rtt >= 180) {
+    return `Moyen · ${stats.lossPercent.toFixed(1)} %`;
+  }
+  return `Stable · ${stats.rtt || 0} ms`;
+}
+
+function platformLabel(platform: Platform) {
+  if (platform === "kick") return "Kick";
+  if (platform === "twitch") return "Twitch";
+  if (platform === "youtube") return "YouTube";
+  return "RTMP";
 }
 
 function clamp(value: number, min: number, max: number) {
