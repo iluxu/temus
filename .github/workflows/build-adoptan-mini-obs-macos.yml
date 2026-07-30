@@ -35,11 +35,27 @@ jobs:
         working-directory: apps/AdoptanMiniOBS
         run: swift package resolve
 
-      - name: Build release executable
+      - name: Build universal release executable
         working-directory: apps/AdoptanMiniOBS
         env:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
-        run: swift build -c release --product AdoptanMiniOBS
+        run: |
+          swift build \
+            -c release \
+            --product AdoptanMiniOBS \
+            --arch arm64 \
+            --scratch-path .build-arm64
+          swift build \
+            -c release \
+            --product AdoptanMiniOBS \
+            --arch x86_64 \
+            --scratch-path .build-x86_64
+          mkdir -p .build/universal
+          lipo -create \
+            .build-arm64/arm64-apple-macosx/release/AdoptanMiniOBS \
+            .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBS \
+            -output .build/universal/AdoptanMiniOBS
+          lipo -archs .build/universal/AdoptanMiniOBS
 
       - name: Assemble app bundle
         working-directory: apps/AdoptanMiniOBS
@@ -47,7 +63,7 @@ jobs:
           APP="$RUNNER_TEMP/Adoptan Mini OBS.app"
           CONTENTS="$APP/Contents"
           mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
-          cp .build/release/AdoptanMiniOBS "$CONTENTS/MacOS/AdoptanMiniOBS"
+          cp .build/universal/AdoptanMiniOBS "$CONTENTS/MacOS/AdoptanMiniOBS"
           cp Bundle/Info.plist "$CONTENTS/Info.plist"
 
           ICON_SOURCE="$RUNNER_TEMP/AdoptanMiniOBS-1024.png"
@@ -102,5 +118,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.1.0" \
+            --title "Adoptan Mini OBS 0.1.1" \
             --notes "Première version macOS native : caméra iPhone, écran entier, audio Mac + micro, scènes et diffusion RTMPS Kick/Twitch."

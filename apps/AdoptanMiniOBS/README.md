@@ -1,6 +1,7 @@
 # Adoptan Mini OBS pour macOS
 
-Application native SwiftUI qui transforme un Mac en mini studio de direct :
+Application native SwiftUI universelle (Apple Silicon et Intel) qui transforme
+un Mac en mini studio de direct :
 
 - caméra de l’iPhone via **Caméra de continuité** ;
 - capture d’un **écran entier** avec ScreenCaptureKit ;
