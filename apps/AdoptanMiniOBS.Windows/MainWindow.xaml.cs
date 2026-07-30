@@ -146,7 +146,7 @@ public partial class MainWindow : Window
             SetMessage("Colle d’abord la clé privée adoptan.ai.", error: true);
             return;
         }
-        Clipboard.SetText(link);
+        System.Windows.Clipboard.SetText(link);
         SetMessage("Lien iPhone copié. Envoie-le ou ouvre-le avec l’appareil photo de l’iPhone.");
     }
 
@@ -338,16 +338,20 @@ public partial class MainWindow : Window
     {
         StatusText.Text = message;
         StatusText.Foreground = new SolidColorBrush(
-            (Color)ColorConverter.ConvertFromString(error ? "#FF8FA6" : "#A39EB5")
+            (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(
+                error ? "#FF8FA6" : "#A39EB5"
+            )
         );
     }
 
     private void SetStatus(string label, string color)
     {
         StatusLabel.Text = label;
-        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
+        var brush = new SolidColorBrush(
+            (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color)
+        );
         StatusDot.Fill = brush;
-        StatusPill.Background = new SolidColorBrush(Color.FromArgb(
+        StatusPill.Background = new SolidColorBrush(System.Windows.Media.Color.FromArgb(
             44,
             brush.Color.R,
             brush.Color.G,
