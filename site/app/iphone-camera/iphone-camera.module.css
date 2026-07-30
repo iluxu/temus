@@ -1,0 +1,274 @@
+.page {
+  min-height: 100svh;
+  color: #f8f7ff;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(113, 62, 255, 0.3), transparent 36rem),
+    radial-gradient(circle at 100% 55%, rgba(245, 51, 139, 0.2), transparent 30rem),
+    #080713;
+  padding: 0 18px 48px;
+}
+
+.nav {
+  width: min(920px, 100%);
+  min-height: 72px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-decoration: none;
+  font-weight: 760;
+}
+
+.brand span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  font-size: 21px;
+  background: linear-gradient(135deg, #713eff, #ef3287);
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #aaa6bb;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.status i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #747080;
+}
+
+.status.connected {
+  color: #8df5bd;
+  border-color: rgba(73, 223, 145, 0.25);
+  background: rgba(73, 223, 145, 0.08);
+}
+
+.status.connected i {
+  background: #49df91;
+  box-shadow: 0 0 14px #49df91;
+}
+
+.status.permission i,
+.status.connecting i {
+  background: #f8ba4d;
+}
+
+.status.error i {
+  background: #ff647c;
+}
+
+.hero {
+  width: min(760px, 100%);
+  margin: 30px auto 26px;
+  text-align: center;
+}
+
+.hero span {
+  color: #b7a2ff;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
+
+.hero h1 {
+  margin: 12px 0 10px;
+  font-size: clamp(34px, 8vw, 60px);
+  line-height: 0.98;
+  letter-spacing: -0.055em;
+}
+
+.hero p {
+  margin: 0;
+  color: #aaa6bb;
+  font-size: 16px;
+}
+
+.cameraCard {
+  width: min(700px, 100%);
+  margin: 0 auto;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 28px;
+  background: rgba(20, 18, 38, 0.9);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+}
+
+.preview {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border-radius: 19px;
+  background: #020207;
+}
+
+.preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview video.mirrored {
+  transform: scaleX(-1);
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 9px;
+  text-align: center;
+  color: #ccc8da;
+}
+
+.placeholder span {
+  width: 70px;
+  height: 70px;
+  border: 2px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 18px rgba(255, 255, 255, 0.05);
+}
+
+.placeholder b {
+  width: 42px;
+  height: 42px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #a17dff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.placeholder p {
+  margin: 0;
+  color: #7f7a91;
+  font-size: 13px;
+}
+
+.liveBadge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  color: white;
+  background: #f02e61;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.message {
+  min-height: 42px;
+  margin: 16px 8px 10px;
+  color: #bbb6ca;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.actions button {
+  min-height: 52px;
+  border: 0;
+  border-radius: 14px;
+  color: white;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.connectButton {
+  background: linear-gradient(135deg, #7547ff, #e5338c);
+}
+
+.connectButton:disabled {
+  opacity: 0.55;
+}
+
+.disconnectButton,
+.switchButton {
+  background: #2c2941;
+}
+
+.steps {
+  width: min(700px, 100%);
+  margin: 22px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.steps div {
+  padding: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.steps span {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border-radius: 8px;
+  color: #cbbdff;
+  background: rgba(117, 71, 255, 0.2);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.steps p {
+  margin: 10px 0 0;
+  color: #9691a8;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 620px) {
+  .page {
+    padding-inline: 12px;
+  }
+
+  .hero {
+    margin-top: 18px;
+  }
+
+  .cameraCard {
+    border-radius: 22px;
+  }
+
+  .actions,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}

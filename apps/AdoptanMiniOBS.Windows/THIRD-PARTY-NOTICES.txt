@@ -1,0 +1,15 @@
+Adoptan Mini OBS for Windows includes or is distributed with:
+
+1. FFmpeg
+   Copyright (c) FFmpeg contributors
+   License: GNU General Public License version 3 or later for the bundled build
+   Project: https://ffmpeg.org/
+   Source: https://ffmpeg.org/download.html
+   Windows build scripts: https://github.com/BtbN/FFmpeg-Builds
+
+2. QRCoder
+   Copyright (c) Raffael Herrmann and contributors
+   License: Apache License 2.0
+   Project: https://github.com/codebude/QRCoder
+
+Each project remains subject to its own license terms.
