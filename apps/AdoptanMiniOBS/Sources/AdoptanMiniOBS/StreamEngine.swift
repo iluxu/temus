@@ -17,6 +17,7 @@ final class StreamEngine: ObservableObject {
     @Published private(set) var isConfiguring = false
     @Published private(set) var cameraHasFrames = false
     @Published private(set) var cameraStatusText = "Recherche de la caméra iPhone…"
+    @Published private(set) var audioStatusText = "Recherche du microphone du Mac…"
     @Published var message = "Initialisation…"
 
     @Published var selectedCameraID = ""
@@ -119,9 +120,16 @@ final class StreamEngine: ObservableObject {
         }
 
         microphones = microphoneDevices.map {
-            CaptureDeviceOption(id: $0.uniqueID, name: $0.localizedName, isIPhone: false)
+            CaptureDeviceOption(
+                id: $0.uniqueID,
+                name: $0.localizedName,
+                isIPhone: isIPhoneAudioDevice($0)
+            )
         }
-        .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        .sorted {
+            if $0.isIPhone != $1.isIPhone { return !$0.isIPhone }
+            return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+        }
 
         if !cameras.contains(where: { $0.id == selectedCameraID }) {
             selectedCameraID = preferredCamera()?.uniqueID
@@ -135,7 +143,16 @@ final class StreamEngine: ObservableObject {
             selectedCameraID = continuityCamera.uniqueID
         }
         if !microphones.contains(where: { $0.id == selectedMicrophoneID }) {
-            selectedMicrophoneID = microphones.first?.id ?? ""
+            selectedMicrophoneID = preferredLocalMicrophone()?.uniqueID
+                ?? microphones.first?.id
+                ?? ""
+        } else if let selected = microphoneDevices.first(where: {
+            $0.uniqueID == selectedMicrophoneID
+        }), isIPhoneAudioDevice(selected), let local = preferredLocalMicrophone() {
+            // The iPhone camera must never depend on the iPhone microphone. A continuity
+            // microphone can disappear while the camera remains available, which used to
+            // interrupt the whole AVCaptureSession and leave the program black.
+            selectedMicrophoneID = local.uniqueID
         }
 
         do {
@@ -177,6 +194,9 @@ final class StreamEngine: ObservableObject {
         isCaptureReady = false
         cameraHasFrames = false
         cameraStatusText = "Configuration de la caméra…"
+        audioStatusText = includeMicrophone
+            ? "Configuration du microphone…"
+            : "Microphone désactivé — la vidéo reste indépendante."
         cameraMonitorTask?.cancel()
         savePreferences()
         await screenCapture.stop()
@@ -189,24 +209,7 @@ final class StreamEngine: ObservableObject {
         videoMixerSettings.mainTrack = scene == .cameraOnly || scene == .cameraScreen ? 1 : 0
         await mixer.setVideoMixerSettings(videoMixerSettings)
 
-        let mainAudioTrack: UInt8 = includeMicrophone ? 0 : 1
-        let audioSettings = AudioMixerSettings(
-            sampleRate: 48_000,
-            channels: 2,
-            isMuted: !includeMicrophone && !includeSystemAudio,
-            mainTrack: mainAudioTrack,
-            tracks: [
-                0: AudioMixerTrackSettings(
-                    volume: Float(microphoneVolume),
-                    isMuted: !includeMicrophone
-                ),
-                1: AudioMixerTrackSettings(
-                    volume: Float(systemAudioVolume),
-                    isMuted: !includeSystemAudio
-                )
-            ]
-        )
-        await mixer.setAudioMixerSettings(audioSettings)
+        await applyAudioMixerSettings()
 
         await configureComposition()
 
@@ -228,19 +231,14 @@ final class StreamEngine: ObservableObject {
             cameraStatusText = "Aucune caméra iPhone détectée."
         }
 
-        if includeMicrophone,
-           let microphone = microphoneDevices.first(where: { $0.uniqueID == selectedMicrophoneID }) {
-            do {
-                try await mixer.attachAudio(microphone, track: 0)
-            } catch {
-                message = "Micro indisponible : \(error.localizedDescription)"
-            }
-        }
-
+        // Start video first. Audio is attached afterwards so a missing continuity
+        // microphone can no longer prevent the camera and preview from starting.
         if !hasStartedMixer {
             await mixer.startRunning()
             hasStartedMixer = true
         }
+
+        await attachMicrophoneWithoutBlockingVideo()
 
         do {
             try await mixer.setFrameRate(Float64(fps.rawValue))
@@ -581,6 +579,95 @@ final class StreamEngine: ObservableObject {
             identity.contains("continuité")
     }
 
+    private func isIPhoneAudioDevice(_ device: AVCaptureDevice) -> Bool {
+        let identity = [
+            device.localizedName,
+            device.manufacturer,
+            device.modelID
+        ]
+        .joined(separator: " ")
+        .lowercased()
+        return identity.contains("iphone") ||
+            identity.contains("continuity") ||
+            identity.contains("continuité")
+    }
+
+    private func preferredLocalMicrophone() -> AVCaptureDevice? {
+        if let systemDefault = AVCaptureDevice.default(for: .audio),
+           !isIPhoneAudioDevice(systemDefault),
+           microphoneDevices.contains(where: { $0.uniqueID == systemDefault.uniqueID }) {
+            return systemDefault
+        }
+        return microphoneDevices.first(where: { !isIPhoneAudioDevice($0) })
+    }
+
+    private func attachMicrophoneWithoutBlockingVideo() async {
+        guard includeMicrophone else {
+            try? await mixer.attachAudio(nil, track: 0)
+            audioStatusText = "Microphone désactivé — caméra et écran restent actifs."
+            await applyAudioMixerSettings()
+            return
+        }
+
+        let requested = microphoneDevices.first(where: {
+            $0.uniqueID == selectedMicrophoneID
+        })
+        let localFallback = preferredLocalMicrophone()
+        var candidates: [AVCaptureDevice] = []
+
+        if let requested, !isIPhoneAudioDevice(requested) {
+            candidates.append(requested)
+        }
+        if let localFallback,
+           !candidates.contains(where: { $0.uniqueID == localFallback.uniqueID }) {
+            candidates.append(localFallback)
+        }
+
+        // Only try an iPhone microphone when no Mac/external local microphone exists.
+        if candidates.isEmpty, let requested {
+            candidates.append(requested)
+        }
+
+        for microphone in candidates {
+            do {
+                try await mixer.attachAudio(microphone, track: 0)
+                selectedMicrophoneID = microphone.uniqueID
+                audioStatusText = "\(microphone.localizedName) actif."
+                return
+            } catch {
+                try? await mixer.attachAudio(nil, track: 0)
+                audioStatusText = "\(microphone.localizedName) indisponible — essai du micro du Mac…"
+            }
+        }
+
+        // Audio failure is deliberately non-fatal. Screen and iPhone video continue.
+        includeMicrophone = false
+        try? await mixer.attachAudio(nil, track: 0)
+        await applyAudioMixerSettings()
+        audioStatusText = "Aucun micro disponible — vidéo active sans micro."
+    }
+
+    private func applyAudioMixerSettings() async {
+        let mainAudioTrack: UInt8 = includeMicrophone ? 0 : 1
+        let settings = AudioMixerSettings(
+            sampleRate: 48_000,
+            channels: 2,
+            isMuted: !includeMicrophone && !includeSystemAudio,
+            mainTrack: mainAudioTrack,
+            tracks: [
+                0: AudioMixerTrackSettings(
+                    volume: Float(microphoneVolume),
+                    isMuted: !includeMicrophone
+                ),
+                1: AudioMixerTrackSettings(
+                    volume: Float(systemAudioVolume),
+                    isMuted: !includeSystemAudio
+                )
+            ]
+        )
+        await mixer.setAudioMixerSettings(settings)
+    }
+
     private func observeDeviceChanges() {
         let center = NotificationCenter.default
         for name in [
@@ -630,7 +717,7 @@ final class StreamEngine: ObservableObject {
             guard !Task.isCancelled else { return }
             cameraHasFrames = false
             cameraStatusText = "\(cameraName) est sélectionnée, mais aucun signal vidéo n’arrive."
-            message = "Déverrouille l’iPhone, rapproche-le du Mac, puis clique sur Appliquer à la capture."
+            message = "Verrouille l’iPhone près du Mac, ferme les autres apps caméra, puis applique à nouveau."
         }
     }
 

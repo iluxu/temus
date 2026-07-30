@@ -31,9 +31,13 @@ C’est le meilleur point de départ pour éviter les freezes. Le 1080p30 à
 4. Autoriser Caméra, Microphone et Enregistrement de l’écran.
 5. Si macOS le demande, fermer puis relancer l’app après l’autorisation écran.
 
-La version 0.1.2 utilise explicitement le type `Continuity Camera` sur macOS 14
+La version 0.1.3 utilise explicitement le type `Continuity Camera` sur macOS 14
 et versions suivantes. L’état sous le sélecteur de caméra confirme si l’iPhone
 est seulement détecté ou s’il transmet réellement des images.
+
+Le microphone du Mac est désormais prioritaire. Si le microphone de l’iPhone
+devient indisponible, la caméra et l’écran continuent de fonctionner et l’app
+retente automatiquement avec un microphone local.
 
 La build publique est signée localement de façon ad hoc. Une signature Apple
 Developer ID et la notarisation nécessitent le certificat Apple du propriétaire.

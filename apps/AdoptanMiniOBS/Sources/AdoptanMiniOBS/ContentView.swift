@@ -123,9 +123,19 @@ struct ContentView: View {
                     Text("Aucun micro").tag("")
                 }
                 ForEach(engine.microphones) { microphone in
-                    Text(microphone.name).tag(microphone.id)
+                    Text(
+                        microphone.isIPhone
+                            ? "📱 \(microphone.name) — non recommandé"
+                            : microphone.name
+                    )
+                    .tag(microphone.id)
                 }
             }
+
+            Text(engine.audioStatusText)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Button {
                 Task { await engine.refreshSources() }

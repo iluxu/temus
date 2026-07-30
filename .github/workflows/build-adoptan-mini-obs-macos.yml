@@ -118,5 +118,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.1.2" \
-            --notes "Correction Caméra de continuité : détection explicite de l’iPhone, activation automatique et diagnostic du signal vidéo."
+            --title "Adoptan Mini OBS 0.1.3" \
+            --notes "Correction audio/vidéo : le microphone iPhone ne peut plus bloquer la caméra. Priorité au micro Mac et repli vidéo sans micro."
