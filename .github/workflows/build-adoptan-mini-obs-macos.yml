@@ -1,0 +1,106 @@
+name: Build Adoptan Mini OBS for macOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "adoptan-mini-obs-v*"
+    paths:
+      - "apps/AdoptanMiniOBS/**"
+      - ".github/workflows/build-adoptan-mini-obs-macos.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.4
+        run: |
+          if [ -d /Applications/Xcode_16.4.app ]; then
+            sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          fi
+          swift --version
+          xcodebuild -version
+
+      - name: Resolve dependencies
+        working-directory: apps/AdoptanMiniOBS
+        run: swift package resolve
+
+      - name: Build release executable
+        working-directory: apps/AdoptanMiniOBS
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
+        run: swift build -c release --product AdoptanMiniOBS
+
+      - name: Assemble app bundle
+        working-directory: apps/AdoptanMiniOBS
+        run: |
+          APP="$RUNNER_TEMP/Adoptan Mini OBS.app"
+          CONTENTS="$APP/Contents"
+          mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
+          cp .build/release/AdoptanMiniOBS "$CONTENTS/MacOS/AdoptanMiniOBS"
+          cp Bundle/Info.plist "$CONTENTS/Info.plist"
+
+          ICON_SOURCE="$RUNNER_TEMP/AdoptanMiniOBS-1024.png"
+          ICONSET="$RUNNER_TEMP/AppIcon.iconset"
+          mkdir -p "$ICONSET"
+          swift Bundle/make-icon.swift "$ICON_SOURCE"
+          sips -z 16 16 "$ICON_SOURCE" --out "$ICONSET/icon_16x16.png"
+          sips -z 32 32 "$ICON_SOURCE" --out "$ICONSET/icon_16x16@2x.png"
+          sips -z 32 32 "$ICON_SOURCE" --out "$ICONSET/icon_32x32.png"
+          sips -z 64 64 "$ICON_SOURCE" --out "$ICONSET/icon_32x32@2x.png"
+          sips -z 128 128 "$ICON_SOURCE" --out "$ICONSET/icon_128x128.png"
+          sips -z 256 256 "$ICON_SOURCE" --out "$ICONSET/icon_128x128@2x.png"
+          sips -z 256 256 "$ICON_SOURCE" --out "$ICONSET/icon_256x256.png"
+          sips -z 512 512 "$ICON_SOURCE" --out "$ICONSET/icon_256x256@2x.png"
+          sips -z 512 512 "$ICON_SOURCE" --out "$ICONSET/icon_512x512.png"
+          cp "$ICON_SOURCE" "$ICONSET/icon_512x512@2x.png"
+          iconutil -c icns "$ICONSET" -o "$CONTENTS/Resources/AppIcon.icns"
+
+          codesign \
+            --force \
+            --deep \
+            --options runtime \
+            --sign - \
+            --entitlements Bundle/AdoptanMiniOBS.entitlements \
+            "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          plutil -lint "$CONTENTS/Info.plist"
+
+      - name: Package and checksum
+        run: |
+          cd "$RUNNER_TEMP"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "Adoptan Mini OBS.app" \
+            "$GITHUB_WORKSPACE/Adoptan-Mini-OBS-macOS.zip"
+          cd "$GITHUB_WORKSPACE"
+          shasum -a 256 Adoptan-Mini-OBS-macOS.zip > Adoptan-Mini-OBS-macOS.zip.sha256
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Adoptan-Mini-OBS-macOS
+          path: |
+            Adoptan-Mini-OBS-macOS.zip
+            Adoptan-Mini-OBS-macOS.zip.sha256
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/adoptan-mini-obs-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            Adoptan-Mini-OBS-macOS.zip \
+            Adoptan-Mini-OBS-macOS.zip.sha256 \
+            --title "Adoptan Mini OBS 0.1.0" \
+            --notes "Première version macOS native : caméra iPhone, écran entier, audio Mac + micro, scènes et diffusion RTMPS Kick/Twitch."
