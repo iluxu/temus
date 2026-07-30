@@ -42,14 +42,16 @@ export default function IPhoneCameraSender() {
   const [libraryReady, setLibraryReady] = useState(false);
   const [token, setToken] = useState("");
   const [status, setStatus] = useState<CameraStatus>("idle");
+  const [videoOnly, setVideoOnly] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const [message, setMessage] = useState(
-    "Cette page envoie uniquement la caméra et le micro de l’iPhone au Mini OBS Windows."
+    "Cette page envoie uniquement la caméra et le micro de l’iPhone à Adoptan Mini OBS."
   );
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
     const queryToken = query.get("key")?.trim() || "";
+    setVideoOnly(query.get("videoOnly") === "1");
     const savedToken = window.localStorage.getItem(TOKEN_STORAGE_KEY) || "";
     if (queryToken) {
       setToken(queryToken);
@@ -67,7 +69,7 @@ export default function IPhoneCameraSender() {
   const connect = async () => {
     if (!token) {
       setStatus("error");
-      setMessage("La clé privée manque. Scanne le QR affiché dans l’application Windows.");
+      setMessage("La clé privée manque. Scanne le QR affiché dans Adoptan Mini OBS.");
       return;
     }
     if (!libraryReady || !window.MediaMTXWebRTCPublisher) {
@@ -83,7 +85,7 @@ export default function IPhoneCameraSender() {
 
     stopCamera(streamRef, publisherRef, wakeLockRef, videoRef);
     setStatus("permission");
-    setMessage("Autorise la caméra et le microphone de l’iPhone.");
+    setMessage("Autorise la caméra de l’iPhone. Le microphone est facultatif.");
 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -93,13 +95,26 @@ export default function IPhoneCameraSender() {
           height: { ideal: 720, max: 1080 },
           frameRate: { ideal: 30, max: 30 }
         },
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 2
-        }
+        audio: false
       });
+      if (!videoOnly) {
+        try {
+          const microphone = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+              autoGainControl: true,
+              channelCount: 2
+            }
+          });
+          const audioTrack = microphone.getAudioTracks()[0];
+          if (audioTrack) stream.addTrack(audioTrack);
+        } catch {
+          // Video is the required source. A denied/unavailable iPhone microphone
+          // must never prevent the camera from reaching Mini OBS.
+        }
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -108,7 +123,7 @@ export default function IPhoneCameraSender() {
       }
 
       setStatus("connecting");
-      setMessage("Connexion sécurisée de l’iPhone à Adoptan Mini OBS Windows…");
+      setMessage("Connexion sécurisée de l’iPhone à Adoptan Mini OBS…");
       const Publisher = window.MediaMTXWebRTCPublisher;
       publisherRef.current = new Publisher({
         url: `${MEDIA_ROOT}/whip`,
@@ -125,7 +140,7 @@ export default function IPhoneCameraSender() {
         },
         onConnected: () => {
           setStatus("connected");
-          setMessage("Caméra connectée. Retourne sur le PC et démarre l’aperçu.");
+          setMessage("Caméra connectée. Retourne sur le Mac ou le PC et démarre l’aperçu.");
           configureSender(publisherRef.current?.pc);
         }
       });
@@ -202,8 +217,8 @@ export default function IPhoneCameraSender() {
         </nav>
 
         <header className={styles.hero}>
-          <span>Caméra iPhone · Mini OBS Windows</span>
-          <h1>L’iPhone devient ta caméra Windows.</h1>
+          <span>Caméra iPhone · Adoptan Mini OBS</span>
+          <h1>L’iPhone devient ta caméra Mac ou Windows.</h1>
           <p>Garde Safari ouvert et l’iPhone branché pendant le direct.</p>
         </header>
 
@@ -228,7 +243,7 @@ export default function IPhoneCameraSender() {
                 <strong>{status === "permission" ? "Autorisation…" : "Connexion…"}</strong>
               </div>
             )}
-            {connected && <div className={styles.liveBadge}>VERS WINDOWS</div>}
+            {connected && <div className={styles.liveBadge}>VERS MINI OBS</div>}
           </div>
 
           <p className={styles.message}>{message}</p>
@@ -258,9 +273,9 @@ export default function IPhoneCameraSender() {
         </section>
 
         <section className={styles.steps}>
-          <div><span>1</span><p>Scanne le QR depuis le Mini OBS Windows.</p></div>
-          <div><span>2</span><p>Autorise caméra et micro dans Safari.</p></div>
-          <div><span>3</span><p>Quand « Connectée » apparaît, retourne sur le PC.</p></div>
+          <div><span>1</span><p>Scanne le QR depuis Adoptan Mini OBS.</p></div>
+          <div><span>2</span><p>Autorise la caméra dans Safari. Le micro est facultatif.</p></div>
+          <div><span>3</span><p>Quand « Connectée » apparaît, retourne sur le Mac ou le PC.</p></div>
         </section>
       </main>
     </>

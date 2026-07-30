@@ -3,7 +3,8 @@
 Application native SwiftUI universelle (Apple Silicon et Intel) qui transforme
 un Mac en mini studio de direct :
 
-- caméra de l’iPhone via **Caméra de continuité** ;
+- caméra de l’iPhone par **QR + Safari**, sans Caméra de continuité ;
+- mode Caméra de continuité conservé comme solution secondaire ;
 - capture d’un **écran entier** avec ScreenCaptureKit ;
 - mixage du microphone et du son du Mac ;
 - scènes écran/caméra, incrustation redimensionnable et positionnable ;
@@ -28,18 +29,19 @@ C’est le meilleur point de départ pour éviter les freezes. Le 1080p30 à
 1. Télécharger l’archive `Adoptan-Mini-OBS-macOS.zip` de la dernière release.
 2. Décompresser puis glisser l’app dans `Applications`.
 3. Au premier lancement, faire clic droit sur l’app puis **Ouvrir**.
-4. Autoriser Caméra, Microphone et Enregistrement de l’écran.
+4. Autoriser Microphone et Enregistrement de l’écran. La permission Caméra
+   n’est requise que pour le mode macOS/Continuité secondaire.
 5. Si macOS le demande, fermer puis relancer l’app après l’autorisation écran.
 
-La version 0.1.5 utilise explicitement le type `Continuity Camera` sur macOS 14
-et versions suivantes. L’état sous le sélecteur de caméra confirme si l’iPhone
-est seulement détecté ou s’il transmet réellement des images.
+La version 0.2.0 utilise par défaut la caméra iPhone réseau. Colle la clé privée
+adoptan.ai, scanne le QR avec l’iPhone et touche **Connecter la caméra** dans
+Safari. La caméra est reçue depuis le relais HLS ; Caméra de continuité peut
+rester désactivée.
 
-La caméra iPhone (ou FaceTime HD) utilise une session AVFoundation native,
-entièrement séparée de la session audio du mixeur RTMP. Une reconfiguration du
-microphone ne peut donc plus figer la caméra. La capture d’écran accepte
-uniquement les images complètes fournies par ScreenCaptureKit, avec un témoin
-d’activité distinct dans l’interface.
+L’écran du Mac possède à nouveau la piste vidéo principale, comme dans la
+première version. La caméra iPhone réseau est une incrustation indépendante :
+une coupure de l’iPhone ne coupe donc jamais le partage d’écran. Chaque source
+possède son propre témoin d’images reçues en continu.
 
 Le microphone du Mac est désormais prioritaire. Si le microphone de l’iPhone
 devient indisponible, la caméra et l’écran continuent de fonctionner et l’app

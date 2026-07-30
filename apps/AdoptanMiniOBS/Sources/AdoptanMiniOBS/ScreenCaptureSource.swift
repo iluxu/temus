@@ -74,11 +74,9 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
         switch outputType {
         case .screen:
-            guard isCompleteScreenFrame(sampleBuffer) else { return }
             Task {
-                // ScreenCaptureKit is always secondary. The iPhone/FaceTime
-                // camera owns track 0 so its output can never be replaced by
-                // the screen source or an error while starting that source.
+                // The Mac display owns the primary track, matching the first
+                // screen-share release that worked on the target MacBook.
                 await mixer.append(sampleBuffer, track: VideoSourceTrack.screen)
             }
             let now = ProcessInfo.processInfo.systemUptime
@@ -101,18 +99,5 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.onError?("La capture d’écran s’est arrêtée : \(error.localizedDescription)")
         }
-    }
-
-    private func isCompleteScreenFrame(_ sampleBuffer: CMSampleBuffer) -> Bool {
-        guard let attachments = CMSampleBufferGetSampleAttachmentsArray(
-            sampleBuffer,
-            createIfNecessary: false
-        ) as? [[SCStreamFrameInfo: Any]],
-        let frame = attachments.first,
-        let rawStatus = frame[.status] as? Int,
-        let status = SCFrameStatus(rawValue: rawStatus) else {
-            return false
-        }
-        return status == .complete
     }
 }

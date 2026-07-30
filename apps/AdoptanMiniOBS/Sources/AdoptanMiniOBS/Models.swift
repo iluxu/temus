@@ -2,11 +2,17 @@ import CoreGraphics
 import Foundation
 
 enum VideoSourceTrack {
-    // Keep the physical camera on HaishinKit's primary/default track. This is
-    // the path used by the native AVCaptureSession and must not depend on the
-    // ScreenCaptureKit source being available.
-    static let camera: UInt8 = 0
-    static let screen: UInt8 = 1
+    // Restore the routing from the first working screen-share release:
+    // ScreenCaptureKit owns the primary track and the camera is only an overlay.
+    static let screen: UInt8 = 0
+    static let camera: UInt8 = 1
+}
+
+enum CameraInputMode: String, CaseIterable, Identifiable {
+    case iphoneNetwork = "iPhone par QR — sans Continuité"
+    case macOSDevice = "Caméra macOS / Continuité"
+
+    var id: Self { self }
 }
 
 enum StreamPlatform: String, CaseIterable, Identifiable {

@@ -83,31 +83,6 @@ struct ContentView: View {
 
     private var sourceSection: some View {
         SettingsCard(title: "Sources", icon: "video.fill") {
-            Picker("Caméra", selection: $engine.selectedCameraID) {
-                if engine.cameras.isEmpty {
-                    Text("Aucune caméra").tag("")
-                }
-                ForEach(engine.cameras) { camera in
-                    Text(camera.isIPhone ? "📱 \(camera.name)" : camera.name)
-                        .tag(camera.id)
-                }
-            }
-            .onChange(of: engine.selectedCameraID) { _ in
-                guard engine.isCaptureReady, !engine.isConfiguring else { return }
-                Task { await engine.configureCapture() }
-            }
-
-            HStack(alignment: .top, spacing: 7) {
-                Circle()
-                    .fill(engine.cameraHasFrames ? Color.green : Color.orange)
-                    .frame(width: 8, height: 8)
-                    .padding(.top, 4)
-                Text(engine.cameraStatusText)
-                    .font(.caption)
-                    .foregroundStyle(engine.cameraHasFrames ? Color.green : Color.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
             Picker("Écran", selection: $engine.selectedDisplayID) {
                 if engine.displays.isEmpty {
                     Text("Aucun écran").tag(UInt32(0))
@@ -128,6 +103,89 @@ struct ContentView: View {
                     .foregroundStyle(engine.screenHasFrames ? Color.green : Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
+
+            Divider()
+
+            Picker("Mode caméra", selection: $engine.cameraInputMode) {
+                ForEach(CameraInputMode.allCases) { mode in
+                    Text(mode.rawValue).tag(mode)
+                }
+            }
+            .onChange(of: engine.cameraInputMode) { _ in
+                guard engine.isCaptureReady, !engine.isConfiguring else { return }
+                Task { await engine.configureCapture() }
+            }
+
+            if engine.cameraInputMode == .iphoneNetwork {
+                SecureField("Clé privée adoptan.ai", text: $engine.iphoneCameraKey)
+                    .textFieldStyle(.roundedBorder)
+                    .onSubmit {
+                        engine.saveIPhoneCameraKey()
+                        Task { await engine.configureCapture() }
+                    }
+
+                if let qrCode = engine.iphoneCameraQRCode {
+                    HStack {
+                        Spacer()
+                        Image(nsImage: qrCode)
+                            .interpolation(.none)
+                            .resizable()
+                            .frame(width: 150, height: 150)
+                            .background(Color.white)
+                            .padding(8)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        Spacer()
+                    }
+                    Text("Scanne ce QR avec l’iPhone, ouvre Safari, puis touche « Connecter la caméra ».")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Colle la clé privée adoptan.ai pour générer le QR sécurisé.")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+
+                Button {
+                    engine.copyIPhoneCameraLink()
+                } label: {
+                    Label("Copier le lien iPhone", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(.link)
+                .disabled(
+                    engine.iphoneCameraKey
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .isEmpty
+                )
+            } else {
+                Picker("Caméra", selection: $engine.selectedCameraID) {
+                    if engine.cameras.isEmpty {
+                        Text("Aucune caméra").tag("")
+                    }
+                    ForEach(engine.cameras) { camera in
+                        Text(camera.isIPhone ? "📱 \(camera.name)" : camera.name)
+                            .tag(camera.id)
+                    }
+                }
+                .onChange(of: engine.selectedCameraID) { _ in
+                    guard engine.isCaptureReady, !engine.isConfiguring else { return }
+                    Task { await engine.configureCapture() }
+                }
+            }
+
+            HStack(alignment: .top, spacing: 7) {
+                Circle()
+                    .fill(engine.cameraHasFrames ? Color.green : Color.orange)
+                    .frame(width: 8, height: 8)
+                    .padding(.top, 4)
+                Text(engine.cameraStatusText)
+                    .font(.caption)
+                    .foregroundStyle(engine.cameraHasFrames ? Color.green : Color.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Divider()
 
             Picker("Micro", selection: $engine.selectedMicrophoneID) {
                 if engine.microphones.isEmpty {
@@ -307,7 +365,11 @@ struct ContentView: View {
                 .onChange(of: engine.rotateCamera180) { _ in
                     engine.applySceneLive()
                 }
-            Text("Si l’iPhone n’apparaît pas : même identifiant Apple, Wi‑Fi et Bluetooth actifs, puis verrouille et déverrouille l’iPhone.")
+            Text(
+                engine.cameraInputMode == .iphoneNetwork
+                    ? "Le mode QR utilise Safari et adoptan.ai : Caméra de continuité peut rester désactivée."
+                    : "Le mode macOS nécessite Caméra de continuité pour utiliser directement l’iPhone."
+            )
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
