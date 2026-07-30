@@ -118,6 +118,17 @@ struct ContentView: View {
                 }
             }
 
+            HStack(alignment: .top, spacing: 7) {
+                Circle()
+                    .fill(engine.screenHasFrames ? Color.green : Color.orange)
+                    .frame(width: 8, height: 8)
+                    .padding(.top, 4)
+                Text(engine.screenStatusText)
+                    .font(.caption)
+                    .foregroundStyle(engine.screenHasFrames ? Color.green : Color.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             Picker("Micro", selection: $engine.selectedMicrophoneID) {
                 if engine.microphones.isEmpty {
                     Text("Aucun micro").tag("")

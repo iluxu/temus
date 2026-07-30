@@ -31,13 +31,15 @@ C’est le meilleur point de départ pour éviter les freezes. Le 1080p30 à
 4. Autoriser Caméra, Microphone et Enregistrement de l’écran.
 5. Si macOS le demande, fermer puis relancer l’app après l’autorisation écran.
 
-La version 0.1.4 utilise explicitement le type `Continuity Camera` sur macOS 14
+La version 0.1.5 utilise explicitement le type `Continuity Camera` sur macOS 14
 et versions suivantes. L’état sous le sélecteur de caméra confirme si l’iPhone
 est seulement détecté ou s’il transmet réellement des images.
 
-La caméra iPhone (ou FaceTime HD) occupe la piste vidéo principale du moteur.
-La capture d’écran est une source secondaire : elle ne peut donc plus remplacer
-la caméra par un écran noir pendant la composition.
+La caméra iPhone (ou FaceTime HD) utilise une session AVFoundation native,
+entièrement séparée de la session audio du mixeur RTMP. Une reconfiguration du
+microphone ne peut donc plus figer la caméra. La capture d’écran accepte
+uniquement les images complètes fournies par ScreenCaptureKit, avec un témoin
+d’activité distinct dans l’interface.
 
 Le microphone du Mac est désormais prioritaire. Si le microphone de l’iPhone
 devient indisponible, la caméra et l’écran continuent de fonctionner et l’app

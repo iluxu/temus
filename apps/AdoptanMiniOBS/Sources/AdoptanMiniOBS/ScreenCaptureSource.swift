@@ -1,6 +1,7 @@
 @preconcurrency import ScreenCaptureKit
 import CoreMedia
 import CoreVideo
+import Foundation
 import HaishinKit
 
 final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
@@ -11,7 +12,9 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
     )
     private var stream: SCStream?
     private var includeSystemAudio = true
+    private var lastFrameCallbackTime = 0.0
 
+    var onFrame: (() -> Void)?
     var onError: ((String) -> Void)?
 
     init(mixer: MediaMixer) {
@@ -28,6 +31,7 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
     ) async throws {
         await stop()
         self.includeSystemAudio = includeSystemAudio
+        lastFrameCallbackTime = 0
 
         let filter = SCContentFilter(
             display: display,
@@ -70,11 +74,19 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
         switch outputType {
         case .screen:
+            guard isCompleteScreenFrame(sampleBuffer) else { return }
             Task {
                 // ScreenCaptureKit is always secondary. The iPhone/FaceTime
                 // camera owns track 0 so its output can never be replaced by
                 // the screen source or an error while starting that source.
                 await mixer.append(sampleBuffer, track: VideoSourceTrack.screen)
+            }
+            let now = ProcessInfo.processInfo.systemUptime
+            if lastFrameCallbackTime == 0 || now - lastFrameCallbackTime >= 0.5 {
+                lastFrameCallbackTime = now
+                DispatchQueue.main.async { [weak self] in
+                    self?.onFrame?()
+                }
             }
         case .audio where includeSystemAudio:
             Task {
@@ -89,5 +101,18 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.onError?("La capture d’écran s’est arrêtée : \(error.localizedDescription)")
         }
+    }
+
+    private func isCompleteScreenFrame(_ sampleBuffer: CMSampleBuffer) -> Bool {
+        guard let attachments = CMSampleBufferGetSampleAttachmentsArray(
+            sampleBuffer,
+            createIfNecessary: false
+        ) as? [[SCStreamFrameInfo: Any]],
+        let frame = attachments.first,
+        let rawStatus = frame[.status] as? Int,
+        let status = SCFrameStatus(rawValue: rawStatus) else {
+            return false
+        }
+        return status == .complete
     }
 }

@@ -16,7 +16,9 @@ final class StreamEngine: ObservableObject {
     @Published private(set) var isCaptureReady = false
     @Published private(set) var isConfiguring = false
     @Published private(set) var cameraHasFrames = false
+    @Published private(set) var screenHasFrames = false
     @Published private(set) var cameraStatusText = "Recherche de la caméra iPhone…"
+    @Published private(set) var screenStatusText = "Recherche de l’écran…"
     @Published private(set) var audioStatusText = "Recherche du microphone du Mac…"
     @Published var message = "Initialisation…"
 
@@ -46,11 +48,36 @@ final class StreamEngine: ObservableObject {
         multiTrackAudioMixingEnabled: true
     )
 
+    private lazy var cameraCapture: CameraCaptureSource = {
+        let source = CameraCaptureSource(mixer: mixer)
+        source.onFrame = { [weak self] in
+            Task { @MainActor in
+                self?.cameraDidOutputFrame()
+            }
+        }
+        source.onError = { [weak self] error in
+            Task { @MainActor in
+                self?.cameraHasFrames = false
+                self?.cameraStatusText = error
+                self?.message = error
+            }
+        }
+        return source
+    }()
+
     private lazy var screenCapture: ScreenCaptureSource = {
         let source = ScreenCaptureSource(mixer: mixer)
+        source.onFrame = { [weak self] in
+            Task { @MainActor in
+                self?.screenDidOutputFrame()
+            }
+        }
         source.onError = { [weak self] error in
-            self?.message = error
-            self?.isCaptureReady = false
+            Task { @MainActor in
+                self?.screenHasFrames = false
+                self?.screenStatusText = error
+                self?.message = error
+            }
         }
         return source
     }()
@@ -62,8 +89,11 @@ final class StreamEngine: ObservableObject {
     private var activeStream: (any StreamConvertible)?
     private var readyStateTask: Task<Void, Never>?
     private var cameraMonitorTask: Task<Void, Never>?
+    private var screenMonitorTask: Task<Void, Never>?
     private var deviceObservers: [NSObjectProtocol] = []
     private var hasStartedMixer = false
+    private var lastCameraFrameAt: Date?
+    private var lastScreenFrameAt: Date?
 
     @ScreenActor private var overlayObject: VideoTrackScreenObject?
     @ScreenActor private var mirrorEffect = MirrorEffect()
@@ -193,15 +223,22 @@ final class StreamEngine: ObservableObject {
         isConfiguring = true
         isCaptureReady = false
         cameraHasFrames = false
+        screenHasFrames = false
+        lastCameraFrameAt = nil
+        lastScreenFrameAt = nil
         cameraStatusText = "Configuration de la caméra…"
+        screenStatusText = "Configuration de la capture d’écran…"
         audioStatusText = includeMicrophone
             ? "Configuration du microphone…"
             : "Microphone désactivé — la vidéo reste indépendante."
         cameraMonitorTask?.cancel()
+        screenMonitorTask?.cancel()
         savePreferences()
         await screenCapture.stop()
+        await cameraCapture.stop()
 
         try? await mixer.attachVideo(nil, track: VideoSourceTrack.camera)
+        try? await mixer.attachVideo(nil, track: VideoSourceTrack.screen)
         try? await mixer.attachAudio(nil, track: 0)
 
         var videoMixerSettings = await mixer.videoMixerSettings
@@ -213,6 +250,16 @@ final class StreamEngine: ObservableObject {
 
         await configureComposition()
 
+        // Configure audio before the independent camera starts. The RTMP mixer
+        // now owns audio only; AVFoundation camera frames arrive through the
+        // dedicated CameraCaptureSource and cannot be interrupted by it.
+        await attachMicrophoneWithoutBlockingVideo()
+
+        if !hasStartedMixer {
+            await mixer.startRunning()
+            hasStartedMixer = true
+        }
+
         if let camera = cameraDevices.first(where: { $0.uniqueID == selectedCameraID }) {
             if camera.isInUseByAnotherApplication {
                 cameraStatusText = "\(camera.localizedName) est utilisée par une autre application."
@@ -222,7 +269,7 @@ final class StreamEngine: ObservableObject {
                 cameraStatusText = "\(camera.localizedName) détectée — attente de l’image…"
             }
             do {
-                try await mixer.attachVideo(camera, track: VideoSourceTrack.camera)
+                try await cameraCapture.start(device: camera, fps: fps.rawValue)
             } catch {
                 cameraStatusText = "Connexion caméra impossible : \(error.localizedDescription)"
                 message = "Caméra indisponible : \(error.localizedDescription)"
@@ -230,15 +277,6 @@ final class StreamEngine: ObservableObject {
         } else {
             cameraStatusText = "Aucune caméra iPhone détectée."
         }
-
-        // Start video first. Audio is attached afterwards so a missing continuity
-        // microphone can no longer prevent the camera and preview from starting.
-        if !hasStartedMixer {
-            await mixer.startRunning()
-            hasStartedMixer = true
-        }
-
-        await attachMicrophoneWithoutBlockingVideo()
 
         do {
             try await mixer.setFrameRate(Float64(fps.rawValue))
@@ -258,15 +296,17 @@ final class StreamEngine: ObservableObject {
                     showCursor: showCursor
                 )
             } catch {
-                message = "Impossible de capturer l’écran : \(error.localizedDescription)"
-                isConfiguring = false
-                return
+                screenStatusText = "Écran indisponible : \(error.localizedDescription)"
+                message = screenStatusText
             }
+        } else {
+            screenStatusText = "Capture d’écran désactivée pour cette scène."
         }
 
         isCaptureReady = true
         isConfiguring = false
         monitorCameraFrames()
+        monitorScreenFrames(whenRequired: needsScreen)
         if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {
             message = "Caméra iPhone détectée — vérification du signal vidéo…"
         } else if cameras.isEmpty {
@@ -389,11 +429,14 @@ final class StreamEngine: ObservableObject {
     func shutdown() {
         cameraMonitorTask?.cancel()
         cameraMonitorTask = nil
+        screenMonitorTask?.cancel()
+        screenMonitorTask = nil
         deviceObservers.forEach(NotificationCenter.default.removeObserver)
         deviceObservers.removeAll()
         Task {
             await stopLive()
             await screenCapture.stop()
+            await cameraCapture.stop()
             if hasStartedMixer {
                 await mixer.stopRunning()
             }
@@ -634,11 +677,6 @@ final class StreamEngine: ObservableObject {
             candidates.append(localFallback)
         }
 
-        // Only try an iPhone microphone when no Mac/external local microphone exists.
-        if candidates.isEmpty, let requested {
-            candidates.append(requested)
-        }
-
         for microphone in candidates {
             do {
                 try await mixer.attachAudio(microphone, track: 0)
@@ -712,24 +750,61 @@ final class StreamEngine: ObservableObject {
         guard !selectedCameraID.isEmpty else { return }
         let cameraName = cameras.first(where: { $0.id == selectedCameraID })?.name ?? "Caméra"
         cameraMonitorTask = Task {
-            for _ in 0..<24 {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard !Task.isCancelled else { return }
-                let inputFormats = await mixer.videoInputFormats
-                if inputFormats[VideoSourceTrack.camera] != nil {
-                    cameraHasFrames = true
-                    cameraStatusText = "\(cameraName) transmet bien l’image."
-                    if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {
-                        message = "Prêt — image de l’iPhone reçue."
-                    }
-                    return
+                guard let lastCameraFrameAt else {
+                    cameraHasFrames = false
+                    cameraStatusText = "\(cameraName) est sélectionnée, mais aucun signal vidéo n’arrive."
+                    continue
                 }
-                try? await Task.sleep(nanoseconds: 250_000_000)
+                let delay = Date().timeIntervalSince(lastCameraFrameAt)
+                cameraHasFrames = delay < 2.0
+                if cameraHasFrames {
+                    cameraStatusText = "\(cameraName) transmet bien l’image en continu."
+                } else {
+                    cameraStatusText = "\(cameraName) a cessé d’envoyer des images."
+                    message = "La caméra s’est interrompue. Ferme les autres apps caméra puis applique à nouveau."
+                }
             }
-            guard !Task.isCancelled else { return }
-            cameraHasFrames = false
-            cameraStatusText = "\(cameraName) est sélectionnée, mais aucun signal vidéo n’arrive."
-            message = "Verrouille l’iPhone près du Mac, ferme les autres apps caméra, puis applique à nouveau."
         }
+    }
+
+    private func monitorScreenFrames(whenRequired required: Bool) {
+        screenMonitorTask?.cancel()
+        guard required else { return }
+        screenMonitorTask = Task {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { return }
+                guard let lastScreenFrameAt else {
+                    screenHasFrames = false
+                    screenStatusText = "Aucune image d’écran complète n’arrive."
+                    continue
+                }
+                let delay = Date().timeIntervalSince(lastScreenFrameAt)
+                screenHasFrames = delay < 2.0
+                screenStatusText = screenHasFrames
+                    ? "L’écran transmet bien l’image en continu."
+                    : "La capture d’écran a cessé d’envoyer des images."
+            }
+        }
+    }
+
+    private func cameraDidOutputFrame() {
+        lastCameraFrameAt = Date()
+        cameraHasFrames = true
+        let name = cameras.first(where: { $0.id == selectedCameraID })?.name ?? "Caméra"
+        cameraStatusText = "\(name) transmet bien l’image en continu."
+        if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {
+            message = "Prêt — image native de l’iPhone reçue."
+        }
+    }
+
+    private func screenDidOutputFrame() {
+        lastScreenFrameAt = Date()
+        screenHasFrames = true
+        screenStatusText = "L’écran transmet bien l’image en continu."
     }
 
     private func requestAccess(for mediaType: AVMediaType) async -> Bool {
