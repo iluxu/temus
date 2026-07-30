@@ -40,22 +40,34 @@ jobs:
         env:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
         run: |
+          set -o pipefail
           swift build \
             -c release \
             --product AdoptanMiniOBS \
             --arch arm64 \
-            --scratch-path .build-arm64
+            --scratch-path .build-arm64 2>&1 | tee "$RUNNER_TEMP/swift-build.log"
           swift build \
             -c release \
             --product AdoptanMiniOBS \
             --arch x86_64 \
-            --scratch-path .build-x86_64
+            --scratch-path .build-x86_64 2>&1 | tee -a "$RUNNER_TEMP/swift-build.log"
           mkdir -p .build/universal
           lipo -create \
             .build-arm64/arm64-apple-macosx/release/AdoptanMiniOBS \
             .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBS \
             -output .build/universal/AdoptanMiniOBS
           lipo -archs .build/universal/AdoptanMiniOBS
+
+      - name: Expose Swift compiler errors
+        if: failure()
+        run: |
+          if [ -f "$RUNNER_TEMP/swift-build.log" ]; then
+            details="$(grep -E 'error:|warning:' "$RUNNER_TEMP/swift-build.log" | tail -30 || true)"
+            details="${details//'%'/'%25'}"
+            details="${details//$'\r'/'%0D'}"
+            details="${details//$'\n'/'%0A'}"
+            echo "::error title=Swift compiler::$details"
+          fi
 
       - name: Assemble app bundle
         working-directory: apps/AdoptanMiniOBS

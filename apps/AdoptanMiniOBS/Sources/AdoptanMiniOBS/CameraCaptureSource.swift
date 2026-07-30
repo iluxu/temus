@@ -50,7 +50,8 @@ final class CameraCaptureSource: NSObject, AVCaptureVideoDataOutputSampleBufferD
 
     func start(device: AVCaptureDevice, fps: Int) async throws {
         await stop()
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation {
+            (continuation: CheckedContinuation<Void, Error>) in
             sessionQueue.async { [weak self] in
                 guard let self else {
                     continuation.resume(throwing: CaptureError.didNotStart)
@@ -128,7 +129,7 @@ final class CameraCaptureSource: NSObject, AVCaptureVideoDataOutputSampleBufferD
     }
 
     func stop() async {
-        await withCheckedContinuation { continuation in
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             sessionQueue.async { [weak self] in
                 guard let self else {
                     continuation.resume()
