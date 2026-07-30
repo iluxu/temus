@@ -951,6 +951,7 @@ export default function MiniObsStudio() {
                     <input
                       value={serverUrl}
                       inputMode="url"
+                      readOnly={platform === "kick"}
                       onChange={(event) => setServerUrl(event.target.value)}
                     />
                   </Field>
