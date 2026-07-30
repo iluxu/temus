@@ -1,6 +1,14 @@
 import CoreGraphics
 import Foundation
 
+enum VideoSourceTrack {
+    // Keep the physical camera on HaishinKit's primary/default track. This is
+    // the path used by the native AVCaptureSession and must not depend on the
+    // ScreenCaptureKit source being available.
+    static let camera: UInt8 = 0
+    static let screen: UInt8 = 1
+}
+
 enum StreamPlatform: String, CaseIterable, Identifiable {
     case kick = "Kick"
     case twitch = "Twitch"

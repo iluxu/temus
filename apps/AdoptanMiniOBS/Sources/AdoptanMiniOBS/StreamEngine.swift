@@ -201,12 +201,12 @@ final class StreamEngine: ObservableObject {
         savePreferences()
         await screenCapture.stop()
 
-        try? await mixer.attachVideo(nil, track: 1)
+        try? await mixer.attachVideo(nil, track: VideoSourceTrack.camera)
         try? await mixer.attachAudio(nil, track: 0)
 
         var videoMixerSettings = await mixer.videoMixerSettings
         videoMixerSettings.mode = .offscreen
-        videoMixerSettings.mainTrack = scene == .cameraOnly || scene == .cameraScreen ? 1 : 0
+        videoMixerSettings.mainTrack = mainVideoTrack(for: scene)
         await mixer.setVideoMixerSettings(videoMixerSettings)
 
         await applyAudioMixerSettings()
@@ -222,7 +222,7 @@ final class StreamEngine: ObservableObject {
                 cameraStatusText = "\(camera.localizedName) détectée — attente de l’image…"
             }
             do {
-                try await mixer.attachVideo(camera, track: 1)
+                try await mixer.attachVideo(camera, track: VideoSourceTrack.camera)
             } catch {
                 cameraStatusText = "Connexion caméra impossible : \(error.localizedDescription)"
                 message = "Caméra indisponible : \(error.localizedDescription)"
@@ -280,7 +280,7 @@ final class StreamEngine: ObservableObject {
         savePreferences()
         Task {
             var settings = await mixer.videoMixerSettings
-            settings.mainTrack = scene == .cameraOnly || scene == .cameraScreen ? 1 : 0
+            settings.mainTrack = mainVideoTrack(for: scene)
             await mixer.setVideoMixerSettings(settings)
             await configureComposition()
         }
@@ -466,7 +466,9 @@ final class StreamEngine: ObservableObject {
         guard let overlay = overlayObject else { return }
 
         overlay.isVisible = scene == .screenCamera || scene == .cameraScreen
-        overlay.track = scene == .cameraScreen ? 0 : 1
+        overlay.track = scene == .cameraScreen
+            ? VideoSourceTrack.screen
+            : VideoSourceTrack.camera
         overlay.cornerRadius = max(10, outputSize.height * 0.018)
 
         let overlayWidth = outputSize.width * max(0.18, min(scale, 0.48))
@@ -561,6 +563,15 @@ final class StreamEngine: ObservableObject {
             return preferred
         }
         return cameraDevices.first
+    }
+
+    private func mainVideoTrack(for scene: SceneLayout) -> UInt8 {
+        switch scene {
+        case .cameraOnly, .cameraScreen:
+            return VideoSourceTrack.camera
+        case .screenCamera, .screenOnly:
+            return VideoSourceTrack.screen
+        }
     }
 
     private func isIPhoneCamera(_ device: AVCaptureDevice) -> Bool {
@@ -704,7 +715,7 @@ final class StreamEngine: ObservableObject {
             for _ in 0..<24 {
                 guard !Task.isCancelled else { return }
                 let inputFormats = await mixer.videoInputFormats
-                if inputFormats[1] != nil {
+                if inputFormats[VideoSourceTrack.camera] != nil {
                     cameraHasFrames = true
                     cameraStatusText = "\(cameraName) transmet bien l’image."
                     if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {

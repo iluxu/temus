@@ -118,5 +118,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.1.3" \
-            --notes "Correction audio/vidéo : le microphone iPhone ne peut plus bloquer la caméra. Priorité au micro Mac et repli vidéo sans micro."
+            --title "Adoptan Mini OBS 0.1.4" \
+            --notes "Correction caméra noire : l’iPhone ou FaceTime HD utilise désormais la piste vidéo principale, indépendante de l’écran et du microphone. Le micro Mac reste prioritaire et une panne audio ne bloque plus la vidéo."

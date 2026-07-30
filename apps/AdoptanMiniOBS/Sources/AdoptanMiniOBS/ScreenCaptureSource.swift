@@ -71,7 +71,10 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
         switch outputType {
         case .screen:
             Task {
-                await mixer.append(sampleBuffer, track: 0)
+                // ScreenCaptureKit is always secondary. The iPhone/FaceTime
+                // camera owns track 0 so its output can never be replaced by
+                // the screen source or an error while starting that source.
+                await mixer.append(sampleBuffer, track: VideoSourceTrack.screen)
             }
         case .audio where includeSystemAudio:
             Task {
