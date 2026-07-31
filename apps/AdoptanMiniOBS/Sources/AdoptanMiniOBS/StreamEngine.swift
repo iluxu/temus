@@ -38,8 +38,10 @@ final class StreamEngine: ObservableObject {
     @Published var audioBitrateKbps = 160
     @Published var microphoneVolume = 1.0
     @Published var systemAudioVolume = 0.85
+    @Published var iphoneAudioVolume = 1.0
     @Published var includeMicrophone = true
     @Published var includeSystemAudio = true
+    @Published var includeIPhoneAudio = true
     @Published var showCursor = true
     @Published var mirrorCamera = false
     @Published var rotateCamera180 = false
@@ -136,8 +138,7 @@ final class StreamEngine: ObservableObject {
             return Self.iphoneCameraPage
         }
         components.queryItems = [
-            URLQueryItem(name: "key", value: cleanKey),
-            URLQueryItem(name: "videoOnly", value: "1")
+            URLQueryItem(name: "key", value: cleanKey)
         ]
         return components.url?.absoluteString ?? Self.iphoneCameraPage
     }
@@ -793,11 +794,19 @@ final class StreamEngine: ObservableObject {
     }
 
     private func applyAudioMixerSettings() async {
-        let mainAudioTrack: UInt8 = includeMicrophone ? 0 : 1
+        let mainAudioTrack: UInt8
+        if includeMicrophone {
+            mainAudioTrack = 0
+        } else if includeSystemAudio {
+            mainAudioTrack = 1
+        } else {
+            mainAudioTrack = 2
+        }
         let settings = AudioMixerSettings(
             sampleRate: 48_000,
             channels: 2,
-            isMuted: !includeMicrophone && !includeSystemAudio,
+            isMuted:
+                !includeMicrophone && !includeSystemAudio && !includeIPhoneAudio,
             mainTrack: mainAudioTrack,
             tracks: [
                 0: AudioMixerTrackSettings(
@@ -807,6 +816,10 @@ final class StreamEngine: ObservableObject {
                 1: AudioMixerTrackSettings(
                     volume: Float(systemAudioVolume),
                     isMuted: !includeSystemAudio
+                ),
+                2: AudioMixerTrackSettings(
+                    volume: Float(iphoneAudioVolume),
+                    isMuted: !includeIPhoneAudio
                 )
             ]
         )

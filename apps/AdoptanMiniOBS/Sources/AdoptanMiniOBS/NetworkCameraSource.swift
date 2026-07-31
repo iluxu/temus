@@ -175,8 +175,9 @@ final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
         didOutput audio: AVAudioBuffer,
         when: AVAudioTime
     ) {
-        // The iPhone microphone is deliberately ignored. Mini OBS uses the
-        // independently selected Mac microphone and system audio tracks.
+        Task {
+            await mixer.append(audio, when: when, track: 2)
+        }
     }
 
     private func emitStatus(_ status: String) {

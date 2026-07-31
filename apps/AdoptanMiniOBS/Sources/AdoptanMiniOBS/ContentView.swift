@@ -364,6 +364,14 @@ struct ContentView: View {
             if engine.includeSystemAudio {
                 VolumeRow(title: "Volume Mac", value: $engine.systemAudioVolume)
             }
+
+            Toggle("Micro de l’iPhone distant", isOn: $engine.includeIPhoneAudio)
+            if engine.includeIPhoneAudio {
+                VolumeRow(
+                    title: "Volume iPhone",
+                    value: $engine.iphoneAudioVolume
+                )
+            }
         }
     }
 

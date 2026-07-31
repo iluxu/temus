@@ -131,4 +131,4 @@ jobs:
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
             --title "Adoptan Mini OBS 0.4.0 — Scaleway WebRTC" \
-            --notes "Caméra iPhone distante reçue en WHEP/WebRTC au lieu de HLS. Le partage d’écran reprend la route directe ScreenCaptureKit de la V1 sur la piste principale. Caméra de continuité reste disponible pour les Mac locaux ; le microphone reste indépendant."
+            --notes "Caméra et microphone de l’iPhone distant reçus en WHEP/WebRTC au lieu de HLS. Le partage d’écran reprend la route directe ScreenCaptureKit de la V1 sur la piste principale. Caméra de continuité reste disponible pour les Mac locaux."

@@ -43,9 +43,9 @@ envoie directement l’écran sur la piste vidéo principale. La caméra distant
 reste la piste d’incrustation. Chaque source possède son propre témoin d’images
 reçues en continu.
 
-Le microphone du Mac est prioritaire et reste dans une session séparée. Le son
-WebRTC de l’iPhone est volontairement ignoré afin qu’une erreur de microphone
-ne puisse jamais arrêter l’image.
+Le micro de l’iPhone distant arrive également par WebRTC sur une piste audio
+séparée. Une autorisation micro refusée sur l’iPhone ne bloque jamais la vidéo.
+Le micro du Mac et le son système restent réglables indépendamment.
 
 La build publique est signée localement de façon ad hoc. Une signature Apple
 Developer ID et la notarisation nécessitent le certificat Apple du propriétaire.
