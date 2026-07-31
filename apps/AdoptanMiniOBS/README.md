@@ -1,7 +1,7 @@
 # Adoptan Mini OBS pour macOS
 
-Application native SwiftUI pour Apple Silicon qui transforme un Mac, notamment
-un Mac Scaleway, en mini studio de direct :
+Application native SwiftUI universelle pour les Mac Intel et Apple Silicon qui
+transforme un Mac, notamment un Mac Scaleway, en mini studio de direct :
 
 - caméra distante de l’iPhone par **SRT depuis Moblin**, activée par défaut
   pour les Mac Scaleway, avec récupération des paquets perdus ;
@@ -35,8 +35,9 @@ C’est le meilleur point de départ pour éviter les freezes. Le 1080p30 à
 4. Autoriser Caméra, Microphone et Enregistrement de l’écran.
 5. Si macOS le demande, fermer puis relancer l’app après l’autorisation écran.
 
-La version 0.5.0 vise le Mac Scaleway distant. Dans le mode recommandé, l’iPhone
-publie sa caméra depuis Moblin en SRT et l’app la décode nativement. Le QR crée
+La version 0.5.1 fonctionne nativement sur Intel (`x86_64`) et Apple Silicon
+(`arm64`). Elle vise notamment le Mac Scaleway distant. Dans le mode recommandé,
+l’iPhone publie sa caméra depuis Moblin en SRT et l’app la décode nativement. Le QR crée
 le profil « Adoptan iPhone SRT » avec les réglages stables : H.264, 1280 × 720,
 30 i/s, 2 500 kb/s, intervalle d’image-clé de 2 secondes, latence SRT de 700 ms
 et débit adaptatif. Aucune clé privée n’est nécessaire pour cette liaison.
