@@ -208,5 +208,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.5.1 — universel Intel et Apple Silicon" \
-            --notes "Version universelle native pour les Mac Intel (x86_64) et Apple Silicon (arm64). Elle inclut le mode caméra iPhone SRT via Moblin et les corrections de stabilité ScreenCaptureKit de la version 0.5.0."
+            --title "Adoptan Mini OBS 0.5.2 — caméra SRT et écran V1 stabilisés" \
+            --notes "Version universelle native pour les Mac Intel (x86_64) et Apple Silicon (arm64). Elle empêche les lecteurs SRT multiples qui faisaient disparaître la caméra après deux secondes, démarre la caméra même avant l’autorisation écran et rétablit la capture ScreenCaptureKit directe de la V1."

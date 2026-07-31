@@ -248,14 +248,15 @@ final class StreamEngine: ObservableObject {
         if !CGPreflightScreenCaptureAccess() {
             message = "macOS va demander l’autorisation d’enregistrer l’écran."
             let granted = CGRequestScreenCaptureAccess()
-            guard granted else {
+            if !granted {
                 screenStatusText =
                     "Autorisation écran refusée — ouvre les réglages puis relance Mini OBS."
-                isConfiguring = false
-                return
             }
         }
 
+        // The iPhone receiver must start even when macOS has not granted screen
+        // recording yet. Previously prepare() returned here, so nothing happened
+        // until the user pressed “Appliquer à la capture”.
         await refreshSources()
         await configureCapture()
         isConfiguring = false
@@ -419,19 +420,27 @@ final class StreamEngine: ObservableObject {
         }
 
         let needsScreen = scene != .cameraOnly || includeSystemAudio
-        if needsScreen,
-           let display = screenDisplays.first(where: { $0.displayID == selectedDisplayID }) {
-            do {
-                try await screenCapture.start(
-                    display: display,
-                    outputSize: resolution.size,
-                    fps: fps.rawValue,
-                    includeSystemAudio: includeSystemAudio,
-                    showCursor: showCursor
-                )
-            } catch {
-                screenStatusText = "Écran indisponible : \(error.localizedDescription)"
-                message = screenStatusText
+        if needsScreen {
+            if let display = screenDisplays.first(where: {
+                $0.displayID == selectedDisplayID
+            }) {
+                do {
+                    try await screenCapture.start(
+                        display: display,
+                        outputSize: resolution.size,
+                        fps: fps.rawValue,
+                        includeSystemAudio: includeSystemAudio,
+                        showCursor: showCursor
+                    )
+                } catch {
+                    screenStatusText = "Écran indisponible : \(error.localizedDescription)"
+                    message = screenStatusText
+                }
+            } else if !CGPreflightScreenCaptureAccess() {
+                screenStatusText =
+                    "Autorise Enregistrement de l’écran pour Mini OBS, puis relance l’app."
+            } else {
+                screenStatusText = "Aucun écran partageable n’a été trouvé."
             }
         } else {
             screenStatusText = "Capture d’écran désactivée pour cette scène."

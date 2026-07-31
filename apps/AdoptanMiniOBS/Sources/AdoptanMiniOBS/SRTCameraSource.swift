@@ -19,6 +19,7 @@ final class SRTCameraSource: StreamOutput, @unchecked Sendable {
     private var readyStateTask: Task<Void, Never>?
     private var sourceURL: URL?
     private var generation = 0
+    private var connectionAttempt = 0
     private var reconnectScheduled = false
     private var pendingVideo: CMSampleBuffer?
     private var videoAppendInFlight = false
@@ -43,6 +44,7 @@ final class SRTCameraSource: StreamOutput, @unchecked Sendable {
 
     func stop() async {
         generation += 1
+        connectionAttempt += 1
         connectionTask?.cancel()
         connectionTask = nil
         readyStateTask?.cancel()
@@ -88,6 +90,19 @@ final class SRTCameraSource: StreamOutput, @unchecked Sendable {
     private func connect(generation expectedGeneration: Int) async {
         guard expectedGeneration == generation, let sourceURL else { return }
 
+        // A retry must replace the previous reader instead of leaving several
+        // SRT readers decoding the same stream with conflicting timestamps.
+        connectionAttempt += 1
+        let expectedAttempt = connectionAttempt
+        if let sessionStream {
+            await sessionStream.removeOutput(self)
+        }
+        if let session {
+            try? await session.close()
+        }
+        session = nil
+        sessionStream = nil
+
         do {
             guard let newSession = try await SessionBuilderFactory.shared
                 .make(sourceURL)
@@ -100,13 +115,21 @@ final class SRTCameraSource: StreamOutput, @unchecked Sendable {
             await stream.addOutput(self)
             session = newSession
             sessionStream = stream
-            observeReadyState(of: newSession, generation: expectedGeneration)
+            observeReadyState(
+                of: newSession,
+                generation: expectedGeneration,
+                attempt: expectedAttempt
+            )
 
             try await newSession.connect { [weak self] in
-                self?.connectionDidClose(generation: expectedGeneration)
+                self?.connectionDidClose(
+                    generation: expectedGeneration,
+                    attempt: expectedAttempt
+                )
             }
 
-            guard expectedGeneration == generation else {
+            guard expectedGeneration == generation,
+                  expectedAttempt == connectionAttempt else {
                 await stream.removeOutput(self)
                 try? await newSession.close()
                 return
@@ -124,30 +147,46 @@ final class SRTCameraSource: StreamOutput, @unchecked Sendable {
 
     private func observeReadyState(
         of session: any Session,
-        generation expectedGeneration: Int
+        generation expectedGeneration: Int,
+        attempt expectedAttempt: Int
     ) {
         readyStateTask?.cancel()
         readyStateTask = Task { [weak self] in
+            // readyState first yields its current value, which is `.closed`
+            // before connect() has opened the socket. Treating that initial
+            // value as a disconnect caused a new reader every two seconds.
+            var hasOpened = false
             for await state in await session.readyState {
                 guard !Task.isCancelled, let self,
-                      expectedGeneration == self.generation else { return }
+                      expectedGeneration == self.generation,
+                      expectedAttempt == self.connectionAttempt else { return }
                 switch state {
                 case .connecting:
                     self.emitStatus("Connexion SRT à l’iPhone…")
                 case .open:
+                    hasOpened = true
                     self.emitStatus("SRT relié — attente de la première image…")
                 case .closing:
                     self.emitStatus("La caméra SRT se déconnecte…")
                 case .closed:
-                    self.connectionDidClose(generation: expectedGeneration)
+                    if hasOpened {
+                        self.connectionDidClose(
+                            generation: expectedGeneration,
+                            attempt: expectedAttempt
+                        )
+                    }
                 }
             }
         }
     }
 
-    private func connectionDidClose(generation expectedGeneration: Int) {
+    private func connectionDidClose(
+        generation expectedGeneration: Int,
+        attempt expectedAttempt: Int
+    ) {
         stateQueue.async { [weak self] in
             guard let self, expectedGeneration == self.generation,
+                  expectedAttempt == self.connectionAttempt,
                   !self.reconnectScheduled else { return }
             self.emitStatus("Liaison SRT interrompue — reconnexion automatique…")
             self.scheduleConnection(
