@@ -62,7 +62,7 @@ jobs:
         if: failure()
         run: |
           if [ -f "$RUNNER_TEMP/swift-build.log" ]; then
-            details="$(grep -E 'error:|warning:' "$RUNNER_TEMP/swift-build.log" | tail -30 || true)"
+            details="$(tail -160 "$RUNNER_TEMP/swift-build.log" || true)"
             details="${details//'%'/'%25'}"
             details="${details//$'\r'/'%0D'}"
             details="${details//$'\n'/'%0A'}"
