@@ -35,7 +35,7 @@ jobs:
         working-directory: apps/AdoptanMiniOBS
         run: swift package resolve
 
-      - name: Build universal release executable
+      - name: Build Apple Silicon release executable
         working-directory: apps/AdoptanMiniOBS
         env:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
@@ -46,23 +46,21 @@ jobs:
             --product AdoptanMiniOBS \
             --arch arm64 \
             --scratch-path .build-arm64 2>&1 | tee "$RUNNER_TEMP/swift-build.log"
-          swift build \
-            -c release \
-            --product AdoptanMiniOBS \
-            --arch x86_64 \
-            --scratch-path .build-x86_64 2>&1 | tee -a "$RUNNER_TEMP/swift-build.log"
           mkdir -p .build/universal
-          lipo -create \
+          cp \
             .build-arm64/arm64-apple-macosx/release/AdoptanMiniOBS \
-            .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBS \
-            -output .build/universal/AdoptanMiniOBS
+            .build/universal/AdoptanMiniOBS
           lipo -archs .build/universal/AdoptanMiniOBS
 
       - name: Expose Swift compiler errors
         if: failure()
         run: |
           if [ -f "$RUNNER_TEMP/swift-build.log" ]; then
-            details="$(tail -160 "$RUNNER_TEMP/swift-build.log" || true)"
+            details="$(
+              grep -E \
+                'Undefined symbols|referenced from:|symbol\\(s\\)|ld:|clang: error|error:' \
+                "$RUNNER_TEMP/swift-build.log" | tail -100 || true
+            )"
             details="${details//'%'/'%25'}"
             details="${details//$'\r'/'%0D'}"
             details="${details//$'\n'/'%0A'}"

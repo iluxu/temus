@@ -1,7 +1,7 @@
 # Adoptan Mini OBS pour macOS
 
-Application native SwiftUI universelle (Apple Silicon et Intel) qui transforme
-un Mac en mini studio de direct :
+Application native SwiftUI pour Apple Silicon qui transforme un Mac, notamment
+un Mac Scaleway, en mini studio de direct :
 
 - caméra distante de l’iPhone par **WHIP/WHEP WebRTC**, activée par défaut
   pour les Mac Scaleway ;
@@ -59,6 +59,6 @@ cd apps/AdoptanMiniOBS
 swift build -c release
 ```
 
-Le workflow GitHub assemble automatiquement le binaire en bundle `.app`, le
-signe ad hoc et publie une archive ZIP lors de la création d’un tag
+Le workflow GitHub assemble automatiquement le binaire Apple Silicon en bundle
+`.app`, le signe ad hoc et publie une archive ZIP lors de la création d’un tag
 `adoptan-mini-obs-v*`.
