@@ -33,7 +33,13 @@ jobs:
 
       - name: Resolve dependencies
         working-directory: apps/AdoptanMiniOBS
-        run: swift package resolve
+        run: swift package resolve --scratch-path .build-arm64
+
+      - name: Fix WHEP H264 receiver
+        working-directory: apps/AdoptanMiniOBS
+        run: |
+          git -C .build-arm64/checkouts/HaishinKit.swift apply \
+            "$GITHUB_WORKSPACE/apps/AdoptanMiniOBS/Patches/haishinkit-webrtc-receiver.patch"
 
       - name: Build Apple Silicon release executable
         working-directory: apps/AdoptanMiniOBS
@@ -128,5 +134,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.4.0 — Scaleway WebRTC" \
-            --notes "Caméra et microphone de l’iPhone distant reçus en WHEP/WebRTC au lieu de HLS. Le partage d’écran reprend la route directe ScreenCaptureKit de la V1 sur la piste principale. Caméra de continuité reste disponible pour les Mac locaux."
+            --title "Adoptan Mini OBS 0.4.1 — caméra iPhone corrigée" \
+            --notes "Corrige le décodage H264 WebRTC de la caméra iPhone, ajoute un secours vidéo automatique sans freeze, masque la fausse duplication d’écran tant que la caméra n’émet pas et supprime la clé privée du parcours iPhone. Le partage d’écran V1 ScreenCaptureKit reste actif."

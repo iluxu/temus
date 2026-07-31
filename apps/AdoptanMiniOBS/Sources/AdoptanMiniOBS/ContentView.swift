@@ -129,13 +129,6 @@ struct ContentView: View {
             }
 
             if engine.cameraInputMode == .iphoneNetwork {
-                SecureField("Clé privée adoptan.ai", text: $engine.iphoneCameraKey)
-                    .textFieldStyle(.roundedBorder)
-                    .onSubmit {
-                        engine.saveIPhoneCameraKey()
-                        Task { await engine.configureCapture() }
-                    }
-
                 if let qrCode = engine.iphoneCameraQRCode {
                     HStack {
                         Spacer()
@@ -149,14 +142,10 @@ struct ContentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                         Spacer()
                     }
-                    Text("Scanne ce QR avec l’iPhone. Safari enverra directement la caméra au Mac Scaleway par WebRTC.")
+                    Text("Scanne ce QR avec l’iPhone. Aucune clé n’est demandée : ouvre Safari, autorise la caméra et touche Connecter.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                } else {
-                    Text("Colle la clé privée adoptan.ai pour générer le QR sécurisé.")
-                        .font(.caption)
-                        .foregroundStyle(.orange)
                 }
 
                 Button {
@@ -165,11 +154,6 @@ struct ContentView: View {
                     Label("Copier le lien iPhone", systemImage: "doc.on.doc")
                 }
                 .buttonStyle(.link)
-                .disabled(
-                    engine.iphoneCameraKey
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
-                        .isEmpty
-                )
             } else {
                 Picker("Caméra", selection: $engine.selectedCameraID) {
                     if engine.cameras.isEmpty {

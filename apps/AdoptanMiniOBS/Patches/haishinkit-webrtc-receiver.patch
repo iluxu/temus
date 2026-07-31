@@ -1,0 +1,91 @@
+diff --git a/RTCHaishinKit/Sources/RTP/RTPH264Packetizer.swift b/RTCHaishinKit/Sources/RTP/RTPH264Packetizer.swift
+index 6a03b16..c924884 100644
+--- a/RTCHaishinKit/Sources/RTP/RTPH264Packetizer.swift
++++ b/RTCHaishinKit/Sources/RTP/RTPH264Packetizer.swift
+@@ -129,6 +129,8 @@ final class RTPH264Packetizer<T: RTPPacketizerDelegate>: RTPPacketizer {
+         switch nalUnitType {
+         case 1...23:
+             decodeSingleNALUnit(packet)
++        case 24:
++            decodeSingleTimeAggregationPacketA(packet)
+         case 28:
+             decodeFragmentUnitA(packet)
+         default:
+@@ -136,6 +138,40 @@ final class RTPH264Packetizer<T: RTPPacketizerDelegate>: RTPPacketizer {
+         }
+     }
+ 
++    private func decodeSingleTimeAggregationPacketA(_ packet: RTPPacket) {
++        var offset = 1
++        var nalUnits: [Data] = []
++
++        while offset + 2 <= packet.payload.count {
++            let length =
++                Int(packet.payload[offset]) << 8 |
++                Int(packet.payload[offset + 1])
++            offset += 2
++            guard length > 0, offset + length <= packet.payload.count else {
++                return
++            }
++            nalUnits.append(packet.payload.subdata(in: offset..<offset + length))
++            offset += length
++        }
++
++        for (index, payload) in nalUnits.enumerated() {
++            decodeSingleNALUnit(
++                RTPPacket(
++                    version: packet.version,
++                    padding: false,
++                    extension: false,
++                    cc: 0,
++                    marker: packet.marker && index == nalUnits.count - 1,
++                    payloadType: packet.payloadType,
++                    sequenceNumber: packet.sequenceNumber,
++                    timestamp: packet.timestamp,
++                    ssrc: packet.ssrc,
++                    payload: payload
++                )
++            )
++        }
++    }
++
+     private func decodeSingleNALUnit(_ packet: RTPPacket) {
+         let nalUnitType = packet.payload[0] & 0x1F
+         switch nalUnitType {
+diff --git a/RTCHaishinKit/Sources/RTP/RTPJitterBuffer.swift b/RTCHaishinKit/Sources/RTP/RTPJitterBuffer.swift
+index 177ffbd..45d9fae 100644
+--- a/RTCHaishinKit/Sources/RTP/RTPJitterBuffer.swift
++++ b/RTCHaishinKit/Sources/RTP/RTPJitterBuffer.swift
+@@ -8,20 +8,26 @@ final class RTPJitterBuffer<T: RTPJitterBufferDelegate> {
+     weak var delegate: T?
+ 
+     private var buffer: [UInt16: RTPPacket] = [:]
+-    private var expectedSequence: UInt16 = 0
++    private var expectedSequence: UInt16?
+     private let stalePacketCounts: Int = 4
+ 
+     func append(_ packet: RTPPacket) {
+         buffer[packet.sequenceNumber] = packet
++        if expectedSequence == nil {
++            expectedSequence = packet.sequenceNumber
++        }
+ 
+-        while let packet = buffer[expectedSequence] {
+-            delegate?.jitterBuffer(self, sequenced: packet)
+-            buffer.removeValue(forKey: expectedSequence)
+-            expectedSequence &+= 1
++        guard var nextSequence = expectedSequence else {
++            return
++        }
++        while let sequenced = buffer.removeValue(forKey: nextSequence) {
++            delegate?.jitterBuffer(self, sequenced: sequenced)
++            nextSequence &+= 1
+         }
++        expectedSequence = nextSequence
+ 
+         if stalePacketCounts <= buffer.count {
+-            expectedSequence &+= 1
++            expectedSequence = nextSequence &+ 1
+         }
+     }
+ }

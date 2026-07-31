@@ -33,10 +33,11 @@ C’est le meilleur point de départ pour éviter les freezes. Le 1080p30 à
 4. Autoriser Caméra, Microphone et Enregistrement de l’écran.
 5. Si macOS le demande, fermer puis relancer l’app après l’autorisation écran.
 
-La version 0.4.0 vise le Mac Scaleway distant. L’iPhone publie sa caméra en WHIP
-depuis Safari et l’app la reçoit directement en WHEP/WebRTC, sans passer par le
-lecteur HLS qui ajoutait de la latence et se bloquait. Le QR est sélectionné par
-défaut.
+La version 0.4.1 vise le Mac Scaleway distant. L’iPhone publie sa caméra en WHIP
+depuis Safari et l’app la reçoit directement en WHEP/WebRTC. Le décodeur H.264
+WebRTC accepte les paquets MediaMTX et un lecteur HLS à faible tampon reprend
+automatiquement la vidéo si WebRTC ne livre plus d’image. Le QR ne contient plus
+de clé privée et fonctionne directement.
 
 La capture d’écran reprend le chemin exact de la version 1 : ScreenCaptureKit
 envoie directement l’écran sur la piste vidéo principale. La caméra distante

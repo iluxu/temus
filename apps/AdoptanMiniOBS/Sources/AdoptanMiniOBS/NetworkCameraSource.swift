@@ -4,11 +4,8 @@ import Foundation
 import HaishinKit
 import RTCHaishinKit
 
-/// Receives the iPhone camera over WHEP/WebRTC from MediaMTX.
-///
-/// The previous HLS reader accumulated latency and had to reload the playlist
-/// when Safari or the network paused. WHEP receives the same H.264 stream sent
-/// by the iPhone WHIP page, but keeps it on the real-time WebRTC path.
+/// Receives the iPhone camera over WHEP/WebRTC from MediaMTX and keeps an
+/// AVFoundation HLS decoder hot as an automatic fallback.
 final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
     private let mixer: MediaMixer
     private let stateQueue = DispatchQueue(
@@ -23,6 +20,18 @@ final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
     private var sourceURL: URL?
     private var generation = 0
     private var lastCallbackUptime = 0.0
+    private var lastWebRTCVideoUptime = 0.0
+
+    private lazy var hlsFallback: HLSCameraFallback = {
+        let source = HLSCameraFallback()
+        source.onSampleBuffer = { [weak self] sampleBuffer in
+            self?.receiveFallbackVideo(sampleBuffer)
+        }
+        source.onStatus = { [weak self] status in
+            self?.emitStatus(status)
+        }
+        return source
+    }()
 
     var onFrame: (() -> Void)?
     var onStatus: ((String) -> Void)?
@@ -31,12 +40,13 @@ final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
         self.mixer = mixer
     }
 
-    func start(url: URL, fps: Int) async {
+    func start(whepURL: URL, hlsURL: URL, fps: Int) async {
         await stop()
-        sourceURL = url
+        sourceURL = whepURL
         generation += 1
         let currentGeneration = generation
         emitStatus("Connexion WebRTC à la caméra de l’iPhone…")
+        await hlsFallback.start(url: hlsURL, fps: fps)
         scheduleConnection(generation: currentGeneration, delayNanoseconds: 0)
     }
 
@@ -53,10 +63,12 @@ final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
         if let session {
             try? await session.close()
         }
+        await hlsFallback.stop()
         self.session = nil
         sessionStream = nil
         sourceURL = nil
         lastCallbackUptime = 0
+        lastWebRTCVideoUptime = 0
     }
 
     private func scheduleConnection(
@@ -153,20 +165,11 @@ final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
         didOutput video: CMSampleBuffer
     ) {
         guard video.isValid, video.dataReadiness == .ready else { return }
-        Task {
-            await mixer.append(video, track: VideoSourceTrack.camera)
-        }
-
         let now = ProcessInfo.processInfo.systemUptime
         stateQueue.async { [weak self] in
             guard let self else { return }
-            if self.lastCallbackUptime == 0 ||
-                now - self.lastCallbackUptime >= 0.5 {
-                self.lastCallbackUptime = now
-                DispatchQueue.main.async { [weak self] in
-                    self?.onFrame?()
-                }
-            }
+            self.lastWebRTCVideoUptime = now
+            self.routeVideo(video, now: now)
         }
     }
 
@@ -177,6 +180,33 @@ final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
     ) {
         Task {
             await mixer.append(audio, when: when, track: 2)
+        }
+    }
+
+    private func receiveFallbackVideo(_ video: CMSampleBuffer) {
+        guard video.isValid, video.dataReadiness == .ready else { return }
+        let now = ProcessInfo.processInfo.systemUptime
+        stateQueue.async { [weak self] in
+            guard let self else { return }
+            // Prefer real-time WebRTC. HLS takes over immediately when WebRTC
+            // has never decoded a frame or has been silent for two seconds.
+            guard self.lastWebRTCVideoUptime == 0 ||
+                    now - self.lastWebRTCVideoUptime >= 2 else {
+                return
+            }
+            self.routeVideo(video, now: now)
+        }
+    }
+
+    private func routeVideo(_ video: CMSampleBuffer, now: TimeInterval) {
+        Task {
+            await mixer.append(video, track: VideoSourceTrack.camera)
+        }
+        if lastCallbackUptime == 0 || now - lastCallbackUptime >= 0.5 {
+            lastCallbackUptime = now
+            DispatchQueue.main.async { [weak self] in
+                self?.onFrame?()
+            }
         }
     }
 

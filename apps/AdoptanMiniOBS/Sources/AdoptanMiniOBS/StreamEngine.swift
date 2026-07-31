@@ -28,7 +28,6 @@ final class StreamEngine: ObservableObject {
     @Published var selectedMicrophoneID = ""
     @Published var selectedDisplayID: UInt32 = 0
     @Published var cameraInputMode: CameraInputMode = .iphoneNetwork
-    @Published var iphoneCameraKey = ""
     @Published var scene: SceneLayout = .screenCamera
     @Published var overlayPosition: OverlayPosition = .bottomRight
     @Published var overlayScale = 0.28
@@ -57,6 +56,9 @@ final class StreamEngine: ObservableObject {
     private static let iphoneCameraPage = "https://adoptan.ai/iphone-camera"
     private static let iphoneCameraWHEP = URL(
         string: "https://api.adoptan.ai/screen-media/studio/lucia/whep"
+    )!
+    private static let iphoneCameraHLS = URL(
+        string: "https://api.adoptan.ai/screen-hls/studio/lucia/index.m3u8"
     )!
 
     private lazy var cameraCapture: CameraCaptureSource = {
@@ -132,21 +134,10 @@ final class StreamEngine: ObservableObject {
     }
 
     var iphoneCameraLink: String {
-        let cleanKey = iphoneCameraKey.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanKey.isEmpty,
-              var components = URLComponents(string: Self.iphoneCameraPage) else {
-            return Self.iphoneCameraPage
-        }
-        components.queryItems = [
-            URLQueryItem(name: "key", value: cleanKey)
-        ]
-        return components.url?.absoluteString ?? Self.iphoneCameraPage
+        Self.iphoneCameraPage
     }
 
     var iphoneCameraQRCode: NSImage? {
-        guard !iphoneCameraKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return nil
-        }
         let filter = CIFilter.qrCodeGenerator()
         filter.message = Data(iphoneCameraLink.utf8)
         filter.correctionLevel = "M"
@@ -161,15 +152,7 @@ final class StreamEngine: ObservableObject {
         return image
     }
 
-    func saveIPhoneCameraKey() {
-        KeychainStore.save(
-            iphoneCameraKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            account: "iphone-network-camera"
-        )
-    }
-
     func copyIPhoneCameraLink() {
-        saveIPhoneCameraKey()
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(iphoneCameraLink, forType: .string)
         message = "Lien caméra iPhone copié — ouvre-le dans Safari sur l’iPhone."
@@ -355,11 +338,13 @@ final class StreamEngine: ObservableObject {
         }
 
         if cameraInputMode == .iphoneNetwork {
-            saveIPhoneCameraKey()
-            cameraStatusText = iphoneCameraKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                ? "Colle la clé privée pour générer le QR de l’iPhone."
-                : "En attente de l’iPhone distant — scanne le QR et touche Connecter."
-            await networkCamera.start(url: Self.iphoneCameraWHEP, fps: fps.rawValue)
+            cameraStatusText =
+                "En attente de l’iPhone distant — scanne le QR et touche Connecter."
+            await networkCamera.start(
+                whepURL: Self.iphoneCameraWHEP,
+                hlsURL: Self.iphoneCameraHLS,
+                fps: fps.rawValue
+            )
         } else if let camera = cameraDevices.first(where: { $0.uniqueID == selectedCameraID }) {
             if camera.isInUseByAnotherApplication {
                 cameraStatusText = "\(camera.localizedName) est utilisée par une autre application."
@@ -573,6 +558,7 @@ final class StreamEngine: ObservableObject {
         let outputSize = resolution.size
         let shouldMirror = mirrorCamera
         let shouldRotate = rotateCamera180
+        let cameraIsReceiving = cameraHasFrames
 
         await configureCompositionOnScreen(
             scene: selectedScene,
@@ -580,7 +566,8 @@ final class StreamEngine: ObservableObject {
             scale: selectedScale,
             outputSize: outputSize,
             mirror: shouldMirror,
-            rotate: shouldRotate
+            rotate: shouldRotate,
+            cameraIsReceiving: cameraIsReceiving
         )
     }
 
@@ -591,7 +578,8 @@ final class StreamEngine: ObservableObject {
         scale: Double,
         outputSize: CGSize,
         mirror: Bool,
-        rotate: Bool
+        rotate: Bool,
+        cameraIsReceiving: Bool
     ) async {
         let screen = await mixer.screen
         screen.size = outputSize
@@ -605,7 +593,16 @@ final class StreamEngine: ObservableObject {
         }
         guard let overlay = overlayObject else { return }
 
-        overlay.isVisible = scene == .screenCamera || scene == .cameraScreen
+        switch scene {
+        case .screenCamera:
+            // HaishinKit reuses the main track when an empty secondary track is
+            // visible. Never show that fake duplicate: wait for a real camera frame.
+            overlay.isVisible = cameraIsReceiving
+        case .cameraScreen:
+            overlay.isVisible = cameraIsReceiving
+        case .screenOnly, .cameraOnly:
+            overlay.isVisible = false
+        }
         overlay.track = scene == .cameraScreen
             ? VideoSourceTrack.screen
             : VideoSourceTrack.camera
@@ -866,11 +863,16 @@ final class StreamEngine: ObservableObject {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 guard !Task.isCancelled else { return }
                 guard let lastCameraFrameAt else {
+                    let wasReceiving = cameraHasFrames
                     cameraHasFrames = false
                     cameraStatusText = "\(cameraName) est sélectionnée, mais aucun signal vidéo n’arrive."
+                    if wasReceiving {
+                        await configureComposition()
+                    }
                     continue
                 }
                 let delay = Date().timeIntervalSince(lastCameraFrameAt)
+                let wasReceiving = cameraHasFrames
                 cameraHasFrames = delay < 2.0
                 if cameraHasFrames {
                     cameraStatusText = "\(cameraName) transmet bien l’image en continu."
@@ -879,6 +881,9 @@ final class StreamEngine: ObservableObject {
                     message = cameraInputMode == .iphoneNetwork
                         ? "L’iPhone ne transmet plus. Garde Safari ouvert puis touche Reconnecter."
                         : "La caméra s’est interrompue. Ferme les autres apps caméra puis applique à nouveau."
+                }
+                if wasReceiving != cameraHasFrames {
+                    await configureComposition()
                 }
             }
         }
@@ -907,6 +912,7 @@ final class StreamEngine: ObservableObject {
     }
 
     private func cameraDidOutputFrame() {
+        let wasReceiving = cameraHasFrames
         lastCameraFrameAt = Date()
         cameraHasFrames = true
         let name = cameraInputMode == .iphoneNetwork
@@ -919,6 +925,11 @@ final class StreamEngine: ObservableObject {
                 : "Caméra iPhone reçue — attente de l’écran du Mac."
         } else if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {
             message = "Prêt — image native de l’iPhone reçue."
+        }
+        if !wasReceiving {
+            Task {
+                await configureComposition()
+            }
         }
     }
 
@@ -975,7 +986,9 @@ final class StreamEngine: ObservableObject {
                   let storedMode = CameraInputMode(rawValue: raw) {
             cameraInputMode = storedMode
         }
-        iphoneCameraKey = KeychainStore.read(account: "iphone-network-camera")
+        // Remove the credential stored by versions 0.3/0.4. The iPhone QR is
+        // now deliberately keyless.
+        KeychainStore.save("", account: "iphone-network-camera")
         streamKey = KeychainStore.read(account: platform.rawValue)
     }
 
@@ -987,10 +1000,6 @@ final class StreamEngine: ObservableObject {
         defaults.set(fps.rawValue, forKey: "fps")
         defaults.set(videoBitrateKbps, forKey: "videoBitrateKbps")
         defaults.set(cameraInputMode.rawValue, forKey: "cameraInputMode")
-        KeychainStore.save(
-            iphoneCameraKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            account: "iphone-network-camera"
-        )
         KeychainStore.save(streamKey, account: platform.rawValue)
     }
 }

@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./iphone-camera.module.css";
 
 const MEDIA_ROOT = "https://api.adoptan.ai/screen-media/studio/lucia";
-const TOKEN_STORAGE_KEY = "adoptan-windows-camera-key-v1";
 
 type PublisherOptions = {
   url: string;
@@ -40,7 +39,6 @@ export default function IPhoneCameraSender() {
   const publisherRef = useRef<PublisherInstance | null>(null);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const [libraryReady, setLibraryReady] = useState(false);
-  const [token, setToken] = useState("");
   const [status, setStatus] = useState<CameraStatus>("idle");
   const [videoOnly, setVideoOnly] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
@@ -50,28 +48,18 @@ export default function IPhoneCameraSender() {
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
-    const queryToken = query.get("key")?.trim() || "";
     setVideoOnly(query.get("videoOnly") === "1");
-    const savedToken = window.localStorage.getItem(TOKEN_STORAGE_KEY) || "";
-    if (queryToken) {
-      setToken(queryToken);
-      window.localStorage.setItem(TOKEN_STORAGE_KEY, queryToken);
+    window.localStorage.removeItem("adoptan-windows-camera-key-v1");
+    if (query.has("key")) {
       query.delete("key");
       const cleaned = `${window.location.pathname}${query.size ? `?${query.toString()}` : ""}`;
       window.history.replaceState({}, "", cleaned);
-    } else {
-      setToken(savedToken);
     }
 
     return () => stopCamera(streamRef, publisherRef, wakeLockRef, videoRef);
   }, []);
 
   const connect = async () => {
-    if (!token) {
-      setStatus("error");
-      setMessage("La clé privée manque. Scanne le QR affiché dans Adoptan Mini OBS.");
-      return;
-    }
     if (!libraryReady || !window.MediaMTXWebRTCPublisher) {
       setStatus("error");
       setMessage("Le module vidéo charge encore. Réessaie dans quelques secondes.");
@@ -123,11 +111,11 @@ export default function IPhoneCameraSender() {
       }
 
       setStatus("connecting");
-      setMessage("Connexion sécurisée de l’iPhone à Adoptan Mini OBS…");
+      setMessage("Connexion de l’iPhone à Adoptan Mini OBS…");
       const Publisher = window.MediaMTXWebRTCPublisher;
       publisherRef.current = new Publisher({
         url: `${MEDIA_ROOT}/whip`,
-        token,
+        token: "",
         stream,
         videoCodec: "h264/90000",
         videoBitrate: 3500,
@@ -273,7 +261,7 @@ export default function IPhoneCameraSender() {
         </section>
 
         <section className={styles.steps}>
-          <div><span>1</span><p>Scanne le QR depuis Adoptan Mini OBS.</p></div>
+          <div><span>1</span><p>Scanne le QR depuis Adoptan Mini OBS — aucune clé à saisir.</p></div>
           <div><span>2</span><p>Autorise la caméra dans Safari. Le micro est facultatif.</p></div>
           <div><span>3</span><p>Quand « Connectée » apparaît, retourne sur le Mac ou le PC.</p></div>
         </section>
