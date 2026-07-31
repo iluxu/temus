@@ -47,6 +47,7 @@ jobs:
             -S "$RUNNER_TEMP/srt-source" \
             -B "$RUNNER_TEMP/srt-x86-build" \
             -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
             -DCMAKE_OSX_ARCHITECTURES=x86_64 \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
             -DENABLE_SHARED=OFF \
