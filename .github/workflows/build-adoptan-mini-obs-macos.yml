@@ -56,14 +56,27 @@ jobs:
             --product AdoptanMiniOBS \
             --arch arm64 \
             --scratch-path .build-arm64 2>&1 | tee "$RUNNER_TEMP/swift-build-arm64.log"
-          datachannel_archive="$(find .build-x86_64/artifacts \
-            -path '*/macos-arm64_x86_64/libdatachannel.a' -print -quit)"
-          srt_archive="$(find .build-x86_64/artifacts \
-            -path '*/macos-arm64_x86_64/libsrt.a' -print -quit)"
-          test -f "$datachannel_archive"
-          test -f "$srt_archive"
-          lipo -verify_arch x86_64 "$datachannel_archive"
-          lipo -verify_arch x86_64 "$srt_archive"
+          datachannel_archive="$(find .build-x86_64 \
+            -path '*macos*' -name 'libdatachannel.a' -print -quit)"
+          srt_archive="$(find .build-x86_64 \
+            -path '*macos*' -name 'libsrt.a' -print -quit)"
+          if [ -z "$datachannel_archive" ] || [ -z "$srt_archive" ]; then
+            echo "::error title=Intel binary archives::SwiftPM did not expose the macOS SRT/WebRTC archives"
+            find .build-x86_64 -name 'libdatachannel.a' -o -name 'libsrt.a'
+            exit 1
+          fi
+          datachannel_archs="$(lipo -archs "$datachannel_archive")"
+          srt_archs="$(lipo -archs "$srt_archive")"
+          echo "libdatachannel: $datachannel_archive ($datachannel_archs)"
+          echo "libsrt: $srt_archive ($srt_archs)"
+          case " $datachannel_archs " in
+            *" x86_64 "*) ;;
+            *) echo "::error title=Intel libdatachannel::x86_64 slice missing"; exit 1 ;;
+          esac
+          case " $srt_archs " in
+            *" x86_64 "*) ;;
+            *) echo "::error title=Intel libsrt::x86_64 slice missing"; exit 1 ;;
+          esac
           swift build \
             -c release \
             --product AdoptanMiniOBS \
