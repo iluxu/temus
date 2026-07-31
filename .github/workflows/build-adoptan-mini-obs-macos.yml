@@ -67,8 +67,12 @@ jobs:
             echo "::error title=Intel SRT::The native x86_64 SRT archive was not produced"
             exit 1
           fi
-          echo "Intel SRT runtime: $srt_archive ($(lipo -archs "$srt_archive"))"
-          lipo -verify_arch x86_64 "$srt_archive"
+          srt_archs="$(lipo -archs "$srt_archive")"
+          echo "Intel SRT runtime: $srt_archive ($srt_archs)"
+          case " $srt_archs " in
+            *" x86_64 "*) ;;
+            *) echo "::error title=Intel SRT::Compiled archive does not contain x86_64"; exit 1 ;;
+          esac
 
       - name: Expose Intel SRT build errors
         if: failure()
@@ -76,7 +80,7 @@ jobs:
           if [ -f "$RUNNER_TEMP/srt-x86-build.log" ]; then
             details="$(
               tr '\r' '\n' < "$RUNNER_TEMP/srt-x86-build.log" | grep -Ei \
-                'error|fatal|failed|undefined|libtool|clang:|make.*\\*\\*\\*' \
+                'error|fatal|failed|undefined|libtool|clang:|\*\*\*' \
                 | tail -60 || true
             )"
             if [ -z "$details" ]; then
