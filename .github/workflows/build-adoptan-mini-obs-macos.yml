@@ -56,10 +56,20 @@ jobs:
             --product AdoptanMiniOBS \
             --arch arm64 \
             --scratch-path .build-arm64 2>&1 | tee "$RUNNER_TEMP/swift-build-arm64.log"
+          datachannel_archive="$(find .build-x86_64/artifacts \
+            -path '*/macos-arm64_x86_64/libdatachannel.a' -print -quit)"
+          srt_archive="$(find .build-x86_64/artifacts \
+            -path '*/macos-arm64_x86_64/libsrt.a' -print -quit)"
+          test -f "$datachannel_archive"
+          test -f "$srt_archive"
+          lipo -verify_arch x86_64 "$datachannel_archive"
+          lipo -verify_arch x86_64 "$srt_archive"
           swift build \
             -c release \
             --product AdoptanMiniOBS \
             --arch x86_64 \
+            -Xlinker "$datachannel_archive" \
+            -Xlinker "$srt_archive" \
             --scratch-path .build-x86_64 2>&1 | tee "$RUNNER_TEMP/swift-build-x86_64.log"
           mkdir -p .build/universal
           lipo -create \
