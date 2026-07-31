@@ -130,5 +130,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.2.0" \
-            --notes "Caméra iPhone par QR et réseau adoptan.ai, sans Caméra de continuité. Le partage d’écran ScreenCaptureKit redevient la source principale comme dans la première version, avec l’iPhone en incrustation indépendante."
+            --title "Adoptan Mini OBS 0.3.0 — test Continuité" \
+            --notes "Build de test matériel : Caméra de continuité redevient le mode principal. AVFoundation reçoit l’iPhone, ScreenCaptureKit reçoit l’écran du Mac et un compositeur Core Image fabrique une piste vidéo finale unique. Le microphone reste indépendant ; le mode QR est conservé seulement en secours."

@@ -16,6 +16,7 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
     var onFrame: (() -> Void)?
     var onError: ((String) -> Void)?
+    var onVideoSampleBuffer: ((CMSampleBuffer) -> Void)?
 
     init(mixer: MediaMixer) {
         self.mixer = mixer
@@ -74,11 +75,7 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
         switch outputType {
         case .screen:
-            Task {
-                // The Mac display owns the primary track, matching the first
-                // screen-share release that worked on the target MacBook.
-                await mixer.append(sampleBuffer, track: VideoSourceTrack.screen)
-            }
+            onVideoSampleBuffer?(sampleBuffer)
             let now = ProcessInfo.processInfo.systemUptime
             if lastFrameCallbackTime == 0 || now - lastFrameCallbackTime >= 0.5 {
                 lastFrameCallbackTime = now

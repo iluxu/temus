@@ -2,7 +2,6 @@
 import CoreMedia
 import CoreVideo
 import Foundation
-import HaishinKit
 
 final class CameraCaptureSource: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private enum CaptureError: LocalizedError {
@@ -22,7 +21,6 @@ final class CameraCaptureSource: NSObject, AVCaptureVideoDataOutputSampleBufferD
         }
     }
 
-    private let mixer: MediaMixer
     private let session = AVCaptureSession()
     private let sessionQueue = DispatchQueue(
         label: "ai.adoptan.miniobs.camera-session",
@@ -37,9 +35,9 @@ final class CameraCaptureSource: NSObject, AVCaptureVideoDataOutputSampleBufferD
 
     var onFrame: (() -> Void)?
     var onError: ((String) -> Void)?
+    var onSampleBuffer: ((CMSampleBuffer) -> Void)?
 
-    init(mixer: MediaMixer) {
-        self.mixer = mixer
+    override init() {
         super.init()
         observeSession()
     }
@@ -150,9 +148,7 @@ final class CameraCaptureSource: NSObject, AVCaptureVideoDataOutputSampleBufferD
     ) {
         guard sampleBuffer.isValid, sampleBuffer.dataReadiness == .ready else { return }
 
-        Task {
-            await mixer.append(sampleBuffer, track: VideoSourceTrack.camera)
-        }
+        onSampleBuffer?(sampleBuffer)
 
         let now = ProcessInfo.processInfo.systemUptime
         if lastFrameCallbackTime == 0 || now - lastFrameCallbackTime >= 0.5 {

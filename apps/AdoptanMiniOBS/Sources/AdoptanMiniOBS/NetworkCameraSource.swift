@@ -2,13 +2,11 @@
 import CoreMedia
 import CoreVideo
 import Foundation
-import HaishinKit
 import QuartzCore
 
 /// Receives the iPhone camera from adoptan.ai as HLS and injects fresh video
 /// frames into the camera track. This path never opens Continuity Camera.
 final class NetworkCameraSource {
-    private let mixer: MediaMixer
     private let sessionQueue = DispatchQueue(
         label: "ai.adoptan.miniobs.network-camera",
         qos: .userInteractive
@@ -26,10 +24,7 @@ final class NetworkCameraSource {
 
     var onFrame: (() -> Void)?
     var onStatus: ((String) -> Void)?
-
-    init(mixer: MediaMixer) {
-        self.mixer = mixer
-    }
+    var onSampleBuffer: ((CMSampleBuffer) -> Void)?
 
     func start(url: URL, fps: Int) async {
         await stop()
@@ -131,9 +126,7 @@ final class NetworkCameraSource {
         }
 
         lastFrameUptime = now
-        Task {
-            await mixer.append(sampleBuffer, track: VideoSourceTrack.camera)
-        }
+        onSampleBuffer?(sampleBuffer)
 
         if lastCallbackUptime == 0 || now - lastCallbackUptime >= 0.5 {
             lastCallbackUptime = now

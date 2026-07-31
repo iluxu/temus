@@ -2,15 +2,14 @@ import CoreGraphics
 import Foundation
 
 enum VideoSourceTrack {
-    // Restore the routing from the first working screen-share release:
-    // ScreenCaptureKit owns the primary track and the camera is only an overlay.
-    static let screen: UInt8 = 0
-    static let camera: UInt8 = 1
+    // Camera and screen are composited natively before they reach HaishinKit.
+    // The streaming engine therefore receives one stable program track only.
+    static let program: UInt8 = 0
 }
 
 enum CameraInputMode: String, CaseIterable, Identifiable {
-    case iphoneNetwork = "iPhone par QR — sans Continuité"
-    case macOSDevice = "Caméra macOS / Continuité"
+    case macOSDevice = "Caméra de continuité / macOS"
+    case iphoneNetwork = "iPhone par QR — secours"
 
     var id: Self { self }
 }

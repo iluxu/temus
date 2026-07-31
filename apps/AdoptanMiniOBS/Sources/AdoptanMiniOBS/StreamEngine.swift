@@ -26,7 +26,7 @@ final class StreamEngine: ObservableObject {
     @Published var selectedCameraID = ""
     @Published var selectedMicrophoneID = ""
     @Published var selectedDisplayID: UInt32 = 0
-    @Published var cameraInputMode: CameraInputMode = .iphoneNetwork
+    @Published var cameraInputMode: CameraInputMode = .macOSDevice
     @Published var iphoneCameraKey = ""
     @Published var scene: SceneLayout = .screenCamera
     @Published var overlayPosition: OverlayPosition = .bottomRight
@@ -56,8 +56,17 @@ final class StreamEngine: ObservableObject {
         string: "https://api.adoptan.ai/screen-hls/studio/lucia/index.m3u8"
     )!
 
+    private lazy var programCompositor = ProgramCompositor(
+        mixer: mixer,
+        settings: makeProgramSettings()
+    )
+
     private lazy var cameraCapture: CameraCaptureSource = {
-        let source = CameraCaptureSource(mixer: mixer)
+        let source = CameraCaptureSource()
+        let compositor = programCompositor
+        source.onSampleBuffer = { [weak compositor] sampleBuffer in
+            compositor?.appendCamera(sampleBuffer)
+        }
         source.onFrame = { [weak self] in
             Task { @MainActor in
                 self?.cameraDidOutputFrame()
@@ -74,7 +83,11 @@ final class StreamEngine: ObservableObject {
     }()
 
     private lazy var networkCamera: NetworkCameraSource = {
-        let source = NetworkCameraSource(mixer: mixer)
+        let source = NetworkCameraSource()
+        let compositor = programCompositor
+        source.onSampleBuffer = { [weak compositor] sampleBuffer in
+            compositor?.appendCamera(sampleBuffer)
+        }
         source.onFrame = { [weak self] in
             Task { @MainActor in
                 self?.cameraDidOutputFrame()
@@ -91,6 +104,10 @@ final class StreamEngine: ObservableObject {
 
     private lazy var screenCapture: ScreenCaptureSource = {
         let source = ScreenCaptureSource(mixer: mixer)
+        let compositor = programCompositor
+        source.onVideoSampleBuffer = { [weak compositor] sampleBuffer in
+            compositor?.appendScreen(sampleBuffer)
+        }
         source.onFrame = { [weak self] in
             Task { @MainActor in
                 self?.screenDidOutputFrame()
@@ -118,10 +135,6 @@ final class StreamEngine: ObservableObject {
     private var hasStartedMixer = false
     private var lastCameraFrameAt: Date?
     private var lastScreenFrameAt: Date?
-
-    @ScreenActor private var overlayObject: VideoTrackScreenObject?
-    @ScreenActor private var mirrorEffect = MirrorEffect()
-    @ScreenActor private var rotateEffect = Rotate180Effect()
 
     init() {
         restorePreferences()
@@ -176,7 +189,7 @@ final class StreamEngine: ObservableObject {
     func prepare() async {
         guard !isConfiguring else { return }
         isConfiguring = true
-        message = "Préparation de l’écran du Mac et de la caméra iPhone réseau…"
+        message = "Préparation de l’écran du Mac et de Caméra de continuité…"
 
         await SessionBuilderFactory.shared.register(RTMPSessionFactory())
 
@@ -308,19 +321,17 @@ final class StreamEngine: ObservableObject {
         await screenCapture.stop()
         await cameraCapture.stop()
         await networkCamera.stop()
+        await programCompositor.stop()
 
-        try? await mixer.attachVideo(nil, track: VideoSourceTrack.camera)
-        try? await mixer.attachVideo(nil, track: VideoSourceTrack.screen)
+        try? await mixer.attachVideo(nil, track: VideoSourceTrack.program)
         try? await mixer.attachAudio(nil, track: 0)
 
         var videoMixerSettings = await mixer.videoMixerSettings
-        videoMixerSettings.mode = .offscreen
-        videoMixerSettings.mainTrack = mainVideoTrack(for: scene)
+        videoMixerSettings.mode = .passthrough
+        videoMixerSettings.mainTrack = VideoSourceTrack.program
         await mixer.setVideoMixerSettings(videoMixerSettings)
 
         await applyAudioMixerSettings()
-
-        await configureComposition()
 
         // Configure audio before the independent camera starts. The RTMP mixer
         // now owns audio only; AVFoundation camera frames arrive through the
@@ -331,6 +342,7 @@ final class StreamEngine: ObservableObject {
             await mixer.startRunning()
             hasStartedMixer = true
         }
+        await programCompositor.start(settings: makeProgramSettings())
 
         if cameraInputMode == .iphoneNetwork {
             saveIPhoneCameraKey()
@@ -354,12 +366,6 @@ final class StreamEngine: ObservableObject {
             }
         } else {
             cameraStatusText = "Aucune caméra macOS détectée."
-        }
-
-        do {
-            try await mixer.setFrameRate(Float64(fps.rawValue))
-        } catch {
-            message = "Fréquence d’image non prise en charge : \(error.localizedDescription)"
         }
 
         let needsScreen = scene != .cameraOnly || includeSystemAudio
@@ -398,12 +404,7 @@ final class StreamEngine: ObservableObject {
 
     func applySceneLive() {
         savePreferences()
-        Task {
-            var settings = await mixer.videoMixerSettings
-            settings.mainTrack = mainVideoTrack(for: scene)
-            await mixer.setVideoMixerSettings(settings)
-            await configureComposition()
-        }
+        programCompositor.update(settings: makeProgramSettings())
     }
 
     func selectPlatform(_ newPlatform: StreamPlatform) {
@@ -518,6 +519,7 @@ final class StreamEngine: ObservableObject {
             await screenCapture.stop()
             await cameraCapture.stop()
             await networkCamera.stop()
+            await programCompositor.stop()
             if hasStartedMixer {
                 await mixer.stopRunning()
             }
@@ -546,98 +548,6 @@ final class StreamEngine: ObservableObject {
                         liveState = .failed("Connexion fermée.")
                     }
                 }
-            }
-        }
-    }
-
-    private func configureComposition() async {
-        let selectedScene = scene
-        let selectedPosition = overlayPosition
-        let selectedScale = overlayScale
-        let outputSize = resolution.size
-        let shouldMirror = mirrorCamera
-        let shouldRotate = rotateCamera180
-
-        await configureCompositionOnScreen(
-            scene: selectedScene,
-            position: selectedPosition,
-            scale: selectedScale,
-            outputSize: outputSize,
-            mirror: shouldMirror,
-            rotate: shouldRotate
-        )
-    }
-
-    @ScreenActor
-    private func configureCompositionOnScreen(
-        scene: SceneLayout,
-        position: OverlayPosition,
-        scale: Double,
-        outputSize: CGSize,
-        mirror: Bool,
-        rotate: Bool
-    ) async {
-        let screen = await mixer.screen
-        screen.size = outputSize
-        screen.backgroundColor = NSColor.black.cgColor
-
-        if overlayObject == nil {
-            let overlay = VideoTrackScreenObject()
-            overlay.videoGravity = .resizeAspectFill
-            try? screen.addChild(overlay)
-            overlayObject = overlay
-        }
-        guard let overlay = overlayObject else { return }
-
-        overlay.isVisible = scene == .screenCamera || scene == .cameraScreen
-        overlay.track = scene == .cameraScreen
-            ? VideoSourceTrack.screen
-            : VideoSourceTrack.camera
-        overlay.cornerRadius = max(10, outputSize.height * 0.018)
-
-        let overlayWidth = outputSize.width * max(0.18, min(scale, 0.48))
-        overlay.size = CGSize(width: overlayWidth, height: overlayWidth * 9 / 16)
-        let margin = max(16, outputSize.width * 0.018)
-        overlay.layoutMargin = NSEdgeInsets(
-            top: margin,
-            left: margin,
-            bottom: margin,
-            right: margin
-        )
-
-        switch position {
-        case .topLeft:
-            overlay.horizontalAlignment = .left
-            overlay.verticalAlignment = .top
-        case .topRight:
-            overlay.horizontalAlignment = .right
-            overlay.verticalAlignment = .top
-        case .bottomLeft:
-            overlay.horizontalAlignment = .left
-            overlay.verticalAlignment = .bottom
-        case .bottomRight:
-            overlay.horizontalAlignment = .right
-            overlay.verticalAlignment = .bottom
-        }
-
-        _ = overlay.unregisterVideoEffect(mirrorEffect)
-        _ = overlay.unregisterVideoEffect(rotateEffect)
-        _ = screen.unregisterVideoEffect(mirrorEffect)
-        _ = screen.unregisterVideoEffect(rotateEffect)
-
-        let cameraIsMain = scene == .cameraOnly || scene == .cameraScreen
-        if mirror {
-            if cameraIsMain {
-                _ = screen.registerVideoEffect(mirrorEffect)
-            } else {
-                _ = overlay.registerVideoEffect(mirrorEffect)
-            }
-        }
-        if rotate {
-            if cameraIsMain {
-                _ = screen.registerVideoEffect(rotateEffect)
-            } else {
-                _ = overlay.registerVideoEffect(rotateEffect)
             }
         }
     }
@@ -687,15 +597,6 @@ final class StreamEngine: ObservableObject {
             return preferred
         }
         return cameraDevices.first
-    }
-
-    private func mainVideoTrack(for scene: SceneLayout) -> UInt8 {
-        switch scene {
-        case .cameraOnly, .cameraScreen:
-            return VideoSourceTrack.camera
-        case .screenCamera, .screenOnly:
-            return VideoSourceTrack.screen
-        }
     }
 
     private func isIPhoneCamera(_ device: AVCaptureDevice) -> Bool {
@@ -796,6 +697,18 @@ final class StreamEngine: ObservableObject {
             ]
         )
         await mixer.setAudioMixerSettings(settings)
+    }
+
+    private func makeProgramSettings() -> ProgramCompositor.Settings {
+        ProgramCompositor.Settings(
+            scene: scene,
+            overlayPosition: overlayPosition,
+            overlayScale: overlayScale,
+            outputSize: resolution.size,
+            fps: fps.rawValue,
+            mirrorCamera: mirrorCamera,
+            rotateCamera180: rotateCamera180
+        )
     }
 
     private func observeDeviceChanges() {
@@ -938,8 +851,12 @@ final class StreamEngine: ObservableObject {
         if defaults.object(forKey: "videoBitrateKbps") != nil {
             videoBitrateKbps = defaults.integer(forKey: "videoBitrateKbps")
         }
-        if let raw = defaults.string(forKey: "cameraInputMode"),
-           let storedMode = CameraInputMode(rawValue: raw) {
+        let compositorMigrationKey = "nativeProgramCompositorV030"
+        if !defaults.bool(forKey: compositorMigrationKey) {
+            cameraInputMode = .macOSDevice
+            defaults.set(true, forKey: compositorMigrationKey)
+        } else if let raw = defaults.string(forKey: "cameraInputMode"),
+                  let storedMode = CameraInputMode(rawValue: raw) {
             cameraInputMode = storedMode
         }
         iphoneCameraKey = KeychainStore.read(account: "iphone-network-camera")
