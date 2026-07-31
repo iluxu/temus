@@ -74,7 +74,14 @@ jobs:
         if: failure()
         run: |
           if [ -f "$RUNNER_TEMP/srt-x86-build.log" ]; then
-            details="$(tail -100 "$RUNNER_TEMP/srt-x86-build.log")"
+            details="$(
+              grep -Ei \
+                'error:|fatal|failed|undefined|make.*\\*\\*\\*' \
+                "$RUNNER_TEMP/srt-x86-build.log" | tail -60 || true
+            )"
+            if [ -z "$details" ]; then
+              details="$(tail -30 "$RUNNER_TEMP/srt-x86-build.log")"
+            fi
             details="${details//'%'/'%25'}"
             details="${details//$'\r'/'%0D'}"
             details="${details//$'\n'/'%0A'}"
