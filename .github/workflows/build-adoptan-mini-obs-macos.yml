@@ -33,13 +33,17 @@ jobs:
 
       - name: Resolve dependencies
         working-directory: apps/AdoptanMiniOBS
-        run: swift package resolve --scratch-path .build-universal
+        run: |
+          swift package resolve --scratch-path .build-arm64
+          swift package resolve --scratch-path .build-x86_64
 
       - name: Fix WHEP H264 receiver
         working-directory: apps/AdoptanMiniOBS
         run: |
-          git -C .build-universal/checkouts/HaishinKit.swift apply \
-            "$GITHUB_WORKSPACE/apps/AdoptanMiniOBS/Patches/haishinkit-webrtc-receiver.patch"
+          for scratch in .build-arm64 .build-x86_64; do
+            git -C "$scratch/checkouts/HaishinKit.swift" apply \
+              "$GITHUB_WORKSPACE/apps/AdoptanMiniOBS/Patches/haishinkit-webrtc-receiver.patch"
+          done
 
       - name: Build universal Intel and Apple Silicon executable
         working-directory: apps/AdoptanMiniOBS
@@ -51,16 +55,16 @@ jobs:
             -c release \
             --product AdoptanMiniOBS \
             --arch arm64 \
-            --scratch-path .build-universal 2>&1 | tee "$RUNNER_TEMP/swift-build-arm64.log"
+            --scratch-path .build-arm64 2>&1 | tee "$RUNNER_TEMP/swift-build-arm64.log"
           swift build \
             -c release \
             --product AdoptanMiniOBS \
             --arch x86_64 \
-            --scratch-path .build-universal 2>&1 | tee "$RUNNER_TEMP/swift-build-x86_64.log"
+            --scratch-path .build-x86_64 2>&1 | tee "$RUNNER_TEMP/swift-build-x86_64.log"
           mkdir -p .build/universal
           lipo -create \
-            .build-universal/arm64-apple-macosx/release/AdoptanMiniOBS \
-            .build-universal/x86_64-apple-macosx/release/AdoptanMiniOBS \
+            .build-arm64/arm64-apple-macosx/release/AdoptanMiniOBS \
+            .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBS \
             -output .build/universal/AdoptanMiniOBS
           lipo -verify_arch arm64 x86_64 .build/universal/AdoptanMiniOBS
           lipo -archs .build/universal/AdoptanMiniOBS
