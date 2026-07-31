@@ -6,6 +6,17 @@ struct ContentView: View {
     @State private var showAdvanced = false
     @State private var revealStreamKey = false
 
+    private var cameraModeDescription: String {
+        switch engine.cameraInputMode {
+        case .iphoneSRT:
+            return "Mode Scaleway recommandé : Moblin envoie la caméra par SRT avec récupération des paquets perdus. Safari et Caméra de continuité ne sont pas utilisés."
+        case .iphoneNetwork:
+            return "Mode de secours : l’iPhone envoie la vidéo à distance par Safari/WebRTC."
+        case .macOSDevice:
+            return "Le mode macOS nécessite Caméra de continuité pour utiliser directement l’iPhone."
+        }
+    }
+
     var body: some View {
         HSplitView {
             controls
@@ -407,16 +418,7 @@ struct ContentView: View {
                 .onChange(of: engine.rotateCamera180) { _ in
                     engine.applySceneLive()
                 }
-            Text(
-                switch engine.cameraInputMode {
-                case .iphoneSRT:
-                    "Mode Scaleway recommandé : Moblin envoie la caméra par SRT avec récupération des paquets perdus. Safari et Caméra de continuité ne sont pas utilisés."
-                case .iphoneNetwork:
-                    "Mode de secours : l’iPhone envoie la vidéo à distance par Safari/WebRTC."
-                case .macOSDevice:
-                    "Le mode macOS nécessite Caméra de continuité pour utiliser directement l’iPhone."
-                }
-            )
+            Text(cameraModeDescription)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
