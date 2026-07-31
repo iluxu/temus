@@ -75,12 +75,14 @@ jobs:
         run: |
           if [ -f "$RUNNER_TEMP/srt-x86-build.log" ]; then
             details="$(
-              grep -Ei \
-                'error:|fatal|failed|undefined|make.*\\*\\*\\*' \
-                "$RUNNER_TEMP/srt-x86-build.log" | tail -60 || true
+              tr '\r' '\n' < "$RUNNER_TEMP/srt-x86-build.log" | grep -Ei \
+                'error|fatal|failed|undefined|libtool|clang:|make.*\\*\\*\\*' \
+                | tail -60 || true
             )"
             if [ -z "$details" ]; then
-              details="$(tail -30 "$RUNNER_TEMP/srt-x86-build.log")"
+              details="$(
+                tr '\r' '\n' < "$RUNNER_TEMP/srt-x86-build.log" | tail -30
+              )"
             fi
             details="${details//'%'/'%25'}"
             details="${details//$'\r'/'%0D'}"
