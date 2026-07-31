@@ -119,8 +119,16 @@ jobs:
             .build-arm64/arm64-apple-macosx/release/AdoptanMiniOBS \
             .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBS \
             -output .build/universal/AdoptanMiniOBS
-          lipo -verify_arch arm64 x86_64 .build/universal/AdoptanMiniOBS
-          lipo -archs .build/universal/AdoptanMiniOBS
+          universal_archs="$(lipo -archs .build/universal/AdoptanMiniOBS)"
+          echo "Universal executable architectures: $universal_archs"
+          case " $universal_archs " in
+            *" arm64 "*) ;;
+            *) echo "::error title=Universal build::arm64 slice missing"; exit 1 ;;
+          esac
+          case " $universal_archs " in
+            *" x86_64 "*) ;;
+            *) echo "::error title=Universal build::x86_64 slice missing"; exit 1 ;;
+          esac
 
       - name: Expose Swift compiler errors
         if: failure()
