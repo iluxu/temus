@@ -39,6 +39,7 @@ jobs:
 
       - name: Build the missing Intel SRT runtime
         run: |
+          set -o pipefail
           git clone --quiet --depth 1 --branch v1.5.4 \
             https://github.com/Haivision/srt.git \
             "$RUNNER_TEMP/srt-source"
@@ -52,11 +53,13 @@ jobs:
             -DENABLE_STATIC=ON \
             -DENABLE_APPS=OFF \
             -DENABLE_ENCRYPTION=OFF \
-            -DENABLE_STDCXX_SYNC=ON
+            -DENABLE_STDCXX_SYNC=ON \
+            2>&1 | tee "$RUNNER_TEMP/srt-x86-build.log"
           cmake --build "$RUNNER_TEMP/srt-x86-build" \
             --config Release \
             --target srt_static \
-            --parallel 4
+            --parallel 4 \
+            2>&1 | tee -a "$RUNNER_TEMP/srt-x86-build.log"
           srt_archive="$(find "$RUNNER_TEMP/srt-x86-build" \
             -name 'libsrt.a' -print -quit)"
           if [ -z "$srt_archive" ]; then
@@ -65,6 +68,17 @@ jobs:
           fi
           echo "Intel SRT runtime: $srt_archive ($(lipo -archs "$srt_archive"))"
           lipo -verify_arch x86_64 "$srt_archive"
+
+      - name: Expose Intel SRT build errors
+        if: failure()
+        run: |
+          if [ -f "$RUNNER_TEMP/srt-x86-build.log" ]; then
+            details="$(tail -100 "$RUNNER_TEMP/srt-x86-build.log")"
+            details="${details//'%'/'%25'}"
+            details="${details//$'\r'/'%0D'}"
+            details="${details//$'\n'/'%0A'}"
+            echo "::error title=Intel SRT compiler::$details"
+          fi
 
       - name: Build universal Intel and Apple Silicon executable
         working-directory: apps/AdoptanMiniOBS
