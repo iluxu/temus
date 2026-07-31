@@ -11,7 +11,7 @@ struct ContentView: View {
         case .iphoneSRT:
             return "Mode Scaleway recommandé : Moblin envoie la caméra par SRT avec récupération des paquets perdus. Safari et Caméra de continuité ne sont pas utilisés."
         case .iphoneNetwork:
-            return "Mode de secours : l’iPhone envoie la vidéo à distance par Safari/WebRTC."
+            return "Mode de secours : l’iPhone envoie la vidéo par Safari et OBS Lite la lit en HLS natif."
         case .macOSDevice:
             return "Le mode macOS nécessite Caméra de continuité pour utiliser directement l’iPhone."
         }

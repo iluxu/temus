@@ -4,7 +4,6 @@ import Combine
 import CoreImage.CIFilterBuiltins
 import CoreGraphics
 import HaishinKit
-import RTCHaishinKit
 import RTMPHaishinKit
 import SRTHaishinKit
 @preconcurrency import ScreenCaptureKit
@@ -55,9 +54,6 @@ final class StreamEngine: ObservableObject {
     )
 
     private static let iphoneCameraPage = "https://adoptan.ai/iphone-camera"
-    private static let iphoneCameraWHEP = URL(
-        string: "https://api.adoptan.ai/screen-media/studio/lucia/whep"
-    )!
     private static let iphoneCameraHLS = URL(
         string: "https://api.adoptan.ai/screen-hls/studio/lucia/index.m3u8"
     )!
@@ -233,7 +229,6 @@ final class StreamEngine: ObservableObject {
         }
 
         await SessionBuilderFactory.shared.register(RTMPSessionFactory())
-        await SessionBuilderFactory.shared.register(HTTPSessionFactory())
         await SessionBuilderFactory.shared.register(SRTSessionFactory())
 
         let cameraAccess = cameraInputMode == .macOSDevice
@@ -402,7 +397,6 @@ final class StreamEngine: ObservableObject {
             cameraStatusText =
                 "En attente de l’iPhone distant — scanne le QR et touche Connecter."
             await networkCamera.start(
-                whepURL: Self.iphoneCameraWHEP,
                 hlsURL: Self.iphoneCameraHLS,
                 fps: fps.rawValue
             )

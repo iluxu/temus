@@ -4,9 +4,9 @@ import CoreVideo
 import Foundation
 import QuartzCore
 
-/// Uses AVFoundation's production HLS decoder when the alpha WHEP decoder
-/// does not deliver frames. It stays close to the live edge and rebuilds the
-/// player quickly after a Safari/network interruption.
+/// Uses AVFoundation's production HLS decoder for the Safari fallback. It
+/// stays close to the live edge and rebuilds the player quickly after a
+/// Safari or network interruption.
 final class HLSCameraFallback: @unchecked Sendable {
     private let queue = DispatchQueue(
         label: "ai.adoptan.miniobs.network-camera-hls",
@@ -135,7 +135,7 @@ final class HLSCameraFallback: @unchecked Sendable {
             return
         }
         lastReloadUptime = now
-        emitStatus("WebRTC sans image — activation du décodeur vidéo de secours…")
+        emitStatus("Flux Safari sans image — reconnexion du lecteur vidéo…")
         configurePlayer()
     }
 

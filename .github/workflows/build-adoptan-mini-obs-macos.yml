@@ -37,13 +37,34 @@ jobs:
           swift package resolve --scratch-path .build-arm64
           swift package resolve --scratch-path .build-x86_64
 
-      - name: Fix WHEP H264 receiver
-        working-directory: apps/AdoptanMiniOBS
+      - name: Build the missing Intel SRT runtime
         run: |
-          for scratch in .build-arm64 .build-x86_64; do
-            git -C "$scratch/checkouts/HaishinKit.swift" apply \
-              "$GITHUB_WORKSPACE/apps/AdoptanMiniOBS/Patches/haishinkit-webrtc-receiver.patch"
-          done
+          git clone --quiet --depth 1 --branch v1.5.4 \
+            https://github.com/Haivision/srt.git \
+            "$RUNNER_TEMP/srt-source"
+          cmake \
+            -S "$RUNNER_TEMP/srt-source" \
+            -B "$RUNNER_TEMP/srt-x86-build" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_OSX_ARCHITECTURES=x86_64 \
+            -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0 \
+            -DENABLE_SHARED=OFF \
+            -DENABLE_STATIC=ON \
+            -DENABLE_APPS=OFF \
+            -DENABLE_ENCRYPTION=OFF \
+            -DENABLE_STDCXX_SYNC=ON
+          cmake --build "$RUNNER_TEMP/srt-x86-build" \
+            --config Release \
+            --target srt_static \
+            --parallel 4
+          srt_archive="$(find "$RUNNER_TEMP/srt-x86-build" \
+            -name 'libsrt.a' -print -quit)"
+          if [ -z "$srt_archive" ]; then
+            echo "::error title=Intel SRT::The native x86_64 SRT archive was not produced"
+            exit 1
+          fi
+          echo "Intel SRT runtime: $srt_archive ($(lipo -archs "$srt_archive"))"
+          lipo -verify_arch x86_64 "$srt_archive"
 
       - name: Build universal Intel and Apple Silicon executable
         working-directory: apps/AdoptanMiniOBS
@@ -56,33 +77,14 @@ jobs:
             --product AdoptanMiniOBS \
             --arch arm64 \
             --scratch-path .build-arm64 2>&1 | tee "$RUNNER_TEMP/swift-build-arm64.log"
-          datachannel_archive="$(find .build-x86_64 \
-            -path '*macos*' -name 'libdatachannel.a' -print -quit)"
-          srt_archive="$(find .build-x86_64 \
-            -path '*macos*' -name 'libsrt.a' -print -quit)"
-          if [ -z "$datachannel_archive" ] || [ -z "$srt_archive" ]; then
-            echo "::error title=Intel binary archives::SwiftPM did not expose the macOS SRT/WebRTC archives"
-            find .build-x86_64 -name 'libdatachannel.a' -o -name 'libsrt.a'
-            exit 1
-          fi
-          datachannel_archs="$(lipo -archs "$datachannel_archive")"
-          srt_archs="$(lipo -archs "$srt_archive")"
-          echo "libdatachannel: $datachannel_archive ($datachannel_archs)"
-          echo "libsrt: $srt_archive ($srt_archs)"
-          case " $datachannel_archs " in
-            *" x86_64 "*) ;;
-            *) echo "::error title=Intel libdatachannel::x86_64 slice missing"; exit 1 ;;
-          esac
-          case " $srt_archs " in
-            *" x86_64 "*) ;;
-            *) echo "::error title=Intel libsrt::x86_64 slice missing"; exit 1 ;;
-          esac
+          srt_archive="$(find "$RUNNER_TEMP/srt-x86-build" \
+            -name 'libsrt.a' -print -quit)"
           swift build \
             -c release \
             --product AdoptanMiniOBS \
             --arch x86_64 \
-            -Xlinker "$datachannel_archive" \
             -Xlinker "$srt_archive" \
+            -Xlinker -lc++ \
             --scratch-path .build-x86_64 2>&1 | tee "$RUNNER_TEMP/swift-build-x86_64.log"
           mkdir -p .build/universal
           lipo -create \

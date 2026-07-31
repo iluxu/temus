@@ -6,7 +6,7 @@ transforme un Mac, notamment un Mac Scaleway, en mini studio de direct :
 - caméra distante de l’iPhone par **SRT depuis Moblin**, activée par défaut
   pour les Mac Scaleway, avec récupération des paquets perdus ;
 - QR Moblin qui crée automatiquement le profil iPhone en 720p30 H.264 ;
-- ancien parcours Safari WHIP/WHEP conservé comme mode de secours ;
+- ancien parcours Safari avec lecture HLS conservé comme mode de secours ;
 - Caméra de continuité conservée pour un Mac physiquement proche de l’iPhone ;
 - capture d’un **écran entier** avec ScreenCaptureKit ;
 - mixage du microphone et du son du Mac ;
@@ -42,7 +42,7 @@ le profil « Adoptan iPhone SRT » avec les réglages stables : H.264, 1280 × 7
 30 i/s, 2 500 kb/s, intervalle d’image-clé de 2 secondes, latence SRT de 700 ms
 et débit adaptatif. Aucune clé privée n’est nécessaire pour cette liaison.
 
-Le mode Safari/WebRTC de la version 0.4.1 reste proposé comme secours.
+Le mode Safari/HLS reste proposé comme secours.
 
 La capture d’écran conserve le chemin de la version 1 : ScreenCaptureKit envoie
 directement l’écran sur la piste vidéo principale. Les files vidéo et audio sont
@@ -50,10 +50,10 @@ séparées, seules les images complètes sont traitées et une ancienne image es
 abandonnée si le mixeur est occupé. Cela évite l’accumulation de retard qui
 finissait par figer l’aperçu sur un Mac distant.
 
-Le micro de l’iPhone distant arrive sur une piste audio séparée par SRT ou
-WebRTC selon le mode. Une autorisation micro refusée sur l’iPhone ne bloque
-jamais la vidéo. Le micro du Mac et le son système restent réglables
-indépendamment.
+Le micro de l’iPhone distant arrive sur une piste audio séparée dans le mode
+SRT recommandé. Le secours Safari transmet uniquement l’image et utilise le
+micro du Mac. Une autorisation micro refusée sur l’iPhone ne bloque jamais la
+vidéo. Le micro du Mac et le son système restent réglables indépendamment.
 
 La build publique est signée localement de façon ad hoc. Une signature Apple
 Developer ID et la notarisation nécessitent le certificat Apple du propriétaire.
