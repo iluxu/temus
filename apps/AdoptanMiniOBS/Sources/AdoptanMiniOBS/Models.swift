@@ -2,14 +2,15 @@ import CoreGraphics
 import Foundation
 
 enum VideoSourceTrack {
-    // Camera and screen are composited natively before they reach HaishinKit.
-    // The streaming engine therefore receives one stable program track only.
-    static let program: UInt8 = 0
+    // Keep the exact routing that made screen capture work in version 1:
+    // ScreenCaptureKit owns track 0 and the camera is only track 1.
+    static let screen: UInt8 = 0
+    static let camera: UInt8 = 1
 }
 
 enum CameraInputMode: String, CaseIterable, Identifiable {
-    case macOSDevice = "Caméra de continuité / macOS"
-    case iphoneNetwork = "iPhone par QR — secours"
+    case iphoneNetwork = "iPhone distant — WebRTC"
+    case macOSDevice = "Caméra de continuité / macOS local"
 
     var id: Self { self }
 }

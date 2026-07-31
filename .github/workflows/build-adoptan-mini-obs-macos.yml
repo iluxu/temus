@@ -130,5 +130,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.3.0 — test Continuité" \
-            --notes "Build de test matériel : Caméra de continuité redevient le mode principal. AVFoundation reçoit l’iPhone, ScreenCaptureKit reçoit l’écran du Mac et un compositeur Core Image fabrique une piste vidéo finale unique. Le microphone reste indépendant ; le mode QR est conservé seulement en secours."
+            --title "Adoptan Mini OBS 0.4.0 — Scaleway WebRTC" \
+            --notes "Caméra iPhone distante reçue en WHEP/WebRTC au lieu de HLS. Le partage d’écran reprend la route directe ScreenCaptureKit de la V1 sur la piste principale. Caméra de continuité reste disponible pour les Mac locaux ; le microphone reste indépendant."

@@ -21,7 +21,8 @@ let package = Package(
             name: "AdoptanMiniOBS",
             dependencies: [
                 .product(name: "HaishinKit", package: "HaishinKit.swift"),
-                .product(name: "RTMPHaishinKit", package: "HaishinKit.swift")
+                .product(name: "RTMPHaishinKit", package: "HaishinKit.swift"),
+                .product(name: "RTCHaishinKit", package: "HaishinKit.swift")
             ],
             linkerSettings: [
                 .linkedFramework("AVFoundation"),

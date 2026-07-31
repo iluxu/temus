@@ -3,8 +3,9 @@
 Application native SwiftUI universelle (Apple Silicon et Intel) qui transforme
 un Mac en mini studio de direct :
 
-- caméra de l’iPhone par **Caméra de continuité**, activée par défaut ;
-- mode QR + Safari conservé uniquement comme solution de secours ;
+- caméra distante de l’iPhone par **WHIP/WHEP WebRTC**, activée par défaut
+  pour les Mac Scaleway ;
+- Caméra de continuité conservée pour un Mac physiquement proche de l’iPhone ;
 - capture d’un **écran entier** avec ScreenCaptureKit ;
 - mixage du microphone et du son du Mac ;
 - scènes écran/caméra, incrustation redimensionnable et positionnable ;
@@ -32,18 +33,19 @@ C’est le meilleur point de départ pour éviter les freezes. Le 1080p30 à
 4. Autoriser Caméra, Microphone et Enregistrement de l’écran.
 5. Si macOS le demande, fermer puis relancer l’app après l’autorisation écran.
 
-La version 0.3.0 remet Caméra de continuité au premier plan. AVFoundation reçoit
-directement l’iPhone et ScreenCaptureKit reçoit l’écran entier du Mac. Un
-compositeur Core Image interne fabrique ensuite une seule image finale : le
-moteur RTMP ne doit donc plus arbitrer entre deux pistes vidéo concurrentes.
-Chaque source possède son propre témoin d’images reçues en continu.
+La version 0.4.0 vise le Mac Scaleway distant. L’iPhone publie sa caméra en WHIP
+depuis Safari et l’app la reçoit directement en WHEP/WebRTC, sans passer par le
+lecteur HLS qui ajoutait de la latence et se bloquait. Le QR est sélectionné par
+défaut.
 
-Le mode QR reste disponible dans le sélecteur comme secours. Il n’est plus
-sélectionné automatiquement et n’est pas nécessaire au fonctionnement normal.
+La capture d’écran reprend le chemin exact de la version 1 : ScreenCaptureKit
+envoie directement l’écran sur la piste vidéo principale. La caméra distante
+reste la piste d’incrustation. Chaque source possède son propre témoin d’images
+reçues en continu.
 
-Le microphone du Mac est prioritaire et reste dans une session séparée. Si le
-microphone de l’iPhone devient indisponible, la caméra et l’écran continuent de
-fonctionner et l’app retente avec un microphone local.
+Le microphone du Mac est prioritaire et reste dans une session séparée. Le son
+WebRTC de l’iPhone est volontairement ignoré afin qu’une erreur de microphone
+ne puisse jamais arrêter l’image.
 
 La build publique est signée localement de façon ad hoc. Une signature Apple
 Developer ID et la notarisation nécessitent le certificat Apple du propriétaire.

@@ -16,7 +16,6 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
     var onFrame: (() -> Void)?
     var onError: ((String) -> Void)?
-    var onVideoSampleBuffer: ((CMSampleBuffer) -> Void)?
 
     init(mixer: MediaMixer) {
         self.mixer = mixer
@@ -75,7 +74,10 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
         switch outputType {
         case .screen:
-            onVideoSampleBuffer?(sampleBuffer)
+            Task {
+                // This is intentionally the direct version-1 route.
+                await mixer.append(sampleBuffer, track: VideoSourceTrack.screen)
+            }
             let now = ProcessInfo.processInfo.systemUptime
             if lastFrameCallbackTime == 0 || now - lastFrameCallbackTime >= 0.5 {
                 lastFrameCallbackTime = now

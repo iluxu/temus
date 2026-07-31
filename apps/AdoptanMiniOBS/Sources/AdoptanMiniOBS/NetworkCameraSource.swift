@@ -1,187 +1,195 @@
 @preconcurrency import AVFoundation
 import CoreMedia
-import CoreVideo
 import Foundation
-import QuartzCore
+import HaishinKit
+import RTCHaishinKit
 
-/// Receives the iPhone camera from adoptan.ai as HLS and injects fresh video
-/// frames into the camera track. This path never opens Continuity Camera.
-final class NetworkCameraSource {
-    private let sessionQueue = DispatchQueue(
-        label: "ai.adoptan.miniobs.network-camera",
-        qos: .userInteractive
+/// Receives the iPhone camera over WHEP/WebRTC from MediaMTX.
+///
+/// The previous HLS reader accumulated latency and had to reload the playlist
+/// when Safari or the network paused. WHEP receives the same H.264 stream sent
+/// by the iPhone WHIP page, but keeps it on the real-time WebRTC path.
+final class NetworkCameraSource: StreamOutput, @unchecked Sendable {
+    private let mixer: MediaMixer
+    private let stateQueue = DispatchQueue(
+        label: "ai.adoptan.miniobs.network-camera-state",
+        qos: .userInitiated
     )
 
-    private var player: AVPlayer?
-    private var videoOutput: AVPlayerItemVideoOutput?
-    private var frameTimer: DispatchSourceTimer?
+    private var session: (any Session)?
+    private var sessionStream: (any StreamConvertible)?
+    private var connectionTask: Task<Void, Never>?
+    private var readyStateTask: Task<Void, Never>?
     private var sourceURL: URL?
-    private var framesPerSecond = 30
-    private var formatDescription: CMVideoFormatDescription?
-    private var lastFrameUptime = 0.0
-    private var lastReloadUptime = 0.0
+    private var generation = 0
     private var lastCallbackUptime = 0.0
 
     var onFrame: (() -> Void)?
     var onStatus: ((String) -> Void)?
-    var onSampleBuffer: ((CMSampleBuffer) -> Void)?
+
+    init(mixer: MediaMixer) {
+        self.mixer = mixer
+    }
 
     func start(url: URL, fps: Int) async {
         await stop()
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            sessionQueue.async { [weak self] in
-                guard let self else {
-                    continuation.resume()
-                    return
-                }
-
-                self.sourceURL = url
-                self.framesPerSecond = max(15, min(fps, 60))
-                self.configurePlayer()
-
-                let timer = DispatchSource.makeTimerSource(queue: self.sessionQueue)
-                timer.schedule(
-                    deadline: .now(),
-                    repeating: .milliseconds(max(16, 1_000 / self.framesPerSecond)),
-                    leeway: .milliseconds(3)
-                )
-                timer.setEventHandler { [weak self] in
-                    self?.pollFrame()
-                }
-                self.frameTimer = timer
-                timer.resume()
-                self.emitStatus(
-                    "En attente de l’iPhone réseau — scanne le QR puis touche Connecter."
-                )
-                continuation.resume()
-            }
-        }
+        sourceURL = url
+        generation += 1
+        let currentGeneration = generation
+        emitStatus("Connexion WebRTC à la caméra de l’iPhone…")
+        scheduleConnection(generation: currentGeneration, delayNanoseconds: 0)
     }
 
     func stop() async {
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            sessionQueue.async { [weak self] in
-                guard let self else {
-                    continuation.resume()
-                    return
+        generation += 1
+        connectionTask?.cancel()
+        connectionTask = nil
+        readyStateTask?.cancel()
+        readyStateTask = nil
+
+        if let sessionStream {
+            await sessionStream.removeOutput(self)
+        }
+        if let session {
+            try? await session.close()
+        }
+        self.session = nil
+        sessionStream = nil
+        sourceURL = nil
+        lastCallbackUptime = 0
+    }
+
+    private func scheduleConnection(
+        generation expectedGeneration: Int,
+        delayNanoseconds: UInt64
+    ) {
+        connectionTask?.cancel()
+        connectionTask = Task { [weak self] in
+            if delayNanoseconds > 0 {
+                try? await Task.sleep(nanoseconds: delayNanoseconds)
+            }
+            guard !Task.isCancelled else { return }
+            await self?.connect(generation: expectedGeneration)
+        }
+    }
+
+    private func connect(generation expectedGeneration: Int) async {
+        guard expectedGeneration == generation, let sourceURL else { return }
+
+        do {
+            guard let newSession = try await SessionBuilderFactory.shared
+                .make(sourceURL)
+                .setMethod(.playback)
+                .build() else {
+                throw NetworkCameraError.sessionUnavailable
+            }
+
+            let stream = await newSession.stream
+            await stream.addOutput(self)
+            session = newSession
+            sessionStream = stream
+            observeReadyState(of: newSession, generation: expectedGeneration)
+
+            try await newSession.connect { [weak self] in
+                self?.connectionDidClose(generation: expectedGeneration)
+            }
+
+            guard expectedGeneration == generation else {
+                await stream.removeOutput(self)
+                try? await newSession.close()
+                return
+            }
+            emitStatus("iPhone relié en WebRTC — attente de la première image…")
+        } catch {
+            guard expectedGeneration == generation else { return }
+            emitStatus(
+                "Caméra iPhone hors ligne — nouvelle tentative WebRTC automatique…"
+            )
+            scheduleConnection(
+                generation: expectedGeneration,
+                delayNanoseconds: 2_000_000_000
+            )
+        }
+    }
+
+    private func observeReadyState(
+        of session: any Session,
+        generation expectedGeneration: Int
+    ) {
+        readyStateTask?.cancel()
+        readyStateTask = Task { [weak self] in
+            for await state in await session.readyState {
+                guard !Task.isCancelled else { return }
+                guard let self, expectedGeneration == self.generation else { return }
+                switch state {
+                case .connecting:
+                    self.emitStatus("Négociation WebRTC avec l’iPhone…")
+                case .open:
+                    self.emitStatus("WebRTC connecté — décodage de la caméra…")
+                case .closing:
+                    self.emitStatus("La caméra iPhone se déconnecte…")
+                case .closed:
+                    self.connectionDidClose(generation: expectedGeneration)
                 }
-                self.frameTimer?.setEventHandler {}
-                self.frameTimer?.cancel()
-                self.frameTimer = nil
-                self.player?.pause()
-                self.player?.replaceCurrentItem(with: nil)
-                self.player = nil
-                self.videoOutput = nil
-                self.sourceURL = nil
-                self.formatDescription = nil
-                continuation.resume()
             }
         }
     }
 
-    private func configurePlayer() {
-        guard let sourceURL else { return }
+    private func connectionDidClose(generation expectedGeneration: Int) {
+        stateQueue.async { [weak self] in
+            guard let self, expectedGeneration == self.generation else { return }
+            self.emitStatus(
+                "Liaison iPhone interrompue — reconnexion dans 2 secondes…"
+            )
+            self.scheduleConnection(
+                generation: expectedGeneration,
+                delayNanoseconds: 2_000_000_000
+            )
+        }
+    }
 
-        player?.pause()
-        player?.replaceCurrentItem(with: nil)
+    nonisolated func stream(
+        _ stream: some StreamConvertible,
+        didOutput video: CMSampleBuffer
+    ) {
+        guard video.isValid, video.dataReadiness == .ready else { return }
+        Task {
+            await mixer.append(video, track: VideoSourceTrack.camera)
+        }
 
-        let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
-            kCVPixelBufferPixelFormatTypeKey as String:
-                Int(kCVPixelFormatType_32BGRA)
-        ])
-        let item = AVPlayerItem(url: sourceURL)
-        item.preferredForwardBufferDuration = 0
-        item.add(output)
-
-        let player = AVPlayer(playerItem: item)
-        player.isMuted = true
-        player.automaticallyWaitsToMinimizeStalling = false
-        player.preventsDisplaySleepDuringVideoPlayback = true
-
-        videoOutput = output
-        self.player = player
-        formatDescription = nil
         let now = ProcessInfo.processInfo.systemUptime
-        lastFrameUptime = now
-        lastReloadUptime = now
-        player.playImmediately(atRate: 1)
-    }
-
-    private func pollFrame() {
-        let now = ProcessInfo.processInfo.systemUptime
-        guard let videoOutput else {
-            reloadIfNeeded(now: now)
-            return
-        }
-
-        let itemTime = videoOutput.itemTime(forHostTime: CACurrentMediaTime())
-        guard videoOutput.hasNewPixelBuffer(forItemTime: itemTime),
-              let pixelBuffer = videoOutput.copyPixelBuffer(
-                forItemTime: itemTime,
-                itemTimeForDisplay: nil
-              ),
-              let sampleBuffer = makeSampleBuffer(from: pixelBuffer) else {
-            reloadIfNeeded(now: now)
-            return
-        }
-
-        lastFrameUptime = now
-        onSampleBuffer?(sampleBuffer)
-
-        if lastCallbackUptime == 0 || now - lastCallbackUptime >= 0.5 {
-            lastCallbackUptime = now
-            DispatchQueue.main.async { [weak self] in
-                self?.onFrame?()
+        stateQueue.async { [weak self] in
+            guard let self else { return }
+            if self.lastCallbackUptime == 0 ||
+                now - self.lastCallbackUptime >= 0.5 {
+                self.lastCallbackUptime = now
+                DispatchQueue.main.async { [weak self] in
+                    self?.onFrame?()
+                }
             }
         }
     }
 
-    private func reloadIfNeeded(now: TimeInterval) {
-        guard now - lastFrameUptime >= 7,
-              now - lastReloadUptime >= 7 else {
-            return
-        }
-        lastReloadUptime = now
-        emitStatus("Recherche de la caméra iPhone sur adoptan.ai…")
-        configurePlayer()
-    }
-
-    private func makeSampleBuffer(from pixelBuffer: CVPixelBuffer) -> CMSampleBuffer? {
-        if formatDescription == nil {
-            var description: CMVideoFormatDescription?
-            guard CMVideoFormatDescriptionCreateForImageBuffer(
-                allocator: kCFAllocatorDefault,
-                imageBuffer: pixelBuffer,
-                formatDescriptionOut: &description
-            ) == noErr else {
-                return nil
-            }
-            formatDescription = description
-        }
-
-        guard let formatDescription else { return nil }
-        let timestamp = CMClockGetTime(CMClockGetHostTimeClock())
-        var timing = CMSampleTimingInfo(
-            duration: CMTime(value: 1, timescale: CMTimeScale(framesPerSecond)),
-            presentationTimeStamp: timestamp,
-            decodeTimeStamp: .invalid
-        )
-        var sampleBuffer: CMSampleBuffer?
-        guard CMSampleBufferCreateReadyWithImageBuffer(
-            allocator: kCFAllocatorDefault,
-            imageBuffer: pixelBuffer,
-            formatDescription: formatDescription,
-            sampleTiming: &timing,
-            sampleBufferOut: &sampleBuffer
-        ) == noErr else {
-            return nil
-        }
-        return sampleBuffer
+    nonisolated func stream(
+        _ stream: some StreamConvertible,
+        didOutput audio: AVAudioBuffer,
+        when: AVAudioTime
+    ) {
+        // The iPhone microphone is deliberately ignored. Mini OBS uses the
+        // independently selected Mac microphone and system audio tracks.
     }
 
     private func emitStatus(_ status: String) {
         DispatchQueue.main.async { [weak self] in
             self?.onStatus?(status)
         }
+    }
+}
+
+private enum NetworkCameraError: LocalizedError {
+    case sessionUnavailable
+
+    var errorDescription: String? {
+        "Le lecteur WebRTC de la caméra iPhone n’a pas pu être créé."
     }
 }

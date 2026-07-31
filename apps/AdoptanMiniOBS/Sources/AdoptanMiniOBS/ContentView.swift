@@ -104,6 +104,18 @@ struct ContentView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
 
+            if !engine.screenHasFrames {
+                Button {
+                    engine.openScreenCaptureSettings()
+                } label: {
+                    Label(
+                        "Autoriser le partage d’écran",
+                        systemImage: "rectangle.inset.filled.and.person.filled"
+                    )
+                }
+                .buttonStyle(.link)
+            }
+
             Divider()
 
             Picker("Mode caméra", selection: $engine.cameraInputMode) {
@@ -137,7 +149,7 @@ struct ContentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                         Spacer()
                     }
-                    Text("Scanne ce QR avec l’iPhone, ouvre Safari, puis touche « Connecter la caméra ».")
+                    Text("Scanne ce QR avec l’iPhone. Safari enverra directement la caméra au Mac Scaleway par WebRTC.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -367,7 +379,7 @@ struct ContentView: View {
                 }
             Text(
                 engine.cameraInputMode == .iphoneNetwork
-                    ? "Le mode QR utilise Safari et adoptan.ai : Caméra de continuité peut rester désactivée."
+                    ? "Mode Scaleway : l’iPhone envoie la vidéo à distance par WebRTC, sans Caméra de continuité."
                     : "Le mode macOS nécessite Caméra de continuité pour utiliser directement l’iPhone."
             )
                 .font(.caption)
