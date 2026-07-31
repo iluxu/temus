@@ -128,7 +128,45 @@ struct ContentView: View {
                 Task { await engine.configureCapture() }
             }
 
-            if engine.cameraInputMode == .iphoneNetwork {
+            if engine.cameraInputMode == .iphoneSRT {
+                if let qrCode = engine.iphoneSRTQRCode {
+                    HStack {
+                        Spacer()
+                        Image(nsImage: qrCode)
+                            .interpolation(.none)
+                            .resizable()
+                            .frame(width: 210, height: 210)
+                            .background(Color.white)
+                            .padding(8)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                        Spacer()
+                    }
+                }
+
+                Text("Mode stable recommandé : installe Moblin sur l’iPhone, scanne ce QR avec Appareil photo, accepte le profil « Adoptan iPhone SRT », puis touche REC dans Moblin.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(engine.iphoneSRTLink)
+                    .font(.caption2.monospaced())
+                    .foregroundStyle(.secondary)
+                    .textSelection(.enabled)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button {
+                    engine.copyIPhoneSRTLink()
+                } label: {
+                    Label("Copier l’adresse SRT", systemImage: "doc.on.doc")
+                }
+                .buttonStyle(.link)
+
+                Text("Réglages chargés par le QR : H.264 · 1280×720 · 30 i/s · 2 500 kb/s · image-clé 2 s · SRT 700 ms · débit adaptatif.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else if engine.cameraInputMode == .iphoneNetwork {
                 if let qrCode = engine.iphoneCameraQRCode {
                     HStack {
                         Spacer()
@@ -370,9 +408,14 @@ struct ContentView: View {
                     engine.applySceneLive()
                 }
             Text(
-                engine.cameraInputMode == .iphoneNetwork
-                    ? "Mode Scaleway : l’iPhone envoie la vidéo à distance par WebRTC, sans Caméra de continuité."
-                    : "Le mode macOS nécessite Caméra de continuité pour utiliser directement l’iPhone."
+                switch engine.cameraInputMode {
+                case .iphoneSRT:
+                    "Mode Scaleway recommandé : Moblin envoie la caméra par SRT avec récupération des paquets perdus. Safari et Caméra de continuité ne sont pas utilisés."
+                case .iphoneNetwork:
+                    "Mode de secours : l’iPhone envoie la vidéo à distance par Safari/WebRTC."
+                case .macOSDevice:
+                    "Le mode macOS nécessite Caméra de continuité pour utiliser directement l’iPhone."
+                }
             )
                 .font(.caption)
                 .foregroundStyle(.secondary)

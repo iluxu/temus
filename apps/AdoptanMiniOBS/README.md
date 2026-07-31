@@ -3,8 +3,10 @@
 Application native SwiftUI pour Apple Silicon qui transforme un Mac, notamment
 un Mac Scaleway, en mini studio de direct :
 
-- caméra distante de l’iPhone par **WHIP/WHEP WebRTC**, activée par défaut
-  pour les Mac Scaleway ;
+- caméra distante de l’iPhone par **SRT depuis Moblin**, activée par défaut
+  pour les Mac Scaleway, avec récupération des paquets perdus ;
+- QR Moblin qui crée automatiquement le profil iPhone en 720p30 H.264 ;
+- ancien parcours Safari WHIP/WHEP conservé comme mode de secours ;
 - Caméra de continuité conservée pour un Mac physiquement proche de l’iPhone ;
 - capture d’un **écran entier** avec ScreenCaptureKit ;
 - mixage du microphone et du son du Mac ;
@@ -33,20 +35,24 @@ C’est le meilleur point de départ pour éviter les freezes. Le 1080p30 à
 4. Autoriser Caméra, Microphone et Enregistrement de l’écran.
 5. Si macOS le demande, fermer puis relancer l’app après l’autorisation écran.
 
-La version 0.4.1 vise le Mac Scaleway distant. L’iPhone publie sa caméra en WHIP
-depuis Safari et l’app la reçoit directement en WHEP/WebRTC. Le décodeur H.264
-WebRTC accepte les paquets MediaMTX et un lecteur HLS à faible tampon reprend
-automatiquement la vidéo si WebRTC ne livre plus d’image. Le QR ne contient plus
-de clé privée et fonctionne directement.
+La version 0.5.0 vise le Mac Scaleway distant. Dans le mode recommandé, l’iPhone
+publie sa caméra depuis Moblin en SRT et l’app la décode nativement. Le QR crée
+le profil « Adoptan iPhone SRT » avec les réglages stables : H.264, 1280 × 720,
+30 i/s, 2 500 kb/s, intervalle d’image-clé de 2 secondes, latence SRT de 700 ms
+et débit adaptatif. Aucune clé privée n’est nécessaire pour cette liaison.
 
-La capture d’écran reprend le chemin exact de la version 1 : ScreenCaptureKit
-envoie directement l’écran sur la piste vidéo principale. La caméra distante
-reste la piste d’incrustation. Chaque source possède son propre témoin d’images
-reçues en continu.
+Le mode Safari/WebRTC de la version 0.4.1 reste proposé comme secours.
 
-Le micro de l’iPhone distant arrive également par WebRTC sur une piste audio
-séparée. Une autorisation micro refusée sur l’iPhone ne bloque jamais la vidéo.
-Le micro du Mac et le son système restent réglables indépendamment.
+La capture d’écran conserve le chemin de la version 1 : ScreenCaptureKit envoie
+directement l’écran sur la piste vidéo principale. Les files vidéo et audio sont
+séparées, seules les images complètes sont traitées et une ancienne image est
+abandonnée si le mixeur est occupé. Cela évite l’accumulation de retard qui
+finissait par figer l’aperçu sur un Mac distant.
+
+Le micro de l’iPhone distant arrive sur une piste audio séparée par SRT ou
+WebRTC selon le mode. Une autorisation micro refusée sur l’iPhone ne bloque
+jamais la vidéo. Le micro du Mac et le son système restent réglables
+indépendamment.
 
 La build publique est signée localement de façon ad hoc. Une signature Apple
 Developer ID et la notarisation nécessitent le certificat Apple du propriétaire.

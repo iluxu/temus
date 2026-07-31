@@ -134,5 +134,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-macOS.zip \
             Adoptan-Mini-OBS-macOS.zip.sha256 \
-            --title "Adoptan Mini OBS 0.4.1 — caméra iPhone corrigée" \
-            --notes "Corrige le décodage H264 WebRTC de la caméra iPhone, ajoute un secours vidéo automatique sans freeze, masque la fausse duplication d’écran tant que la caméra n’émet pas et supprime la clé privée du parcours iPhone. Le partage d’écran V1 ScreenCaptureKit reste actif."
+            --title "Adoptan Mini OBS 0.5.0 — caméra iPhone SRT stable" \
+            --notes "Ajoute le mode recommandé Moblin vers OBS Lite par SRT, avec QR de configuration automatique en 720p30 H.264 et récupération des paquets perdus. Le mode Safari reste disponible en secours. La capture d’écran utilise désormais des files vidéo/audio séparées, ignore les images ScreenCaptureKit incomplètes et abandonne les anciennes images au lieu d’accumuler du retard."

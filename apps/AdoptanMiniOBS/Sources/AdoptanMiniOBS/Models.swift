@@ -9,7 +9,8 @@ enum VideoSourceTrack {
 }
 
 enum CameraInputMode: String, CaseIterable, Identifiable {
-    case iphoneNetwork = "iPhone distant — lien direct"
+    case iphoneSRT = "iPhone distant — SRT stable (Moblin)"
+    case iphoneNetwork = "iPhone distant — Safari (secours)"
     case macOSDevice = "Caméra de continuité / macOS local"
 
     var id: Self { self }

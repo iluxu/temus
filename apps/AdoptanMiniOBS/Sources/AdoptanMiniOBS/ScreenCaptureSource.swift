@@ -6,12 +6,18 @@ import HaishinKit
 
 final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
     private let mixer: MediaMixer
-    private let sampleQueue = DispatchQueue(
-        label: "ai.adoptan.miniobs.screen-samples",
+    private let videoSampleQueue = DispatchQueue(
+        label: "ai.adoptan.miniobs.screen-video",
         qos: .userInteractive
+    )
+    private let audioSampleQueue = DispatchQueue(
+        label: "ai.adoptan.miniobs.screen-audio",
+        qos: .userInitiated
     )
     private var stream: SCStream?
     private var includeSystemAudio = true
+    private var pendingVideo: CMSampleBuffer?
+    private var videoAppendInFlight = false
     private var lastFrameCallbackTime = 0.0
 
     var onFrame: (() -> Void)?
@@ -42,8 +48,11 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
         configuration.width = Int(outputSize.width)
         configuration.height = Int(outputSize.height)
         configuration.minimumFrameInterval = CMTime(value: 1, timescale: CMTimeScale(fps))
-        configuration.queueDepth = 5
+        // Apple's supported maximum gives the remote Mac enough breathing room
+        // during short GPU/encoder stalls without stopping ScreenCaptureKit.
+        configuration.queueDepth = 8
         configuration.pixelFormat = kCVPixelFormatType_32BGRA
+        configuration.scalesToFit = true
         configuration.showsCursor = showCursor
         configuration.capturesAudio = includeSystemAudio
         configuration.excludesCurrentProcessAudio = true
@@ -51,18 +60,22 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
         configuration.channelCount = 2
 
         let stream = SCStream(filter: filter, configuration: configuration, delegate: self)
-        try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: sampleQueue)
+        try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: videoSampleQueue)
         if includeSystemAudio {
-            try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: sampleQueue)
+            try stream.addStreamOutput(self, type: .audio, sampleHandlerQueue: audioSampleQueue)
         }
         self.stream = stream
         try await stream.startCapture()
     }
 
     func stop() async {
-        guard let stream else { return }
+        guard let stream else {
+            clearPendingVideo()
+            return
+        }
         self.stream = nil
         try? await stream.stopCapture()
+        clearPendingVideo()
     }
 
     func stream(
@@ -74,17 +87,11 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
 
         switch outputType {
         case .screen:
-            Task {
-                // This is intentionally the direct version-1 route.
-                await mixer.append(sampleBuffer, track: VideoSourceTrack.screen)
-            }
-            let now = ProcessInfo.processInfo.systemUptime
-            if lastFrameCallbackTime == 0 || now - lastFrameCallbackTime >= 0.5 {
-                lastFrameCallbackTime = now
-                DispatchQueue.main.async { [weak self] in
-                    self?.onFrame?()
-                }
-            }
+            guard isCompleteFrame(sampleBuffer) else { return }
+            // Always retain the newest complete frame only. An unbounded Task
+            // per frame used to make the preview progressively lag and freeze.
+            pendingVideo = sampleBuffer
+            appendLatestVideoIfPossible()
         case .audio where includeSystemAudio:
             Task {
                 await mixer.append(sampleBuffer, track: 1)
@@ -97,6 +104,50 @@ final class ScreenCaptureSource: NSObject, SCStreamOutput, SCStreamDelegate {
     func stream(_ stream: SCStream, didStopWithError error: Error) {
         DispatchQueue.main.async { [weak self] in
             self?.onError?("La capture d’écran s’est arrêtée : \(error.localizedDescription)")
+        }
+    }
+
+    private func isCompleteFrame(_ sampleBuffer: CMSampleBuffer) -> Bool {
+        guard let attachments = CMSampleBufferGetSampleAttachmentsArray(
+            sampleBuffer,
+            createIfNecessary: false
+        ) as? [[SCStreamFrameInfo: Any]],
+        let frame = attachments.first,
+        let rawStatus = frame[.status] as? Int,
+        let status = SCFrameStatus(rawValue: rawStatus) else {
+            return false
+        }
+        return status == .complete
+    }
+
+    private func appendLatestVideoIfPossible() {
+        guard !videoAppendInFlight, let video = pendingVideo else { return }
+        pendingVideo = nil
+        videoAppendInFlight = true
+
+        Task { [weak self] in
+            guard let self else { return }
+            // Preserve the direct version-1 route: the screen owns track 0.
+            await self.mixer.append(video, track: VideoSourceTrack.screen)
+            let now = ProcessInfo.processInfo.systemUptime
+            self.videoSampleQueue.async { [weak self] in
+                guard let self else { return }
+                self.videoAppendInFlight = false
+                if self.lastFrameCallbackTime == 0 ||
+                    now - self.lastFrameCallbackTime >= 0.5 {
+                    self.lastFrameCallbackTime = now
+                    DispatchQueue.main.async { [weak self] in
+                        self?.onFrame?()
+                    }
+                }
+                self.appendLatestVideoIfPossible()
+            }
+        }
+    }
+
+    private func clearPendingVideo() {
+        videoSampleQueue.async { [weak self] in
+            self?.pendingVideo = nil
         }
     }
 }

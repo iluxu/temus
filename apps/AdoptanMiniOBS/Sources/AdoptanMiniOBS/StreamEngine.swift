@@ -6,6 +6,7 @@ import CoreGraphics
 import HaishinKit
 import RTCHaishinKit
 import RTMPHaishinKit
+import SRTHaishinKit
 @preconcurrency import ScreenCaptureKit
 import VideoToolbox
 
@@ -27,7 +28,7 @@ final class StreamEngine: ObservableObject {
     @Published var selectedCameraID = ""
     @Published var selectedMicrophoneID = ""
     @Published var selectedDisplayID: UInt32 = 0
-    @Published var cameraInputMode: CameraInputMode = .iphoneNetwork
+    @Published var cameraInputMode: CameraInputMode = .iphoneSRT
     @Published var scene: SceneLayout = .screenCamera
     @Published var overlayPosition: OverlayPosition = .bottomRight
     @Published var overlayScale = 0.28
@@ -60,6 +61,21 @@ final class StreamEngine: ObservableObject {
     private static let iphoneCameraHLS = URL(
         string: "https://api.adoptan.ai/screen-hls/studio/lucia/index.m3u8"
     )!
+    private static let iphoneSRTPublish =
+        "srt://51.222.9.123:8890?streamid=publish:studio/lucia"
+    private static let iphoneSRTPlayback = URL(
+        string:
+            "srt://51.222.9.123:8890?streamid=read:studio/lucia&latency=700&rcvlatency=700"
+    )!
+    private static let iphoneSRTMoblinSetup: String = {
+        let configuration = """
+        {"streams":[{"name":"Adoptan iPhone SRT","url":"\(iphoneSRTPublish)","selected":true,"backgroundStreaming":true,"video":{"resolution":"1280x720","fps":30,"bitrate":2500000,"codec":"H.264/AVC","bFrames":false,"maxKeyFrameInterval":2},"audio":{"bitrate":128000},"srt":{"latency":700,"adaptiveBitrateEnabled":true}}]}
+        """
+        let encoded = configuration.addingPercentEncoding(
+            withAllowedCharacters: .alphanumerics
+        ) ?? configuration
+        return "moblin://?\(encoded)"
+    }()
 
     private lazy var cameraCapture: CameraCaptureSource = {
         let source = CameraCaptureSource(mixer: mixer)
@@ -80,6 +96,22 @@ final class StreamEngine: ObservableObject {
 
     private lazy var networkCamera: NetworkCameraSource = {
         let source = NetworkCameraSource(mixer: mixer)
+        source.onFrame = { [weak self] in
+            Task { @MainActor in
+                self?.cameraDidOutputFrame()
+            }
+        }
+        source.onStatus = { [weak self] status in
+            Task { @MainActor in
+                guard let self, !self.cameraHasFrames else { return }
+                self.cameraStatusText = status
+            }
+        }
+        return source
+    }()
+
+    private lazy var srtCamera: SRTCameraSource = {
+        let source = SRTCameraSource(mixer: mixer)
         source.onFrame = { [weak self] in
             Task { @MainActor in
                 self?.cameraDidOutputFrame()
@@ -138,8 +170,20 @@ final class StreamEngine: ObservableObject {
     }
 
     var iphoneCameraQRCode: NSImage? {
+        makeQRCode(for: iphoneCameraLink)
+    }
+
+    var iphoneSRTLink: String {
+        Self.iphoneSRTPublish
+    }
+
+    var iphoneSRTQRCode: NSImage? {
+        makeQRCode(for: Self.iphoneSRTMoblinSetup)
+    }
+
+    private func makeQRCode(for content: String) -> NSImage? {
         let filter = CIFilter.qrCodeGenerator()
-        filter.message = Data(iphoneCameraLink.utf8)
+        filter.message = Data(content.utf8)
         filter.correctionLevel = "M"
         guard let output = filter.outputImage?.transformed(
             by: CGAffineTransform(scaleX: 7, y: 7)
@@ -158,6 +202,12 @@ final class StreamEngine: ObservableObject {
         message = "Lien caméra iPhone copié — ouvre-le dans Safari sur l’iPhone."
     }
 
+    func copyIPhoneSRTLink() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(iphoneSRTLink, forType: .string)
+        message = "Adresse SRT copiée — colle-la dans une nouvelle diffusion Moblin."
+    }
+
     func openScreenCaptureSettings() {
         guard let url = URL(
             string:
@@ -173,19 +223,25 @@ final class StreamEngine: ObservableObject {
     func prepare() async {
         guard !isConfiguring else { return }
         isConfiguring = true
-        message = cameraInputMode == .iphoneNetwork
-            ? "Préparation de l’écran V1 et de la caméra iPhone WebRTC…"
-            : "Préparation de l’écran V1 et de Caméra de continuité…"
+        switch cameraInputMode {
+        case .iphoneSRT:
+            message = "Préparation de l’écran et de la caméra iPhone SRT…"
+        case .iphoneNetwork:
+            message = "Préparation de l’écran et de la caméra iPhone Safari…"
+        case .macOSDevice:
+            message = "Préparation de l’écran et de Caméra de continuité…"
+        }
 
         await SessionBuilderFactory.shared.register(RTMPSessionFactory())
         await SessionBuilderFactory.shared.register(HTTPSessionFactory())
+        await SessionBuilderFactory.shared.register(SRTSessionFactory())
 
         let cameraAccess = cameraInputMode == .macOSDevice
             ? await requestAccess(for: .video)
             : true
         let microphoneAccess = await requestAccess(for: .audio)
 
-        guard cameraAccess || cameraInputMode == .iphoneNetwork else {
+        guard cameraAccess || cameraInputMode != .macOSDevice else {
             message = "Autorise la caméra dans Réglages Système › Confidentialité et sécurité › Caméra."
             isConfiguring = false
             return
@@ -314,6 +370,7 @@ final class StreamEngine: ObservableObject {
         await screenCapture.stop()
         await cameraCapture.stop()
         await networkCamera.stop()
+        await srtCamera.stop()
 
         try? await mixer.attachVideo(nil, track: VideoSourceTrack.camera)
         try? await mixer.attachVideo(nil, track: VideoSourceTrack.screen)
@@ -337,7 +394,11 @@ final class StreamEngine: ObservableObject {
             hasStartedMixer = true
         }
 
-        if cameraInputMode == .iphoneNetwork {
+        if cameraInputMode == .iphoneSRT {
+            cameraStatusText =
+                "En attente de Moblin — scanne le QR puis lance la diffusion Adoptan iPhone SRT."
+            await srtCamera.start(url: Self.iphoneSRTPlayback)
+        } else if cameraInputMode == .iphoneNetwork {
             cameraStatusText =
                 "En attente de l’iPhone distant — scanne le QR et touche Connecter."
             await networkCamera.start(
@@ -386,7 +447,9 @@ final class StreamEngine: ObservableObject {
         isConfiguring = false
         monitorCameraFrames()
         monitorScreenFrames(whenRequired: needsScreen)
-        if cameraInputMode == .iphoneNetwork {
+        if cameraInputMode == .iphoneSRT {
+            message = "Écran Mac prêt — lance la diffusion Adoptan iPhone SRT dans Moblin."
+        } else if cameraInputMode == .iphoneNetwork {
             message = "Écran Mac prêt — connecte maintenant l’iPhone avec le QR."
         } else if cameras.first(where: { $0.id == selectedCameraID })?.isIPhone == true {
             message = "Caméra iPhone détectée — vérification du signal vidéo…"
@@ -519,6 +582,7 @@ final class StreamEngine: ObservableObject {
             await screenCapture.stop()
             await cameraCapture.stop()
             await networkCamera.stop()
+            await srtCamera.stop()
             if hasStartedMixer {
                 await mixer.stopRunning()
             }
@@ -854,10 +918,17 @@ final class StreamEngine: ObservableObject {
 
     private func monitorCameraFrames() {
         cameraMonitorTask?.cancel()
-        guard cameraInputMode == .iphoneNetwork || !selectedCameraID.isEmpty else { return }
-        let cameraName = cameraInputMode == .iphoneNetwork
-            ? "Caméra iPhone réseau"
-            : cameras.first(where: { $0.id == selectedCameraID })?.name ?? "Caméra"
+        guard cameraInputMode != .macOSDevice || !selectedCameraID.isEmpty else { return }
+        let cameraName: String
+        switch cameraInputMode {
+        case .iphoneSRT:
+            cameraName = "Caméra iPhone SRT"
+        case .iphoneNetwork:
+            cameraName = "Caméra iPhone Safari"
+        case .macOSDevice:
+            cameraName = cameras.first(where: { $0.id == selectedCameraID })?.name
+                ?? "Caméra"
+        }
         cameraMonitorTask = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
@@ -878,9 +949,14 @@ final class StreamEngine: ObservableObject {
                     cameraStatusText = "\(cameraName) transmet bien l’image en continu."
                 } else {
                     cameraStatusText = "\(cameraName) a cessé d’envoyer des images."
-                    message = cameraInputMode == .iphoneNetwork
-                        ? "L’iPhone ne transmet plus. Garde Safari ouvert puis touche Reconnecter."
-                        : "La caméra s’est interrompue. Ferme les autres apps caméra puis applique à nouveau."
+                    switch cameraInputMode {
+                    case .iphoneSRT:
+                        message = "Moblin ne transmet plus. Rouvre-le puis relance la diffusion SRT."
+                    case .iphoneNetwork:
+                        message = "L’iPhone ne transmet plus. Garde Safari ouvert puis touche Reconnecter."
+                    case .macOSDevice:
+                        message = "La caméra s’est interrompue. Ferme les autres apps caméra puis applique à nouveau."
+                    }
                 }
                 if wasReceiving != cameraHasFrames {
                     await configureComposition()
@@ -915,11 +991,21 @@ final class StreamEngine: ObservableObject {
         let wasReceiving = cameraHasFrames
         lastCameraFrameAt = Date()
         cameraHasFrames = true
-        let name = cameraInputMode == .iphoneNetwork
-            ? "Caméra iPhone réseau"
-            : cameras.first(where: { $0.id == selectedCameraID })?.name ?? "Caméra"
+        let name: String
+        switch cameraInputMode {
+        case .iphoneSRT:
+            name = "Caméra iPhone SRT"
+        case .iphoneNetwork:
+            name = "Caméra iPhone Safari"
+        case .macOSDevice:
+            name = cameras.first(where: { $0.id == selectedCameraID })?.name ?? "Caméra"
+        }
         cameraStatusText = "\(name) transmet bien l’image en continu."
-        if cameraInputMode == .iphoneNetwork {
+        if cameraInputMode == .iphoneSRT {
+            message = screenHasFrames
+                ? "Prêt — écran Mac et caméra iPhone SRT sont actifs."
+                : "Caméra iPhone SRT reçue — attente de l’écran du Mac."
+        } else if cameraInputMode == .iphoneNetwork {
             message = screenHasFrames
                 ? "Prêt — écran Mac et caméra iPhone réseau sont actifs."
                 : "Caméra iPhone reçue — attente de l’écran du Mac."
@@ -978,9 +1064,9 @@ final class StreamEngine: ObservableObject {
         if defaults.object(forKey: "videoBitrateKbps") != nil {
             videoBitrateKbps = defaults.integer(forKey: "videoBitrateKbps")
         }
-        let remoteCameraMigrationKey = "remoteWebRTCCameraV040"
+        let remoteCameraMigrationKey = "remoteSRTCameraV050"
         if !defaults.bool(forKey: remoteCameraMigrationKey) {
-            cameraInputMode = .iphoneNetwork
+            cameraInputMode = .iphoneSRT
             defaults.set(true, forKey: remoteCameraMigrationKey)
         } else if let raw = defaults.string(forKey: "cameraInputMode"),
                   let storedMode = CameraInputMode(rawValue: raw) {
