@@ -1,0 +1,157 @@
+name: Build Adoptan Mini OBS Intel Clean
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "adoptan-mini-obs-intel-v*"
+    paths:
+      - "apps/AdoptanMiniOBSIntel/**"
+      - ".github/workflows/build-adoptan-mini-obs-intel-clean.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16.4
+        run: |
+          if [ -d /Applications/Xcode_16.4.app ]; then
+            sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          fi
+          swift --version
+          xcodebuild -version
+
+      - name: Build portable FFmpeg for Intel
+        run: |
+          set -o pipefail
+          curl --fail --location --silent --show-error \
+            https://ffmpeg.org/releases/ffmpeg-7.1.3.tar.xz \
+            --output "$RUNNER_TEMP/ffmpeg.tar.xz"
+          tar -xf "$RUNNER_TEMP/ffmpeg.tar.xz" -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/ffmpeg-7.1.3"
+          ./configure \
+            --prefix="$RUNNER_TEMP/ffmpeg-intel" \
+            --target-os=darwin \
+            --arch=x86_64 \
+            --cc="clang -arch x86_64" \
+            --extra-cflags="-arch x86_64 -mmacosx-version-min=13.0" \
+            --extra-ldflags="-arch x86_64 -mmacosx-version-min=13.0" \
+            --disable-debug \
+            --disable-doc \
+            --disable-shared \
+            --enable-static \
+            --enable-securetransport \
+            --enable-videotoolbox \
+            --enable-audiotoolbox \
+            --disable-ffplay \
+            --disable-ffprobe \
+            2>&1 | tee "$RUNNER_TEMP/ffmpeg-configure.log"
+          make -j3 2>&1 | tee "$RUNNER_TEMP/ffmpeg-build.log"
+          make install
+
+      - name: Verify Intel media engine
+        run: |
+          set -o pipefail
+          FFMPEG="$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg"
+          archs="$(lipo -archs "$FFMPEG")"
+          echo "FFmpeg architectures: $archs"
+          case " $archs " in
+            *" x86_64 "*) ;;
+            *) echo "::error title=FFmpeg::x86_64 slice missing"; exit 1 ;;
+          esac
+          "$FFMPEG" -hide_banner -devices 2>&1 | grep avfoundation
+          "$FFMPEG" -hide_banner -encoders 2>&1 | grep h264_videotoolbox
+          "$FFMPEG" -hide_banner -protocols 2>&1 | grep -E 'https|rtmps'
+          if otool -L "$FFMPEG" | grep -E '/usr/local|/opt/homebrew'; then
+            echo "::error title=FFmpeg::Non-portable Homebrew dependency detected"
+            exit 1
+          fi
+
+      - name: Exercise composition filters
+        run: |
+          "$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg" \
+            -hide_banner -loglevel warning \
+            -f lavfi -i testsrc2=size=1280x720:rate=30 \
+            -f lavfi -i testsrc2=size=640x360:rate=30 \
+            -filter_complex \
+              '[0:v]format=yuv420p[screen];[1:v]scale=384:216[camera];[screen][camera]overlay=W-w-24:H-h-24,format=yuv420p[out]' \
+            -map '[out]' -frames:v 300 -f null -
+
+      - name: Build Intel Swift application
+        working-directory: apps/AdoptanMiniOBSIntel
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "13.0"
+        run: |
+          set -o pipefail
+          swift build \
+            -c release \
+            --product AdoptanMiniOBSIntel \
+            --arch x86_64 \
+            --scratch-path .build-x86_64 \
+            2>&1 | tee "$RUNNER_TEMP/swift-intel-clean.log"
+
+      - name: Assemble clean app bundle
+        working-directory: apps/AdoptanMiniOBSIntel
+        run: |
+          APP="$RUNNER_TEMP/Adoptan Mini OBS Intel Clean.app"
+          CONTENTS="$APP/Contents"
+          mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
+          cp \
+            .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBSIntel \
+            "$CONTENTS/MacOS/AdoptanMiniOBSIntel"
+          cp "$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg" "$CONTENTS/Resources/ffmpeg"
+          cp Bundle/Info.plist "$CONTENTS/Info.plist"
+          chmod +x "$CONTENTS/MacOS/AdoptanMiniOBSIntel" "$CONTENTS/Resources/ffmpeg"
+
+          codesign --force --options runtime --sign - "$CONTENTS/Resources/ffmpeg"
+          codesign \
+            --force \
+            --deep \
+            --options runtime \
+            --sign - \
+            --entitlements Bundle/AdoptanMiniOBSIntel.entitlements \
+            "$APP"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          plutil -lint "$CONTENTS/Info.plist"
+          file "$CONTENTS/MacOS/AdoptanMiniOBSIntel"
+          file "$CONTENTS/Resources/ffmpeg"
+
+      - name: Package and checksum
+        run: |
+          cd "$RUNNER_TEMP"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "Adoptan Mini OBS Intel Clean.app" \
+            "$GITHUB_WORKSPACE/Adoptan-Mini-OBS-Intel-Clean.zip"
+          cd "$GITHUB_WORKSPACE"
+          shasum -a 256 Adoptan-Mini-OBS-Intel-Clean.zip \
+            > Adoptan-Mini-OBS-Intel-Clean.zip.sha256
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Adoptan-Mini-OBS-Intel-Clean
+          path: |
+            Adoptan-Mini-OBS-Intel-Clean.zip
+            Adoptan-Mini-OBS-Intel-Clean.zip.sha256
+          if-no-files-found: error
+
+      - name: Publish Intel release
+        if: startsWith(github.ref, 'refs/tags/adoptan-mini-obs-intel-v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            Adoptan-Mini-OBS-Intel-Clean.zip \
+            Adoptan-Mini-OBS-Intel-Clean.zip.sha256 \
+            --title "Adoptan Mini OBS Intel Clean 1.0.0" \
+            --notes "Reconstruction indépendante pour MacBook Pro Intel. FFmpeg et AVFoundation remplacent entièrement l’ancien décodeur SRT HaishinKit. Trois tests séparés valident l’écran, la caméra Moblin via HLS, puis leur composition."
