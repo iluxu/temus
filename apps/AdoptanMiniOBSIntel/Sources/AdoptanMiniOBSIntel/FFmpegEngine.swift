@@ -508,7 +508,7 @@ private enum EngineError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .ffmpegMissing:
-            "Le moteur FFmpeg Intel manque dans l’application."
+            "Le moteur FFmpeg universel manque dans l’application."
         case .noScreenDevice:
             "FFmpeg ne détecte aucun écran macOS."
         case .noScreenSelected:

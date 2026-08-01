@@ -9,7 +9,7 @@ final class StudioViewModel: ObservableObject {
     @Published private(set) var screens: [FFmpegDevice] = []
     @Published private(set) var microphones: [FFmpegDevice] = []
     @Published private(set) var previewImage: NSImage?
-    @Published private(set) var status = "Initialisation du moteur Intel…"
+    @Published private(set) var status = "Initialisation du moteur macOS universel…"
     @Published private(set) var isBusy = false
     @Published private(set) var isRunning = false
     @Published private(set) var isLive = false
@@ -121,7 +121,7 @@ final class StudioViewModel: ObservableObject {
         fps = 30
         videoBitrateKbps = 3_500
         audioBitrateKbps = 160
-        status = "Profil Intel stable : 720p30."
+        status = "Profil macOS stable : 720p30."
     }
 
     func testScreen() async {
@@ -193,7 +193,7 @@ final class StudioViewModel: ObservableObject {
         currentLive = live
         status = scene.needsCamera
             ? "Connexion directe à la caméra Safari de l’iPhone…"
-            : "Démarrage de la capture d’écran Intel…"
+            : "Démarrage de la capture d’écran macOS…"
         do {
             try await engine.start(makeConfiguration(), live: live)
             isRunning = true

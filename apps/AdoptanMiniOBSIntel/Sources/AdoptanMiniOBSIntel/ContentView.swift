@@ -21,7 +21,7 @@ struct ContentView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Adoptan Mini OBS — Intel Direct")
+                    Text("Adoptan Mini OBS — macOS Universal")
                         .font(.title2.bold())
                     Text("Écran natif V1 · caméra iPhone directe par Safari")
                         .font(.caption)
@@ -127,7 +127,7 @@ struct ContentView: View {
                         Toggle("Afficher le curseur", isOn: $studio.showCursor)
                         Toggle("Miroir caméra", isOn: $studio.mirrorCamera)
                         Toggle("Son de l’iPhone", isOn: $studio.includeIPhoneAudio)
-                        Button("Profil Intel stable 720p30") { studio.useStableProfile() }
+                        Button("Profil macOS stable 720p30") { studio.useStableProfile() }
                             .buttonStyle(.link)
                     }
                     .padding(.top, 4)

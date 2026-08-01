@@ -1,7 +1,8 @@
-# Adoptan Mini OBS Intel Clean
+# Adoptan Mini OBS macOS Universal
 
-Application indépendante destinée au MacBook Pro Intel. Elle ne dépend ni de
-HaishinKit, ni de Moblin, ni de Caméra de continuité.
+Application indépendante pour macOS Intel et Apple Silicon. Le bundle et son
+moteur FFmpeg sont tous les deux Universal 2 (`x86_64` + `arm64`). Elle ne
+dépend ni de HaishinKit, ni de Moblin, ni de Caméra de continuité.
 
 Pipeline 1.1 :
 
@@ -19,5 +20,5 @@ Depuis la 1.0.2, aucun format de pixels AVFoundation n’est forcé pour l’éc
 ScreenCaptureKit fournit des images BGRA dimensionnées exactement, et l’aperçu
 utilise lui aussi des images brutes cadrées plutôt qu’un flux MJPEG.
 
-La nouvelle identité `ai.adoptan.miniobs.intel.clean` force une autorisation
-d’enregistrement d’écran propre, indépendante des anciennes versions.
+Depuis la 1.2.0, l’identité stable `ai.adoptan.miniobs.direct` et le même
+bundle universel sont utilisés pour toutes les releases macOS suivantes.

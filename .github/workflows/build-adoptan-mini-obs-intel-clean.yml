@@ -1,4 +1,4 @@
-name: Build Adoptan Mini OBS Intel Clean
+name: Build Adoptan Mini OBS macOS Universal
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     branches:
       - main
     tags:
-      - "adoptan-mini-obs-intel-v*"
+      - "adoptan-mini-obs-v*"
     paths:
       - "apps/AdoptanMiniOBSIntel/**"
       - ".github/workflows/build-adoptan-mini-obs-intel-clean.yml"
@@ -17,7 +17,7 @@ permissions:
 jobs:
   build:
     runs-on: macos-15
-    timeout-minutes: 45
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
@@ -31,66 +31,103 @@ jobs:
           swift --version
           xcodebuild -version
 
-      - name: Build portable FFmpeg for Intel
+      - name: Restore universal FFmpeg cache
+        id: ffmpeg-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/ffmpeg-universal
+          key: ffmpeg-7.1.3-macos-universal2-v1
+
+      - name: Build FFmpeg for Intel and Apple Silicon
+        if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
         run: |
-          set -o pipefail
+          set -euo pipefail
           curl --fail --location --silent --show-error \
             https://ffmpeg.org/releases/ffmpeg-7.1.3.tar.xz \
             --output "$RUNNER_TEMP/ffmpeg.tar.xz"
-          tar -xf "$RUNNER_TEMP/ffmpeg.tar.xz" -C "$RUNNER_TEMP"
-          cd "$RUNNER_TEMP/ffmpeg-7.1.3"
-          ./configure \
-            --prefix="$RUNNER_TEMP/ffmpeg-intel" \
-            --target-os=darwin \
-            --arch=x86_64 \
-            --cc="clang -arch x86_64" \
-            --extra-cflags="-arch x86_64 -mmacosx-version-min=13.0" \
-            --extra-ldflags="-arch x86_64 -mmacosx-version-min=13.0" \
-            --disable-debug \
-            --disable-doc \
-            --disable-shared \
-            --disable-x86asm \
-            --enable-static \
-            --enable-securetransport \
-            --enable-videotoolbox \
-            --enable-audiotoolbox \
-            --disable-ffplay \
-            --disable-ffprobe \
-            2>&1 | tee "$RUNNER_TEMP/ffmpeg-configure.log"
-          make -j3 2>&1 | tee "$RUNNER_TEMP/ffmpeg-build.log"
-          make install
+          host_arch="$(uname -m)"
+          echo "Build host architecture: $host_arch"
+
+          for arch in x86_64 arm64; do
+            source_dir="$RUNNER_TEMP/ffmpeg-$arch-source"
+            prefix="$RUNNER_TEMP/ffmpeg-$arch"
+            mkdir -p "$source_dir"
+            tar -xf "$RUNNER_TEMP/ffmpeg.tar.xz" \
+              --strip-components=1 -C "$source_dir"
+            cd "$source_dir"
+
+            architecture_flags=()
+            if [ "$arch" = "x86_64" ]; then
+              architecture_flags+=(--disable-x86asm)
+            fi
+            if [ "$arch" != "$host_arch" ]; then
+              architecture_flags+=(--enable-cross-compile)
+            fi
+
+            ./configure \
+              --prefix="$prefix" \
+              --target-os=darwin \
+              --arch="$arch" \
+              --cc="clang -arch $arch" \
+              --extra-cflags="-arch $arch -mmacosx-version-min=13.0" \
+              --extra-ldflags="-arch $arch -mmacosx-version-min=13.0" \
+              --disable-debug \
+              --disable-doc \
+              --disable-shared \
+              --enable-static \
+              --enable-securetransport \
+              --enable-videotoolbox \
+              --enable-audiotoolbox \
+              --disable-ffplay \
+              --disable-ffprobe \
+              "${architecture_flags[@]}" \
+              2>&1 | tee "$RUNNER_TEMP/ffmpeg-configure-$arch.log"
+            make -j3 2>&1 | tee "$RUNNER_TEMP/ffmpeg-build-$arch.log"
+            make install
+          done
+
+          mkdir -p "$RUNNER_TEMP/ffmpeg-universal/bin"
+          lipo -create \
+            "$RUNNER_TEMP/ffmpeg-x86_64/bin/ffmpeg" \
+            "$RUNNER_TEMP/ffmpeg-arm64/bin/ffmpeg" \
+            -output "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
+          chmod +x "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
 
       - name: Expose FFmpeg build errors
-        if: failure()
+        if: failure() && steps.ffmpeg-cache.outputs.cache-hit != 'true'
         run: |
           details="$({
-            tail -80 "$RUNNER_TEMP/ffmpeg-configure.log" 2>/dev/null
-            tail -80 "$RUNNER_TEMP/ffmpeg-build.log" 2>/dev/null
+            tail -80 "$RUNNER_TEMP"/ffmpeg-configure-*.log 2>/dev/null
+            tail -80 "$RUNNER_TEMP"/ffmpeg-build-*.log 2>/dev/null
             find "$RUNNER_TEMP" -path '*/ffbuild/config.log' \
               -exec tail -80 {} \; 2>/dev/null
-          } | grep -Ei 'error|failed|fatal|not found|unknown|unsupported' | tail -80 || true)"
+          } | grep -Ei 'error|failed|fatal|not found|unknown|unsupported' | tail -100 || true)"
           if [ -z "$details" ]; then
-            details="FFmpeg build failed; inspect the complete workflow log."
+            details="Universal FFmpeg build failed; inspect the complete workflow log."
           fi
           details="${details//'%'/'%25'}"
           details="${details//$'\r'/'%0D'}"
           details="${details//$'\n'/'%0A'}"
-          echo "::error title=FFmpeg Intel::$details"
+          echo "::error title=FFmpeg Universal::$details"
 
-      - name: Verify Intel media engine
+      - name: Verify universal media engine
         run: |
           set -o pipefail
-          FFMPEG="$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg"
+          FFMPEG="$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
           archs="$(lipo -archs "$FFMPEG")"
           echo "FFmpeg architectures: $archs"
           case " $archs " in
             *" x86_64 "*) ;;
             *) echo "::error title=FFmpeg::x86_64 slice missing"; exit 1 ;;
           esac
+          case " $archs " in
+            *" arm64 "*) ;;
+            *) echo "::error title=FFmpeg::arm64 slice missing"; exit 1 ;;
+          esac
           "$FFMPEG" -hide_banner -devices 2>&1 | grep avfoundation
           "$FFMPEG" -hide_banner -encoders 2>&1 | grep h264_videotoolbox
           "$FFMPEG" -hide_banner -protocols 2>&1 | grep -E 'https|rtmps'
-          "$FFMPEG" -hide_banner -protocols 2>&1 | grep -E 'rtsp|tcp'
+          "$FFMPEG" -hide_banner -protocols 2>&1 | grep tcp
           if otool -L "$FFMPEG" | grep -E '/usr/local|/opt/homebrew'; then
             echo "::error title=FFmpeg::Non-portable Homebrew dependency detected"
             exit 1
@@ -98,7 +135,7 @@ jobs:
 
       - name: Exercise composition filters
         run: |
-          "$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg" \
+          "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg" \
             -hide_banner -loglevel warning \
             -f lavfi -i testsrc2=size=1280x720:rate=30 \
             -f lavfi -i testsrc2=size=640x360:rate=30 \
@@ -108,7 +145,7 @@ jobs:
 
       - name: Verify raw BGRA preview frame boundaries
         run: |
-          FFMPEG="$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg"
+          FFMPEG="$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
           PREVIEW="$RUNNER_TEMP/preview-640x360.bgra"
           "$FFMPEG" \
             -hide_banner -loglevel warning \
@@ -122,7 +159,7 @@ jobs:
             -f rawvideo -pixel_format bgra -video_size 640x360 -framerate 8 \
             -i "$PREVIEW" -frames:v 30 -vf format=yuv420p -f null -
 
-      - name: Build Intel Swift application
+      - name: Build universal Swift application
         working-directory: apps/AdoptanMiniOBSIntel
         env:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
@@ -131,22 +168,53 @@ jobs:
           swift build \
             -c release \
             --product AdoptanMiniOBSIntel \
+            --arch arm64 \
+            --scratch-path .build-arm64 \
+            2>&1 | tee "$RUNNER_TEMP/swift-arm64.log"
+          swift build \
+            -c release \
+            --product AdoptanMiniOBSIntel \
             --arch x86_64 \
             --scratch-path .build-x86_64 \
-            2>&1 | tee "$RUNNER_TEMP/swift-intel-clean.log"
+            2>&1 | tee "$RUNNER_TEMP/swift-x86_64.log"
+          mkdir -p .build-universal
+          lipo -create \
+            .build-arm64/arm64-apple-macosx/release/AdoptanMiniOBSIntel \
+            .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBSIntel \
+            -output .build-universal/AdoptanMiniOBSIntel
 
-      - name: Assemble clean app bundle
+      - name: Expose Swift compiler errors
+        if: failure()
+        run: |
+          details="$(cat "$RUNNER_TEMP"/swift-*.log 2>/dev/null | grep -E \
+            'Undefined symbols|referenced from:|symbol\(s\)|ld:|clang: error|error:' \
+            | tail -100 || true)"
+          details="${details//'%'/'%25'}"
+          details="${details//$'\r'/'%0D'}"
+          details="${details//$'\n'/'%0A'}"
+          echo "::error title=Swift Universal::$details"
+
+      - name: Assemble universal app bundle
         working-directory: apps/AdoptanMiniOBSIntel
         run: |
-          APP="$RUNNER_TEMP/Adoptan Mini OBS Intel Clean.app"
+          APP="$RUNNER_TEMP/Adoptan Mini OBS.app"
           CONTENTS="$APP/Contents"
           mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
-          cp \
-            .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBSIntel \
+          cp .build-universal/AdoptanMiniOBSIntel \
             "$CONTENTS/MacOS/AdoptanMiniOBSIntel"
-          cp "$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg" "$CONTENTS/Resources/ffmpeg"
+          cp "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg" \
+            "$CONTENTS/Resources/ffmpeg"
           cp Bundle/Info.plist "$CONTENTS/Info.plist"
           chmod +x "$CONTENTS/MacOS/AdoptanMiniOBSIntel" "$CONTENTS/Resources/ffmpeg"
+
+          for binary in \
+            "$CONTENTS/MacOS/AdoptanMiniOBSIntel" \
+            "$CONTENTS/Resources/ffmpeg"; do
+            archs="$(lipo -archs "$binary")"
+            echo "$binary architectures: $archs"
+            case " $archs " in *" arm64 "*) ;; *) exit 1 ;; esac
+            case " $archs " in *" x86_64 "*) ;; *) exit 1 ;; esac
+          done
 
           codesign --force --options runtime --sign - "$CONTENTS/Resources/ffmpeg"
           codesign \
@@ -158,35 +226,33 @@ jobs:
             "$APP"
           codesign --verify --deep --strict --verbose=2 "$APP"
           plutil -lint "$CONTENTS/Info.plist"
-          file "$CONTENTS/MacOS/AdoptanMiniOBSIntel"
-          file "$CONTENTS/Resources/ffmpeg"
 
       - name: Package and checksum
         run: |
           cd "$RUNNER_TEMP"
           ditto -c -k --sequesterRsrc --keepParent \
-            "Adoptan Mini OBS Intel Clean.app" \
-            "$GITHUB_WORKSPACE/Adoptan-Mini-OBS-Intel-Clean.zip"
+            "Adoptan Mini OBS.app" \
+            "$GITHUB_WORKSPACE/Adoptan-Mini-OBS-macOS-Universal.zip"
           cd "$GITHUB_WORKSPACE"
-          shasum -a 256 Adoptan-Mini-OBS-Intel-Clean.zip \
-            > Adoptan-Mini-OBS-Intel-Clean.zip.sha256
+          shasum -a 256 Adoptan-Mini-OBS-macOS-Universal.zip \
+            > Adoptan-Mini-OBS-macOS-Universal.zip.sha256
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Adoptan-Mini-OBS-Intel-Clean
+          name: Adoptan-Mini-OBS-macOS-Universal
           path: |
-            Adoptan-Mini-OBS-Intel-Clean.zip
-            Adoptan-Mini-OBS-Intel-Clean.zip.sha256
+            Adoptan-Mini-OBS-macOS-Universal.zip
+            Adoptan-Mini-OBS-macOS-Universal.zip.sha256
           if-no-files-found: error
 
-      - name: Publish Intel release
-        if: startsWith(github.ref, 'refs/tags/adoptan-mini-obs-intel-v')
+      - name: Publish universal release
+        if: startsWith(github.ref, 'refs/tags/adoptan-mini-obs-v')
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" \
-            Adoptan-Mini-OBS-Intel-Clean.zip \
-            Adoptan-Mini-OBS-Intel-Clean.zip.sha256 \
-            --title "Adoptan Mini OBS Intel Direct 1.1.0" \
-            --notes "Nouvelle liaison iPhone pour Mac Intel : le QR ouvre Safari sur l’iPhone, qui publie directement la caméra en WebRTC/WHIP. L’app reçoit le pont MediaMTX en RTSP/TCP, sans Caméra de continuité, Moblin ni HLS. ScreenCaptureKit conserve le chemin écran de la V1 et une microcoupure caméra déclenche une reprise automatique de l’aperçu ou du direct."
+            Adoptan-Mini-OBS-macOS-Universal.zip \
+            Adoptan-Mini-OBS-macOS-Universal.zip.sha256 \
+            --title "Adoptan Mini OBS macOS Universal 1.2.0" \
+            --notes "Première release macOS hybride. Un seul bundle contient l’application et FFmpeg en Universal 2 : Apple Silicon arm64 et Mac Intel x86_64. La caméra iPhone directe Safari/WebRTC vers RTSP/TCP et la capture ScreenCaptureKit sont identiques sur les deux architectures. Cette identité universelle sera conservée pour les prochaines releases."
