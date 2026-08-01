@@ -50,7 +50,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/ffmpeg-${{ matrix.arch }}
-          key: ffmpeg-7.1.3-macos-${{ matrix.arch }}-native-v1
+          key: ffmpeg-7.1.3-macos-${{ matrix.arch }}-native-v2
 
       - name: Build native FFmpeg
         if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
@@ -71,7 +71,9 @@ jobs:
             --disable-debug \
             --disable-doc \
             --disable-shared \
+            --disable-autodetect \
             --enable-static \
+            --enable-avfoundation \
             --enable-securetransport \
             --enable-videotoolbox \
             --enable-audiotoolbox \
