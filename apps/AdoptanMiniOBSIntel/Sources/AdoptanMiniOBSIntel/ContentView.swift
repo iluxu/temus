@@ -23,7 +23,7 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Adoptan Mini OBS — Intel Clean")
                         .font(.title2.bold())
-                    Text("Nouveau moteur FFmpeg · aucune Caméra de continuité")
+                    Text("Écran natif ScreenCaptureKit V1 · caméra Moblin stable")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

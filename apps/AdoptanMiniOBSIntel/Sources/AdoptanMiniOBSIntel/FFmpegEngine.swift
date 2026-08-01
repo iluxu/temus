@@ -1,4 +1,6 @@
 import AppKit
+import CoreGraphics
+import Darwin
 import Foundation
 
 final class FFmpegEngine: @unchecked Sendable {
@@ -10,15 +12,29 @@ final class FFmpegEngine: @unchecked Sendable {
     var onExit: ((Int32, String, Bool) -> Void)?
 
     private let stateQueue = DispatchQueue(label: "ai.adoptan.miniobs.intel.ffmpeg-state")
-    private let frameQueue = DispatchQueue(label: "ai.adoptan.miniobs.intel.jpeg-frames")
+    private let frameQueue = DispatchQueue(label: "ai.adoptan.miniobs.intel.preview-frames")
+    private let screenCapture = NativeScreenCaptureSource()
     private var process: Process?
     private var standardInput: Pipe?
     private var standardOutput: Pipe?
     private var standardError: Pipe?
-    private var jpegBuffer = Data()
+    private var previewBuffer = Data()
     private var diagnosticLines: [String] = []
     private var expectedStop = false
+    private var stdinCarriesScreenFrames = false
     private var processGeneration = 0
+
+    private static let previewWidth = 640
+    private static let previewHeight = 360
+    private static let previewFPS = 8
+    private static let previewFrameBytes = previewWidth * previewHeight * 4
+
+    init() {
+        signal(SIGPIPE, SIG_IGN)
+        screenCapture.onError = { [weak self] message in
+            self?.screenCaptureFailed(message)
+        }
+    }
 
     var executableURL: URL? {
         if let bundled = Bundle.main.url(forResource: "ffmpeg", withExtension: nil) {
@@ -34,7 +50,9 @@ final class FFmpegEngine: @unchecked Sendable {
 
     func listDevices() async throws -> DeviceCatalog {
         guard let executableURL else { throw EngineError.ffmpegMissing }
-        return try await withCheckedThrowingContinuation { continuation in
+        let screens = try await NativeScreenCaptureSource.availableDisplays()
+        guard !screens.isEmpty else { throw EngineError.noScreenDevice("") }
+        let microphones: [FFmpegDevice] = try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 let process = Process()
                 let pipe = Pipe()
@@ -51,21 +69,22 @@ final class FFmpegEngine: @unchecked Sendable {
                     process.waitUntilExit()
                     let text = String(data: data, encoding: .utf8) ?? ""
                     let catalog = Self.parseDeviceCatalog(text)
-                    guard !catalog.screens.isEmpty else {
-                        throw EngineError.noScreenDevice(text)
-                    }
-                    continuation.resume(returning: catalog)
+                    continuation.resume(returning: catalog.microphones)
                 } catch {
                     continuation.resume(throwing: error)
                 }
             }
         }
+        return DeviceCatalog(screens: screens, microphones: microphones)
     }
 
     func start(_ configuration: FFmpegConfiguration, live: Bool) async throws {
         await stop()
         guard let executableURL else { throw EngineError.ffmpegMissing }
         let arguments = try buildArguments(configuration, live: live)
+        let input = Pipe()
+        let output = Pipe()
+        let error = Pipe()
 
         try await withCheckedThrowingContinuation {
             (continuation: CheckedContinuation<Void, Error>) in
@@ -75,9 +94,6 @@ final class FFmpegEngine: @unchecked Sendable {
                     return
                 }
 
-                let input = Pipe()
-                let output = Pipe()
-                let error = Pipe()
                 let process = Process()
                 process.executableURL = executableURL
                 process.arguments = arguments
@@ -94,13 +110,16 @@ final class FFmpegEngine: @unchecked Sendable {
                 }
 
                 self.expectedStop = false
-                self.jpegBuffer.removeAll(keepingCapacity: true)
+                self.stdinCarriesScreenFrames = configuration.scene.needsScreen
                 self.diagnosticLines.removeAll(keepingCapacity: true)
                 self.standardInput = input
                 self.standardOutput = output
                 self.standardError = error
                 self.process = process
-                self.installReaders(output: output, error: error)
+                self.frameQueue.async { [weak self] in
+                    self?.previewBuffer.removeAll(keepingCapacity: true)
+                }
+                self.installReaders(output: output, error: error, generation: generation)
 
                 do {
                     try process.run()
@@ -111,9 +130,31 @@ final class FFmpegEngine: @unchecked Sendable {
                 }
             }
         }
+
+        if configuration.scene.needsScreen {
+            guard let screen = configuration.screen,
+                  let displayID = CGDirectDisplayID(exactly: screen.index) else {
+                await stop()
+                throw EngineError.noScreenSelected
+            }
+            do {
+                try await screenCapture.start(
+                    displayID: displayID,
+                    width: configuration.resolution.width,
+                    height: configuration.resolution.height,
+                    fps: configuration.fps,
+                    showCursor: configuration.showCursor,
+                    output: input.fileHandleForWriting
+                )
+            } catch {
+                await stop()
+                throw error
+            }
+        }
     }
 
     func stop() async {
+        await screenCapture.stop()
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
             stateQueue.async { [weak self] in
                 guard let self, let process = self.process else {
@@ -122,9 +163,13 @@ final class FFmpegEngine: @unchecked Sendable {
                 }
                 self.expectedStop = true
                 if process.isRunning {
-                    try? self.standardInput?.fileHandleForWriting.write(
-                        Data("q\n".utf8)
-                    )
+                    if self.stdinCarriesScreenFrames {
+                        self.standardInput?.fileHandleForWriting.closeFile()
+                    } else {
+                        try? self.standardInput?.fileHandleForWriting.write(
+                            Data("q\n".utf8)
+                        )
+                    }
                 }
                 DispatchQueue.global(qos: .utility).async {
                     let deadline = Date().addingTimeInterval(2.5)
@@ -147,6 +192,9 @@ final class FFmpegEngine: @unchecked Sendable {
     }
 
     func shutdown() {
+        Task { [screenCapture] in
+            await screenCapture.stop()
+        }
         stateQueue.async { [weak self] in
             guard let self, let process = self.process else { return }
             self.expectedStop = true
@@ -156,19 +204,22 @@ final class FFmpegEngine: @unchecked Sendable {
         }
     }
 
-    private func installReaders(output: Pipe, error: Pipe) {
+    private func installReaders(output: Pipe, error: Pipe, generation: Int) {
         output.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
             guard !data.isEmpty else { return }
-            self?.frameQueue.async { [weak self] in
-                self?.consumeJPEGData(data)
+            self?.stateQueue.async { [weak self] in
+                guard let self, generation == self.processGeneration else { return }
+                self.frameQueue.async { [weak self] in
+                    self?.consumePreviewData(data)
+                }
             }
         }
         error.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
             guard !data.isEmpty, let text = String(data: data, encoding: .utf8) else { return }
             self?.stateQueue.async { [weak self] in
-                guard let self else { return }
+                guard let self, generation == self.processGeneration else { return }
                 for line in text.split(whereSeparator: \.isNewline) {
                     let cleaned = String(line)
                     self.diagnosticLines.append(cleaned)
@@ -180,24 +231,49 @@ final class FFmpegEngine: @unchecked Sendable {
         }
     }
 
-    private func consumeJPEGData(_ data: Data) {
-        jpegBuffer.append(data)
-        let startMarker = Data([0xFF, 0xD8])
-        let endMarker = Data([0xFF, 0xD9])
+    private func consumePreviewData(_ data: Data) {
+        previewBuffer.append(data)
+        while previewBuffer.count >= Self.previewFrameBytes {
+            let frame = Data(previewBuffer.prefix(Self.previewFrameBytes))
+            previewBuffer.removeFirst(Self.previewFrameBytes)
 
-        while let start = jpegBuffer.range(of: startMarker),
-              let end = jpegBuffer.range(of: endMarker, in: start.lowerBound..<jpegBuffer.endIndex) {
-            let frameEnd = end.upperBound
-            let frame = jpegBuffer.subdata(in: start.lowerBound..<frameEnd)
-            jpegBuffer.removeSubrange(jpegBuffer.startIndex..<frameEnd)
-            if let image = NSImage(data: frame) {
-                DispatchQueue.main.async { [weak self] in
-                    self?.onPreviewFrame?(image)
-                }
+            guard let provider = CGDataProvider(data: frame as CFData) else { continue }
+            let bitmapInfo = CGBitmapInfo.byteOrder32Little.union(
+                CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedFirst.rawValue)
+            )
+            guard let image = CGImage(
+                width: Self.previewWidth,
+                height: Self.previewHeight,
+                bitsPerComponent: 8,
+                bitsPerPixel: 32,
+                bytesPerRow: Self.previewWidth * 4,
+                space: CGColorSpaceCreateDeviceRGB(),
+                bitmapInfo: bitmapInfo,
+                provider: provider,
+                decode: nil,
+                shouldInterpolate: true,
+                intent: .defaultIntent
+            ) else { continue }
+            let preview = NSImage(
+                cgImage: image,
+                size: NSSize(width: Self.previewWidth, height: Self.previewHeight)
+            )
+            DispatchQueue.main.async { [weak self] in
+                self?.onPreviewFrame?(preview)
             }
         }
-        if jpegBuffer.count > 20_000_000 {
-            jpegBuffer.removeAll(keepingCapacity: true)
+    }
+
+    private func screenCaptureFailed(_ message: String) {
+        stateQueue.async { [weak self] in
+            guard let self, !self.expectedStop else { return }
+            self.diagnosticLines.append(message)
+            if self.diagnosticLines.count > 40 {
+                self.diagnosticLines.removeFirst(self.diagnosticLines.count - 40)
+            }
+            if self.process?.isRunning == true {
+                self.process?.terminate()
+            }
         }
     }
 
@@ -207,6 +283,9 @@ final class FFmpegEngine: @unchecked Sendable {
             let wasExpected = self.expectedStop
             let diagnostics = self.diagnosticLines.suffix(14).joined(separator: "\n")
             self.clearProcess()
+            Task { [screenCapture = self.screenCapture] in
+                await screenCapture.stop()
+            }
             DispatchQueue.main.async { [weak self] in
                 self?.onExit?(status, diagnostics, wasExpected)
             }
@@ -220,6 +299,7 @@ final class FFmpegEngine: @unchecked Sendable {
         standardInput = nil
         standardOutput = nil
         standardError = nil
+        stdinCarriesScreenFrames = false
     }
 
     private func buildArguments(
@@ -235,16 +315,16 @@ final class FFmpegEngine: @unchecked Sendable {
         var microphoneInput: Int?
 
         if configuration.scene.needsScreen {
-            guard let screen = configuration.screen else { throw EngineError.noScreenSelected }
+            guard configuration.screen != nil else { throw EngineError.noScreenSelected }
             screenInput = nextInput
             nextInput += 1
             arguments += [
                 "-thread_queue_size", "1024",
-                "-f", "avfoundation",
+                "-f", "rawvideo",
                 "-framerate", String(configuration.fps),
-                "-pixel_format", "bgr0",
-                "-capture_cursor", configuration.showCursor ? "1" : "0",
-                "-i", "\(screen.name):none"
+                "-pixel_format", "bgra",
+                "-video_size", "\(configuration.resolution.width)x\(configuration.resolution.height)",
+                "-i", "pipe:0"
             ]
         }
 
@@ -312,7 +392,10 @@ final class FFmpegEngine: @unchecked Sendable {
 
         if live {
             filters.append("[vbase]split=2[vstream][vpreviewbase]")
-            filters.append("[vpreviewbase]fps=10,scale=960:-2[vpreview]")
+            filters.append(
+                "[vpreviewbase]fps=\(Self.previewFPS)," +
+                "scale=\(Self.previewWidth):\(Self.previewHeight),format=bgra[vpreview]"
+            )
 
             var audioSources: [String] = []
             if configuration.includeIPhoneAudio, let cameraInput {
@@ -334,7 +417,10 @@ final class FFmpegEngine: @unchecked Sendable {
                 )
             }
         } else {
-            filters.append("[vbase]fps=10,scale=960:-2[vpreview]")
+            filters.append(
+                "[vbase]fps=\(Self.previewFPS)," +
+                "scale=\(Self.previewWidth):\(Self.previewHeight),format=bgra[vpreview]"
+            )
         }
 
         arguments += ["-filter_complex", filters.joined(separator: ";")]
@@ -367,8 +453,8 @@ final class FFmpegEngine: @unchecked Sendable {
 
         arguments += [
             "-map", "[vpreview]", "-an",
-            "-c:v", "mjpeg", "-q:v", "7",
-            "-f", "image2pipe", "pipe:1"
+            "-c:v", "rawvideo", "-pix_fmt", "bgra",
+            "-f", "rawvideo", "pipe:1"
         ]
         return arguments
     }

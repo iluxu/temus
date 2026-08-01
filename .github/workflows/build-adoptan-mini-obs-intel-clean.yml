@@ -105,6 +105,22 @@ jobs:
               '[0:v]format=yuv420p[screen];[1:v]scale=384:216[camera];[screen][camera]overlay=W-w-24:H-h-24,format=yuv420p[out]' \
             -map '[out]' -frames:v 300 -f null -
 
+      - name: Verify raw BGRA preview frame boundaries
+        run: |
+          FFMPEG="$RUNNER_TEMP/ffmpeg-intel/bin/ffmpeg"
+          PREVIEW="$RUNNER_TEMP/preview-640x360.bgra"
+          "$FFMPEG" \
+            -hide_banner -loglevel warning \
+            -f lavfi -i testsrc2=size=1280x720:rate=30 \
+            -vf 'fps=8,scale=640:360,format=bgra' \
+            -frames:v 30 -c:v rawvideo -pix_fmt bgra -f rawvideo "$PREVIEW"
+          bytes="$(stat -f%z "$PREVIEW")"
+          test "$bytes" = "27648000"
+          "$FFMPEG" \
+            -hide_banner -loglevel warning \
+            -f rawvideo -pixel_format bgra -video_size 640x360 -framerate 8 \
+            -i "$PREVIEW" -frames:v 30 -vf format=yuv420p -f null -
+
       - name: Build Intel Swift application
         working-directory: apps/AdoptanMiniOBSIntel
         env:
@@ -171,5 +187,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-Intel-Clean.zip \
             Adoptan-Mini-OBS-Intel-Clean.zip.sha256 \
-            --title "Adoptan Mini OBS Intel Clean 1.0.1" \
-            --notes "Reconstruction indépendante pour MacBook Pro Intel. FFmpeg et AVFoundation remplacent entièrement l’ancien décodeur SRT HaishinKit. Trois tests séparés valident l’écran, la caméra Moblin via HLS, puis leur composition. La transition entre les tests est protégée contre les arrêts concurrents."
+            --title "Adoptan Mini OBS Intel Clean 1.0.2" \
+            --notes "Correctif MacBook Pro Intel : la capture d’écran repasse sur le chemin natif ScreenCaptureKit de la V1, sans le format bgr0 AVFoundation qui provoquait les bandes magenta et vertes. L’aperçu MJPEG est remplacé par des images BGRA à taille fixe afin d’éliminer toute corruption de découpage. La caméra Moblin reste reçue par le relais HLS stable."
