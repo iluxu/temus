@@ -53,17 +53,12 @@ final class StudioViewModel: ObservableObject {
         }
     }
 
-    var moblinPublishURL: String {
-        "srt://51.222.9.123:8890?streamid=publish:studio/lucia"
+    var iPhoneCameraURL: String {
+        "https://adoptan.ai/iphone-camera"
     }
 
-    var moblinQRCode: NSImage? {
-        let configuration = """
-        {"streams":[{"name":"Adoptan Camera Intel","url":"\(moblinPublishURL)","selected":true,"backgroundStreaming":true,"video":{"resolution":"1280x720","fps":30,"bitrate":2500000,"codec":"H.264/AVC","bFrames":false,"maxKeyFrameInterval":2},"audio":{"bitrate":128000},"srt":{"latency":700,"adaptiveBitrateEnabled":true}}]}
-        """
-        let encoded = configuration.addingPercentEncoding(withAllowedCharacters: .alphanumerics)
-            ?? configuration
-        return makeQRCode("moblin://?\(encoded)")
+    var iPhoneCameraQRCode: NSImage? {
+        makeQRCode(iPhoneCameraURL)
     }
 
     func prepare() async {
@@ -108,10 +103,10 @@ final class StudioViewModel: ObservableObject {
         NSWorkspace.shared.open(url)
     }
 
-    func copyMoblinURL() {
+    func copyIPhoneCameraURL() {
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(moblinPublishURL, forType: .string)
-        status = "Adresse Moblin copiée."
+        NSPasteboard.general.setString(iPhoneCameraURL, forType: .string)
+        status = "Lien de la caméra iPhone copié."
     }
 
     func selectPlatform(_ value: StudioPlatform) {
@@ -197,7 +192,7 @@ final class StudioViewModel: ObservableObject {
         requestedRun = true
         currentLive = live
         status = scene.needsCamera
-            ? "Connexion à la caméra Moblin via le relais stable…"
+            ? "Connexion directe à la caméra Safari de l’iPhone…"
             : "Démarrage de la capture d’écran Intel…"
         do {
             try await engine.start(makeConfiguration(), live: live)
@@ -255,13 +250,14 @@ final class StudioViewModel: ObservableObject {
             status = "macOS bloque l’écran. Autorise cette nouvelle application puis relance-la."
             return
         }
-        if scene.needsCamera && !currentLive {
-            status = "Caméra Moblin absente — nouvelle tentative automatique dans 3 secondes…"
+        if scene.needsCamera {
+            let mode = currentLive ? "Le direct va reprendre" : "Nouvel essai"
+            status = "Caméra iPhone absente — \(mode) automatiquement dans 3 secondes…"
             retryTask?.cancel()
             retryTask = Task { [weak self] in
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
                 guard !Task.isCancelled, let self, self.requestedRun else { return }
-                await self.start(live: false)
+                await self.start(live: self.currentLive)
             }
             return
         }

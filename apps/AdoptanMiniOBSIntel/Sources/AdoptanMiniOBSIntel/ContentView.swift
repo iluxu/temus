@@ -21,9 +21,9 @@ struct ContentView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Adoptan Mini OBS — Intel Clean")
+                    Text("Adoptan Mini OBS — Intel Direct")
                         .font(.title2.bold())
-                    Text("Écran natif ScreenCaptureKit V1 · caméra Moblin stable")
+                    Text("Écran natif V1 · caméra iPhone directe par Safari")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -65,9 +65,9 @@ struct ContentView: View {
                     .padding(.top, 4)
                 }
 
-                GroupBox("3 · Caméra iPhone Moblin") {
+                GroupBox("3 · Caméra iPhone directe") {
                     VStack(alignment: .leading, spacing: 8) {
-                        if let qr = studio.moblinQRCode {
+                        if let qr = studio.iPhoneCameraQRCode {
                             HStack {
                                 Spacer()
                                 Image(nsImage: qr)
@@ -79,10 +79,10 @@ struct ContentView: View {
                                 Spacer()
                             }
                         }
-                        Text("Moblin envoie en SRT au serveur. L’app lit ensuite le relais HLS testé, sans le décodeur SRT défectueux.")
+                        Text("Scanne ce QR avec l’iPhone, ouvre Safari, puis touche « Connecter la caméra ». Aucun Moblin et aucune Caméra de continuité.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Button("Copier l’adresse Moblin") { studio.copyMoblinURL() }
+                        Button("Copier le lien iPhone") { studio.copyIPhoneCameraURL() }
                             .buttonStyle(.link)
                     }
                     .padding(.top, 4)

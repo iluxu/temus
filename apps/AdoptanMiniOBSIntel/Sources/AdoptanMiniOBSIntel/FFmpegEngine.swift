@@ -4,8 +4,8 @@ import Darwin
 import Foundation
 
 final class FFmpegEngine: @unchecked Sendable {
-    static let iPhoneHLS =
-        "https://api.adoptan.ai/screen-hls/studio/lucia/index.m3u8"
+    static let iPhoneRTSP =
+        "rtsp://51.222.9.123:8554/studio/lucia"
 
     var onPreviewFrame: ((NSImage) -> Void)?
     var onStatus: ((String) -> Void)?
@@ -333,12 +333,10 @@ final class FFmpegEngine: @unchecked Sendable {
             nextInput += 1
             arguments += [
                 "-thread_queue_size", "2048",
-                "-rw_timeout", "15000000",
-                "-reconnect", "1",
-                "-reconnect_streamed", "1",
-                "-reconnect_delay_max", "2",
+                "-rtsp_transport", "tcp",
+                "-timeout", "15000000",
                 "-fflags", "+genpts+discardcorrupt",
-                "-i", Self.iPhoneHLS
+                "-i", Self.iPhoneRTSP
             ]
         }
 

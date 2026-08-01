@@ -90,6 +90,7 @@ jobs:
           "$FFMPEG" -hide_banner -devices 2>&1 | grep avfoundation
           "$FFMPEG" -hide_banner -encoders 2>&1 | grep h264_videotoolbox
           "$FFMPEG" -hide_banner -protocols 2>&1 | grep -E 'https|rtmps'
+          "$FFMPEG" -hide_banner -protocols 2>&1 | grep -E 'rtsp|tcp'
           if otool -L "$FFMPEG" | grep -E '/usr/local|/opt/homebrew'; then
             echo "::error title=FFmpeg::Non-portable Homebrew dependency detected"
             exit 1
@@ -187,5 +188,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-Intel-Clean.zip \
             Adoptan-Mini-OBS-Intel-Clean.zip.sha256 \
-            --title "Adoptan Mini OBS Intel Clean 1.0.2" \
-            --notes "Correctif MacBook Pro Intel : la capture d’écran repasse sur le chemin natif ScreenCaptureKit de la V1, sans le format bgr0 AVFoundation qui provoquait les bandes magenta et vertes. L’aperçu MJPEG est remplacé par des images BGRA à taille fixe afin d’éliminer toute corruption de découpage. La caméra Moblin reste reçue par le relais HLS stable."
+            --title "Adoptan Mini OBS Intel Direct 1.1.0" \
+            --notes "Nouvelle liaison iPhone pour Mac Intel : le QR ouvre Safari sur l’iPhone, qui publie directement la caméra en WebRTC/WHIP. L’app reçoit le pont MediaMTX en RTSP/TCP, sans Caméra de continuité, Moblin ni HLS. ScreenCaptureKit conserve le chemin écran de la V1 et une microcoupure caméra déclenche une reprise automatique de l’aperçu ou du direct."
