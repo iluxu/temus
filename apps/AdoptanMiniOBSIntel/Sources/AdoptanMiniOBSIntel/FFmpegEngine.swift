@@ -18,6 +18,7 @@ final class FFmpegEngine: @unchecked Sendable {
     private var jpegBuffer = Data()
     private var diagnosticLines: [String] = []
     private var expectedStop = false
+    private var processGeneration = 0
 
     var executableURL: URL? {
         if let bundled = Bundle.main.url(forResource: "ffmpeg", withExtension: nil) {
@@ -83,8 +84,13 @@ final class FFmpegEngine: @unchecked Sendable {
                 process.standardInput = input
                 process.standardOutput = output
                 process.standardError = error
+                self.processGeneration += 1
+                let generation = self.processGeneration
                 process.terminationHandler = { [weak self] finished in
-                    self?.processDidExit(finished.terminationStatus)
+                    self?.processDidExit(
+                        finished.terminationStatus,
+                        generation: generation
+                    )
                 }
 
                 self.expectedStop = false
@@ -121,8 +127,20 @@ final class FFmpegEngine: @unchecked Sendable {
                     )
                 }
                 DispatchQueue.global(qos: .utility).async {
+                    let deadline = Date().addingTimeInterval(2.5)
+                    while process.isRunning && Date() < deadline {
+                        Thread.sleep(forTimeInterval: 0.05)
+                    }
+                    if process.isRunning {
+                        process.terminate()
+                    }
                     process.waitUntilExit()
-                    continuation.resume()
+                    self.stateQueue.async {
+                        if self.process === process {
+                            self.clearProcess()
+                        }
+                        continuation.resume()
+                    }
                 }
             }
         }
@@ -183,9 +201,9 @@ final class FFmpegEngine: @unchecked Sendable {
         }
     }
 
-    private func processDidExit(_ status: Int32) {
+    private func processDidExit(_ status: Int32, generation: Int) {
         stateQueue.async { [weak self] in
-            guard let self else { return }
+            guard let self, generation == self.processGeneration else { return }
             let wasExpected = self.expectedStop
             let diagnostics = self.diagnosticLines.suffix(14).joined(separator: "\n")
             self.clearProcess()

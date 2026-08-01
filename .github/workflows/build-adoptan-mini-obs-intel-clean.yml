@@ -171,5 +171,5 @@ jobs:
           gh release create "$GITHUB_REF_NAME" \
             Adoptan-Mini-OBS-Intel-Clean.zip \
             Adoptan-Mini-OBS-Intel-Clean.zip.sha256 \
-            --title "Adoptan Mini OBS Intel Clean 1.0.0" \
-            --notes "Reconstruction indépendante pour MacBook Pro Intel. FFmpeg et AVFoundation remplacent entièrement l’ancien décodeur SRT HaishinKit. Trois tests séparés valident l’écran, la caméra Moblin via HLS, puis leur composition."
+            --title "Adoptan Mini OBS Intel Clean 1.0.1" \
+            --notes "Reconstruction indépendante pour MacBook Pro Intel. FFmpeg et AVFoundation remplacent entièrement l’ancien décodeur SRT HaishinKit. Trois tests séparés valident l’écran, la caméra Moblin via HLS, puis leur composition. La transition entre les tests est protégée contre les arrêts concurrents."

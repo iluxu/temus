@@ -145,10 +145,6 @@ final class StudioViewModel: ObservableObject {
     }
 
     func startPreview() async {
-        if isRunning && !isLive {
-            await stop()
-            return
-        }
         guard validateScreenPermission() else { return }
         await start(live: false)
     }

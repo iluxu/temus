@@ -99,6 +99,15 @@ struct ContentView: View {
                         testButton("Tester écran + caméra", icon: "rectangle.inset.filled.and.person.filled") {
                             await studio.testCombined()
                         }
+                        if studio.isRunning && !studio.isLive {
+                            Button {
+                                Task { await studio.stop() }
+                            } label: {
+                                Label("Arrêter le test", systemImage: "stop.fill")
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .buttonStyle(.bordered)
+                        }
                     }
                     .padding(.top, 4)
                 }
