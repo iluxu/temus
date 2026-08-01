@@ -49,6 +49,7 @@ jobs:
             --disable-debug \
             --disable-doc \
             --disable-shared \
+            --disable-x86asm \
             --enable-static \
             --enable-securetransport \
             --enable-videotoolbox \
@@ -58,6 +59,23 @@ jobs:
             2>&1 | tee "$RUNNER_TEMP/ffmpeg-configure.log"
           make -j3 2>&1 | tee "$RUNNER_TEMP/ffmpeg-build.log"
           make install
+
+      - name: Expose FFmpeg build errors
+        if: failure()
+        run: |
+          details="$({
+            tail -80 "$RUNNER_TEMP/ffmpeg-configure.log" 2>/dev/null
+            tail -80 "$RUNNER_TEMP/ffmpeg-build.log" 2>/dev/null
+            find "$RUNNER_TEMP" -path '*/ffbuild/config.log' \
+              -exec tail -80 {} \; 2>/dev/null
+          } | grep -Ei 'error|failed|fatal|not found|unknown|unsupported' | tail -80 || true)"
+          if [ -z "$details" ]; then
+            details="FFmpeg build failed; inspect the complete workflow log."
+          fi
+          details="${details//'%'/'%25'}"
+          details="${details//$'\r'/'%0D'}"
+          details="${details//$'\n'/'%0A'}"
+          echo "::error title=FFmpeg Intel::$details"
 
       - name: Verify Intel media engine
         run: |
