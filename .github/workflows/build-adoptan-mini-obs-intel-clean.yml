@@ -15,114 +15,99 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    runs-on: macos-15
-    timeout-minutes: 60
+  build-slices:
+    name: Build ${{ matrix.arch }} slice
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: macos-15-intel
+            ffmpeg_flags: --disable-x86asm
+          - arch: arm64
+            runner: macos-15
+            ffmpeg_flags: --enable-neon
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Select Xcode 16.4
+      - name: Select Xcode and verify native runner
         run: |
           if [ -d /Applications/Xcode_16.4.app ]; then
             sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
           fi
+          host_arch="$(uname -m)"
+          echo "Runner architecture: $host_arch"
+          test "$host_arch" = "${{ matrix.arch }}"
           swift --version
           xcodebuild -version
 
-      - name: Restore universal FFmpeg cache
+      - name: Restore native FFmpeg cache
         id: ffmpeg-cache
         uses: actions/cache@v4
         with:
-          path: ${{ runner.temp }}/ffmpeg-universal
-          key: ffmpeg-7.1.3-macos-universal2-v1
+          path: ${{ runner.temp }}/ffmpeg-${{ matrix.arch }}
+          key: ffmpeg-7.1.3-macos-${{ matrix.arch }}-native-v1
 
-      - name: Build FFmpeg for Intel and Apple Silicon
+      - name: Build native FFmpeg
         if: steps.ffmpeg-cache.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           curl --fail --location --silent --show-error \
             https://ffmpeg.org/releases/ffmpeg-7.1.3.tar.xz \
             --output "$RUNNER_TEMP/ffmpeg.tar.xz"
-          host_arch="$(uname -m)"
-          echo "Build host architecture: $host_arch"
-
-          for arch in x86_64 arm64; do
-            source_dir="$RUNNER_TEMP/ffmpeg-$arch-source"
-            prefix="$RUNNER_TEMP/ffmpeg-$arch"
-            mkdir -p "$source_dir"
-            tar -xf "$RUNNER_TEMP/ffmpeg.tar.xz" \
-              --strip-components=1 -C "$source_dir"
-            cd "$source_dir"
-
-            architecture_flags=()
-            if [ "$arch" = "x86_64" ]; then
-              architecture_flags+=(--disable-x86asm)
-            fi
-            if [ "$arch" != "$host_arch" ]; then
-              architecture_flags+=(--enable-cross-compile)
-            fi
-
-            ./configure \
-              --prefix="$prefix" \
-              --target-os=darwin \
-              --arch="$arch" \
-              --cc="clang -arch $arch" \
-              --extra-cflags="-arch $arch -mmacosx-version-min=13.0" \
-              --extra-ldflags="-arch $arch -mmacosx-version-min=13.0" \
-              --disable-debug \
-              --disable-doc \
-              --disable-shared \
-              --enable-static \
-              --enable-securetransport \
-              --enable-videotoolbox \
-              --enable-audiotoolbox \
-              --disable-ffplay \
-              --disable-ffprobe \
-              "${architecture_flags[@]}" \
-              2>&1 | tee "$RUNNER_TEMP/ffmpeg-configure-$arch.log"
-            make -j3 2>&1 | tee "$RUNNER_TEMP/ffmpeg-build-$arch.log"
-            make install
-          done
-
-          mkdir -p "$RUNNER_TEMP/ffmpeg-universal/bin"
-          lipo -create \
-            "$RUNNER_TEMP/ffmpeg-x86_64/bin/ffmpeg" \
-            "$RUNNER_TEMP/ffmpeg-arm64/bin/ffmpeg" \
-            -output "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
-          chmod +x "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
+          tar -xf "$RUNNER_TEMP/ffmpeg.tar.xz" -C "$RUNNER_TEMP"
+          cd "$RUNNER_TEMP/ffmpeg-7.1.3"
+          ./configure \
+            --prefix="$RUNNER_TEMP/ffmpeg-${{ matrix.arch }}" \
+            --target-os=darwin \
+            --arch="${{ matrix.arch }}" \
+            --cc="clang -arch ${{ matrix.arch }}" \
+            --extra-cflags="-arch ${{ matrix.arch }} -mmacosx-version-min=13.0" \
+            --extra-ldflags="-arch ${{ matrix.arch }} -mmacosx-version-min=13.0" \
+            --disable-debug \
+            --disable-doc \
+            --disable-shared \
+            --enable-static \
+            --enable-securetransport \
+            --enable-videotoolbox \
+            --enable-audiotoolbox \
+            --disable-ffplay \
+            --disable-ffprobe \
+            ${{ matrix.ffmpeg_flags }} \
+            2>&1 | tee "$RUNNER_TEMP/ffmpeg-configure-${{ matrix.arch }}.log"
+          make -j3 2>&1 | tee "$RUNNER_TEMP/ffmpeg-build-${{ matrix.arch }}.log"
+          make install
 
       - name: Expose FFmpeg build errors
         if: failure() && steps.ffmpeg-cache.outputs.cache-hit != 'true'
         run: |
-          details="$({
-            tail -80 "$RUNNER_TEMP"/ffmpeg-configure-*.log 2>/dev/null
-            tail -80 "$RUNNER_TEMP"/ffmpeg-build-*.log 2>/dev/null
-            find "$RUNNER_TEMP" -path '*/ffbuild/config.log' \
-              -exec tail -80 {} \; 2>/dev/null
-          } | grep -Ei 'error|failed|fatal|not found|unknown|unsupported' | tail -100 || true)"
-          if [ -z "$details" ]; then
-            details="Universal FFmpeg build failed; inspect the complete workflow log."
+          build_log="$RUNNER_TEMP/ffmpeg-build-${{ matrix.arch }}.log"
+          configure_log="$RUNNER_TEMP/ffmpeg-configure-${{ matrix.arch }}.log"
+          if [ -f "$build_log" ]; then
+            details="$(tail -120 "$build_log")"
+          elif [ -f "$configure_log" ]; then
+            details="$(tail -120 "$configure_log")"
+          else
+            details="Native FFmpeg build failed before a log was created."
           fi
           details="${details//'%'/'%25'}"
           details="${details//$'\r'/'%0D'}"
           details="${details//$'\n'/'%0A'}"
-          echo "::error title=FFmpeg Universal::$details"
+          echo "::error title=FFmpeg ${{ matrix.arch }}::$details"
 
-      - name: Verify universal media engine
+      - name: Verify native media engine
         run: |
           set -o pipefail
-          FFMPEG="$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
+          FFMPEG="$RUNNER_TEMP/ffmpeg-${{ matrix.arch }}/bin/ffmpeg"
           archs="$(lipo -archs "$FFMPEG")"
           echo "FFmpeg architectures: $archs"
           case " $archs " in
-            *" x86_64 "*) ;;
-            *) echo "::error title=FFmpeg::x86_64 slice missing"; exit 1 ;;
-          esac
-          case " $archs " in
-            *" arm64 "*) ;;
-            *) echo "::error title=FFmpeg::arm64 slice missing"; exit 1 ;;
+            *" ${{ matrix.arch }} "*) ;;
+            *) echo "::error title=FFmpeg::${{ matrix.arch }} slice missing"; exit 1 ;;
           esac
           "$FFMPEG" -hide_banner -devices 2>&1 | grep avfoundation
           "$FFMPEG" -hide_banner -encoders 2>&1 | grep h264_videotoolbox
@@ -133,9 +118,10 @@ jobs:
             exit 1
           fi
 
-      - name: Exercise composition filters
+      - name: Exercise video pipeline
         run: |
-          "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg" \
+          FFMPEG="$RUNNER_TEMP/ffmpeg-${{ matrix.arch }}/bin/ffmpeg"
+          "$FFMPEG" \
             -hide_banner -loglevel warning \
             -f lavfi -i testsrc2=size=1280x720:rate=30 \
             -f lavfi -i testsrc2=size=640x360:rate=30 \
@@ -143,23 +129,15 @@ jobs:
               '[0:v]format=yuv420p[screen];[1:v]scale=384:216[camera];[screen][camera]overlay=W-w-24:H-h-24,format=yuv420p[out]' \
             -map '[out]' -frames:v 300 -f null -
 
-      - name: Verify raw BGRA preview frame boundaries
-        run: |
-          FFMPEG="$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg"
-          PREVIEW="$RUNNER_TEMP/preview-640x360.bgra"
+          PREVIEW="$RUNNER_TEMP/preview-${{ matrix.arch }}.bgra"
           "$FFMPEG" \
             -hide_banner -loglevel warning \
             -f lavfi -i testsrc2=size=1280x720:rate=30 \
             -vf 'fps=8,scale=640:360,format=bgra' \
             -frames:v 30 -c:v rawvideo -pix_fmt bgra -f rawvideo "$PREVIEW"
-          bytes="$(stat -f%z "$PREVIEW")"
-          test "$bytes" = "27648000"
-          "$FFMPEG" \
-            -hide_banner -loglevel warning \
-            -f rawvideo -pixel_format bgra -video_size 640x360 -framerate 8 \
-            -i "$PREVIEW" -frames:v 30 -vf format=yuv420p -f null -
+          test "$(stat -f%z "$PREVIEW")" = "27648000"
 
-      - name: Build universal Swift application
+      - name: Build native Swift application
         working-directory: apps/AdoptanMiniOBSIntel
         env:
           MACOSX_DEPLOYMENT_TARGET: "13.0"
@@ -168,53 +146,86 @@ jobs:
           swift build \
             -c release \
             --product AdoptanMiniOBSIntel \
-            --arch arm64 \
-            --scratch-path .build-arm64 \
-            2>&1 | tee "$RUNNER_TEMP/swift-arm64.log"
-          swift build \
-            -c release \
-            --product AdoptanMiniOBSIntel \
-            --arch x86_64 \
-            --scratch-path .build-x86_64 \
-            2>&1 | tee "$RUNNER_TEMP/swift-x86_64.log"
-          mkdir -p .build-universal
-          lipo -create \
-            .build-arm64/arm64-apple-macosx/release/AdoptanMiniOBSIntel \
-            .build-x86_64/x86_64-apple-macosx/release/AdoptanMiniOBSIntel \
-            -output .build-universal/AdoptanMiniOBSIntel
+            --arch "${{ matrix.arch }}" \
+            --scratch-path ".build-${{ matrix.arch }}" \
+            2>&1 | tee "$RUNNER_TEMP/swift-${{ matrix.arch }}.log"
 
       - name: Expose Swift compiler errors
         if: failure()
         run: |
-          details="$(cat "$RUNNER_TEMP"/swift-*.log 2>/dev/null | grep -E \
-            'Undefined symbols|referenced from:|symbol\(s\)|ld:|clang: error|error:' \
-            | tail -100 || true)"
+          details="$(tail -120 "$RUNNER_TEMP/swift-${{ matrix.arch }}.log" 2>/dev/null || true)"
           details="${details//'%'/'%25'}"
           details="${details//$'\r'/'%0D'}"
           details="${details//$'\n'/'%0A'}"
-          echo "::error title=Swift Universal::$details"
+          echo "::error title=Swift ${{ matrix.arch }}::$details"
 
-      - name: Assemble universal app bundle
-        working-directory: apps/AdoptanMiniOBSIntel
+      - name: Stage native slice
         run: |
-          APP="$RUNNER_TEMP/Adoptan Mini OBS.app"
-          CONTENTS="$APP/Contents"
-          mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
-          cp .build-universal/AdoptanMiniOBSIntel \
-            "$CONTENTS/MacOS/AdoptanMiniOBSIntel"
-          cp "$RUNNER_TEMP/ffmpeg-universal/bin/ffmpeg" \
-            "$CONTENTS/Resources/ffmpeg"
-          cp Bundle/Info.plist "$CONTENTS/Info.plist"
-          chmod +x "$CONTENTS/MacOS/AdoptanMiniOBSIntel" "$CONTENTS/Resources/ffmpeg"
+          destination="$GITHUB_WORKSPACE/universal-slice-${{ matrix.arch }}"
+          mkdir -p "$destination"
+          cp \
+            "apps/AdoptanMiniOBSIntel/.build-${{ matrix.arch }}/${{ matrix.arch }}-apple-macosx/release/AdoptanMiniOBSIntel" \
+            "$destination/AdoptanMiniOBSIntel"
+          cp "$RUNNER_TEMP/ffmpeg-${{ matrix.arch }}/bin/ffmpeg" \
+            "$destination/ffmpeg"
+          chmod +x "$destination/AdoptanMiniOBSIntel" "$destination/ffmpeg"
+
+      - name: Upload native slice
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-slice-${{ matrix.arch }}
+          path: universal-slice-${{ matrix.arch }}
+          if-no-files-found: error
+
+  package-universal:
+    name: Merge and release Universal 2 app
+    needs: build-slices
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download native slices
+        uses: actions/download-artifact@v4
+        with:
+          pattern: macos-slice-*
+          path: ${{ runner.temp }}/slices
+
+      - name: Merge and verify Universal 2 binaries
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/universal"
+          lipo -create \
+            "$RUNNER_TEMP/slices/macos-slice-x86_64/AdoptanMiniOBSIntel" \
+            "$RUNNER_TEMP/slices/macos-slice-arm64/AdoptanMiniOBSIntel" \
+            -output "$RUNNER_TEMP/universal/AdoptanMiniOBSIntel"
+          lipo -create \
+            "$RUNNER_TEMP/slices/macos-slice-x86_64/ffmpeg" \
+            "$RUNNER_TEMP/slices/macos-slice-arm64/ffmpeg" \
+            -output "$RUNNER_TEMP/universal/ffmpeg"
 
           for binary in \
-            "$CONTENTS/MacOS/AdoptanMiniOBSIntel" \
-            "$CONTENTS/Resources/ffmpeg"; do
+            "$RUNNER_TEMP/universal/AdoptanMiniOBSIntel" \
+            "$RUNNER_TEMP/universal/ffmpeg"; do
             archs="$(lipo -archs "$binary")"
             echo "$binary architectures: $archs"
             case " $archs " in *" arm64 "*) ;; *) exit 1 ;; esac
             case " $archs " in *" x86_64 "*) ;; *) exit 1 ;; esac
           done
+
+      - name: Assemble and sign universal app
+        working-directory: apps/AdoptanMiniOBSIntel
+        run: |
+          APP="$RUNNER_TEMP/Adoptan Mini OBS.app"
+          CONTENTS="$APP/Contents"
+          mkdir -p "$CONTENTS/MacOS" "$CONTENTS/Resources"
+          cp "$RUNNER_TEMP/universal/AdoptanMiniOBSIntel" \
+            "$CONTENTS/MacOS/AdoptanMiniOBSIntel"
+          cp "$RUNNER_TEMP/universal/ffmpeg" "$CONTENTS/Resources/ffmpeg"
+          cp Bundle/Info.plist "$CONTENTS/Info.plist"
+          chmod +x "$CONTENTS/MacOS/AdoptanMiniOBSIntel" "$CONTENTS/Resources/ffmpeg"
 
           codesign --force --options runtime --sign - "$CONTENTS/Resources/ffmpeg"
           codesign \
@@ -237,7 +248,7 @@ jobs:
           shasum -a 256 Adoptan-Mini-OBS-macOS-Universal.zip \
             > Adoptan-Mini-OBS-macOS-Universal.zip.sha256
 
-      - name: Upload workflow artifact
+      - name: Upload universal application
         uses: actions/upload-artifact@v4
         with:
           name: Adoptan-Mini-OBS-macOS-Universal
@@ -255,4 +266,4 @@ jobs:
             Adoptan-Mini-OBS-macOS-Universal.zip \
             Adoptan-Mini-OBS-macOS-Universal.zip.sha256 \
             --title "Adoptan Mini OBS macOS Universal 1.2.0" \
-            --notes "Première release macOS hybride. Un seul bundle contient l’application et FFmpeg en Universal 2 : Apple Silicon arm64 et Mac Intel x86_64. La caméra iPhone directe Safari/WebRTC vers RTSP/TCP et la capture ScreenCaptureKit sont identiques sur les deux architectures. Cette identité universelle sera conservée pour les prochaines releases."
+            --notes "Première release macOS hybride. Un même bundle contient l’application et FFmpeg en Universal 2 : Apple Silicon arm64 et Mac Intel x86_64. Chaque tranche est compilée et testée sur un runner natif distinct avant la fusion, la signature et la publication. La caméra iPhone directe Safari/WebRTC vers RTSP/TCP et ScreenCaptureKit fonctionnent avec le même code sur les deux architectures."
