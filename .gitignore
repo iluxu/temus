@@ -2,6 +2,8 @@ node_modules/
 dist/
 .next/
 out/
+site/.dev.vars
+site/.wrangler/
 repos/
 codex-skill/
 codex-skills-registry/
