@@ -4,6 +4,7 @@ dist/
 out/
 site/.dev.vars
 site/.wrangler/
+site/.pages-worker/
 repos/
 codex-skill/
 codex-skills-registry/
