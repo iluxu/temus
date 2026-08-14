@@ -11,6 +11,7 @@ export interface LuciaPagesEnv {
 
 const MAX_UPSTREAM_BYTES = 128 * 1024;
 const UPSTREAM_TIMEOUT_MS = 5_000;
+const PUBLIC_HOUSE_URL = "https://api.adoptan.ai/v1/public/houses/lucia";
 
 export const PUBLIC_SECURITY_HEADERS = {
   "Cache-Control": "no-store, max-age=0",
@@ -35,17 +36,24 @@ export class LuciaUpstreamError extends Error {
 
 function configuredUpstream(env: LuciaPagesEnv): {
   url: URL;
-  apiKey: string;
+  apiKey?: string;
+  responseShape: "json_rpc" | "house_public";
 } {
   const rawOrigin = env.LLMBASEDOS_API_ORIGIN?.trim();
   const apiKey = env.LLMBASEDOS_PUBLIC_API_KEY?.trim();
   const path =
     env.LLMBASEDOS_LUCIA_HOUSE_PATH?.trim() || "/v1/mcp/call";
 
+  if (!rawOrigin && !apiKey) {
+    return {
+      url: new URL(PUBLIC_HOUSE_URL),
+      responseShape: "house_public"
+    };
+  }
   if (!rawOrigin || !apiKey) {
     throw new LuciaUpstreamError(
       "configuration",
-      "Lucia public upstream is not configured"
+      "Lucia authenticated upstream is only partially configured"
     );
   }
   if (
@@ -95,7 +103,8 @@ function configuredUpstream(env: LuciaPagesEnv): {
 
   return {
     url: new URL(path, origin),
-    apiKey
+    apiKey,
+    responseShape: "json_rpc"
   };
 }
 
@@ -123,19 +132,24 @@ export async function fetchLuciaHouseProjection(
 
   let response: Response;
   try {
+    const authenticated = upstream.responseShape === "json_rpc";
     response = await fetchImpl(upstream.url.toString(), {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-        "X-API-Key": upstream.apiKey
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: "lucia-house",
-        method: "mcp.world.audience.snapshot",
-        params: [{ house_slug: "lucia" }]
-      }),
+      method: authenticated ? "POST" : "GET",
+      headers: authenticated
+        ? {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+            "X-API-Key": upstream.apiKey as string
+          }
+        : { Accept: "application/json" },
+      body: authenticated
+        ? JSON.stringify({
+            jsonrpc: "2.0",
+            id: "lucia-house",
+            method: "mcp.world.audience.snapshot",
+            params: [{ house_slug: "lucia" }]
+          })
+        : undefined,
       cache: "no-store",
       redirect: "manual",
       signal: controller.signal
@@ -176,11 +190,15 @@ export async function fetchLuciaHouseProjection(
   }
 
   try {
-    const envelope = JSON.parse(body) as unknown;
-    if (typeof envelope !== "object" || envelope === null || Array.isArray(envelope)) {
+    const payload = JSON.parse(body) as unknown;
+    if (upstream.responseShape === "house_public") {
+      return parseHousePublicV1(payload);
+    }
+
+    if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
       throw new HousePublicValidationError("JSON-RPC response is invalid");
     }
-    const rpc = envelope as Record<string, unknown>;
+    const rpc = payload as Record<string, unknown>;
     if (
       rpc.jsonrpc !== "2.0" ||
       rpc.id !== "lucia-house" ||
