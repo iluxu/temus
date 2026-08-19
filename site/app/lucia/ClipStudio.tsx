@@ -43,6 +43,7 @@ function ClipCard({ clip, selected, onSelect }: { clip: ClipPublicV0; selected: 
         <span className={styles.cardTopline}><span>{clip.category_label}</span><span>{displayDate(clip.created_at)}</span></span>
         <strong>{clip.title}</strong>
         <span className={styles.cardMeta}>{clip.status_label} · {clip.variant_count} version{clip.variant_count === 1 ? "" : "s"}</span>
+        {clip.match ? <span className={styles.cardReason}>{clip.match.reasons[0]}</span> : null}
       </span>
     </button>
   );
@@ -73,6 +74,13 @@ function ClipDetail({ clip, host, onShare, shareState }: { clip: ClipPublicV0; h
           <div><dt>Rendus</dt><dd>{clip.variant_count}</dd></div>
           <div><dt>DA TikTok</dt><dd>{clip.ready_tiktok ? "prête" : "non confirmée"}</dd></div>
         </dl>
+        {clip.match ? (
+          <section className={styles.matchExplanation} aria-labelledby="match-explanation-title">
+            <p className={styles.eyebrow} id="match-explanation-title">Pourquoi ce résultat</p>
+            <ul>{clip.match.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
+            <small>Pertinence de recherche : {Math.round(clip.match.score * 100)} %. Ce n’est ni une note de qualité ni une confiance éditoriale.</small>
+          </section>
+        ) : null}
         <p className={styles.truthNote}>Ce média reste un Clip. Il ne devient Moment qu’avec une qualification, une provenance et un <code>moment_id</code> canoniques.</p>
       </div>
     </article>
@@ -157,7 +165,14 @@ export default function ClipStudio() {
     try {
       const result = await requestJson(
         "/api/lucia/v1/public/clips/ask",
-        { method: "POST", body: JSON.stringify({ clip_id: selected.id, question: command }) },
+        {
+          method: "POST",
+          body: JSON.stringify({
+            clip_id: selected.id,
+            question: command,
+            context_query: collection?.filters.query.trim() || null
+          })
+        },
         parseClipAnswerPublicV0
       );
       if (result.clip_id !== selected.id || result.question !== command) throw new Error();
@@ -250,7 +265,7 @@ export default function ClipStudio() {
           <form onSubmit={submit}>
             <div className={styles.modes}>{(["find", "ask", "do"] as HumanMode[]).map((mode) => <button key={mode} type="button" aria-pressed={humanMode === mode} onClick={() => { setHumanMode(mode); setAnswer(null); setNotice(null); setError(null); }}>{mode}</button>)}</div>
             <div className={styles.commandLine}>
-              <input value={input} onChange={(event) => setInput(event.target.value)} maxLength={600} placeholder={humanMode === "find" ? "retrouve quand Lucia chantait à New York" : humanMode === "ask" ? "pourquoi celui-ci a été retenu ?" : "fais-en une version TikTok et demande à Lucia"} aria-label={`${humanMode} dans le Studio`} />
+              <input value={input} onChange={(event) => setInput(event.target.value)} maxLength={600} placeholder={humanMode === "find" ? "retrouve quand Lucia était marrante" : humanMode === "ask" ? "pourquoi celui-ci a été retenu ?" : "fais-en une version TikTok et demande à Lucia"} aria-label={`${humanMode} dans le Studio`} />
               <button type="submit" disabled={busy}>{busy ? "…" : humanMode}</button>
             </div>
             <small>{humanMode === "find" ? "Find cherche dans les titres, angles et transcriptions disponibles sans exposer le transcript brut." : humanMode === "ask" ? "Ask répond sur le clip sélectionné et garde sa source Twitch." : "Do exige un Moment canonique et l’identité vérifiée de Lucia ou Luca."}</small>

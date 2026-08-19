@@ -12,6 +12,13 @@ export type ClipStatusSlug =
   | "processing"
   | "failed";
 
+export type ClipMatchV0 = {
+  score: number;
+  score_semantics: "lexical_editorial_relevance_not_quality";
+  evidence: Array<"title" | "editorial" | "transcript">;
+  reasons: string[];
+};
+
 export type ClipPublicV0 = {
   id: string;
   title: string;
@@ -25,6 +32,7 @@ export type ClipPublicV0 = {
   has_render: boolean;
   ready_tiktok: boolean;
   moment_id: null;
+  match: ClipMatchV0 | null;
 };
 
 export type ClipFacetV0 = { slug: string; label: string; count: number };
@@ -55,6 +63,7 @@ export type ClipAnswerPublicV0 = {
   schema_version: "clip-answer-public.v0";
   clip_id: string;
   question: string;
+  context_query: string | null;
   answer: {
     intent: "why_catalogued" | "source" | "derivatives" | "summary";
     text: string;
@@ -134,6 +143,37 @@ function list(value: unknown, field: string, maximum: number): unknown[] {
   return value;
 }
 
+function parseMatch(value: unknown, field: string): ClipMatchV0 | null {
+  if (value === null) return null;
+  const source = record(value, field);
+  if (
+    typeof source.score !== "number" || !Number.isFinite(source.score) ||
+    source.score < 0 || source.score > 1 ||
+    source.score_semantics !== "lexical_editorial_relevance_not_quality"
+  ) {
+    throw new ClipPublicValidationError(`${field} is invalid`);
+  }
+  const evidence = list(source.evidence, `${field}.evidence`, 3).map((item) => {
+    if (!(["title", "editorial", "transcript"] as unknown[]).includes(item)) {
+      throw new ClipPublicValidationError(`${field}.evidence is invalid`);
+    }
+    return item as "title" | "editorial" | "transcript";
+  });
+  if (!evidence.length || new Set(evidence).size !== evidence.length) {
+    throw new ClipPublicValidationError(`${field}.evidence is invalid`);
+  }
+  const reasons = list(source.reasons, `${field}.reasons`, 6).map((item, index) =>
+    text(item, `${field}.reasons[${index}]`, 500)
+  );
+  if (!reasons.length) throw new ClipPublicValidationError(`${field}.reasons is invalid`);
+  return {
+    score: source.score,
+    score_semantics: "lexical_editorial_relevance_not_quality",
+    evidence,
+    reasons
+  };
+}
+
 function parseClip(value: unknown, field: string): ClipPublicV0 {
   const source = record(value, field);
   const category = text(source.category, `${field}.category`, 80) as ClipCategorySlug;
@@ -162,7 +202,8 @@ function parseClip(value: unknown, field: string): ClipPublicV0 {
     variant_count: integer(source.variant_count, `${field}.variant_count`, 100),
     has_render: source.has_render,
     ready_tiktok: source.ready_tiktok,
-    moment_id: null
+    moment_id: null,
+    match: parseMatch(source.match, `${field}.match`)
   };
 }
 
@@ -202,11 +243,15 @@ export function parseClipCollectionPublicV0(value: unknown): ClipCollectionPubli
   const nextOffset = filters.next_offset === null ? null : integer(filters.next_offset, "filters.next_offset", 20_000);
   const query = typeof filters.query === "string" && filters.query.length <= 600 ? filters.query : null;
   if (query === null) throw new ClipPublicValidationError("filters.query is invalid");
+  const clips = list(source.clips, "clips", 48).map((entry, index) => parseClip(entry, `clips[${index}]`));
+  if (clips.some((clip) => query.trim() ? clip.match === null : clip.match !== null)) {
+    throw new ClipPublicValidationError("clips match context is invalid");
+  }
   return {
     schema_version: "clip-collection-public.v0",
     house_slug: "lucia",
     scope: "public_twitch_clips",
-    clips: list(source.clips, "clips", 48).map((entry, index) => parseClip(entry, `clips[${index}]`)),
+    clips,
     categories: parseFacets(source.categories, categories, "categories"),
     statuses: parseFacets(source.statuses, statuses, "statuses"),
     totals: {
@@ -235,10 +280,19 @@ export function parseClipAnswerPublicV0(value: unknown): ClipAnswerPublicV0 {
   if (source.schema_version !== "clip-answer-public.v0" || !["why_catalogued", "source", "derivatives", "summary"].includes(intent)) {
     throw new ClipPublicValidationError("Clip answer identity is invalid");
   }
+  const contextQuery = source.context_query === null
+    ? null
+    : typeof source.context_query === "string" && source.context_query.trim() && source.context_query.length <= 600
+      ? source.context_query
+      : null;
+  if (source.context_query !== null && contextQuery === null) {
+    throw new ClipPublicValidationError("context_query is invalid");
+  }
   return {
     schema_version: "clip-answer-public.v0",
     clip_id: text(source.clip_id, "clip_id", 180),
     question: text(source.question, "question", 600),
+    context_query: contextQuery,
     answer: {
       intent,
       text: text(answer.text, "answer.text", 2000),

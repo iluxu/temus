@@ -235,6 +235,7 @@ function clipCollection() {
       has_render: true,
       ready_tiktok: false,
       moment_id: null,
+      match: null,
       transcript: "must disappear"
     }],
     categories: Object.entries(categoryLabels).map(([slug, label]) => ({ slug, label, count: slug === "musique" ? 1 : 0 })),
@@ -317,6 +318,7 @@ try {
   const safeClips = clipModule.parseClipCollectionPublicV0(clipCollection());
   assert.equal(safeClips.clips[0].title, "Lucia chante à New York");
   assert.equal("transcript" in safeClips.clips[0], false);
+  assert.equal(safeClips.clips[0].match, null);
   const safeMoment = momentModule.parseMomentCollectionV0({
     ...momentCollection(),
     private_memory: "must disappear"
@@ -400,13 +402,27 @@ try {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query: "New York", category: "all", status: "all", offset: 0, limit: 24 })
     }),
-    { ...clipCollection(), filters: { ...clipCollection().filters, query: "New York" } }
+    {
+      ...clipCollection(),
+      clips: clipCollection().clips.map((clip) => ({
+        ...clip,
+        match: {
+          score: 0.75,
+          score_semantics: "lexical_editorial_relevance_not_quality",
+          evidence: ["title", "transcript"],
+          reasons: ["Le titre correspond à New York.", "La transcription contient des marqueurs pertinents sans être exposée."]
+        },
+        raw_transcript: "must disappear"
+      })),
+      filters: { ...clipCollection().filters, query: "New York" }
+    }
   )).status, 200);
 
   const clipAnswer = {
     schema_version: "clip-answer-public.v0",
     clip_id: "MusicalNewYorkClip",
     question: "pourquoi celui-ci ?",
+    context_query: "New York",
     answer: {
       intent: "why_catalogued",
       text: "Ce clip a une source publique, sans qualification inventée.",
@@ -419,7 +435,7 @@ try {
     clipAskEndpoint,
     new Request("https://adoptan.ai/api/lucia/v1/public/clips/ask", {
       method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ clip_id: clipAnswer.clip_id, question: clipAnswer.question })
+      body: JSON.stringify({ clip_id: clipAnswer.clip_id, question: clipAnswer.question, context_query: clipAnswer.context_query })
     }),
     clipAnswer
   )).status, 200);

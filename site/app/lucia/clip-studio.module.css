@@ -31,6 +31,7 @@
 .cardTopline { display: flex; justify-content: space-between; gap: .4rem; color: #8b7793; font: 700 .57rem/1.1 "Courier Prime", monospace; letter-spacing: .04em; text-transform: uppercase; }
 .cardBody strong { display: -webkit-box; margin: .55rem 0 .4rem; overflow: hidden; font: 600 .93rem/1.2 Georgia, serif; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .cardMeta { color: #7c6f82; font-size: .68rem; }
+.cardReason { display: -webkit-box; margin-top: .55rem; overflow: hidden; color: #674a75; font-size: .7rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .detail { display: flex; flex-direction: column; min-width: 0; padding: 1.1rem; background: #2e2137; color: #f8f2f8; }
 .detailTopline { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; color: #ccb8d3; font: 700 .62rem/1 "Courier Prime", monospace; letter-spacing: .07em; text-transform: uppercase; }
 .player { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 17px; background: #130f16; }
@@ -45,6 +46,10 @@
 .detailCopy dl div { padding: .85rem; border: 1px solid rgba(255, 255, 255, .1); border-radius: 12px; }
 .detailCopy dt { color: #bdaac5; font: 700 .58rem "Courier Prime", monospace; text-transform: uppercase; }
 .detailCopy dd { margin: .35rem 0 0; font-size: .82rem; }
+.matchExplanation { margin-top: 1.3rem; padding: 1rem; border: 1px solid rgba(237, 191, 217, .2); border-radius: 14px; background: rgba(255, 255, 255, .06); }
+.matchExplanation ul { margin: .55rem 0 .7rem; padding-left: 1.15rem; color: #eadfeb; font-size: .84rem; line-height: 1.5; }
+.matchExplanation li + li { margin-top: .35rem; }
+.matchExplanation small { color: #bcaec2; line-height: 1.45; }
 .truthNote { padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, .12); color: #cbbfd0; font-size: .79rem; line-height: 1.5; }
 .truthNote code { color: #f1bfd9; }
 .more { display: block; width: 100%; margin-top: .8rem; border: 1px solid rgba(74, 49, 91, .16); border-radius: 12px; padding: .8rem; background: #fff; color: #60456e; font-weight: 750; cursor: pointer; }

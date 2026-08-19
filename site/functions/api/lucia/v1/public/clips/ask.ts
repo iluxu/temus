@@ -17,14 +17,20 @@ export async function onRequest({ request, env }: PagesContext): Promise<Respons
   }
   try {
     const body = await readPublicJsonRequest(request);
-    assertExactKeys(body, ["clip_id", "question"]);
+    assertExactKeys(body, ["clip_id", "question", "context_query"]);
+    const contextQuery = body.context_query ?? null;
     if (
       typeof body.clip_id !== "string" || !/^[A-Za-z0-9_-]{3,180}$/.test(body.clip_id) ||
-      typeof body.question !== "string" || !body.question.trim() || body.question.length > 600
+      typeof body.question !== "string" || !body.question.trim() || body.question.length > 600 ||
+      (contextQuery !== null && (typeof contextQuery !== "string" || !contextQuery.trim() || contextQuery.length > 600))
     ) {
       throw new LuciaRequestError("invalid_request", "Clip Ask request is invalid");
     }
-    const publicBody = { clip_id: body.clip_id, question: body.question.trim() };
+    const publicBody = {
+      clip_id: body.clip_id,
+      question: body.question.trim(),
+      context_query: typeof contextQuery === "string" ? contextQuery.trim() : null
+    };
     const projection = await fetchLuciaProjection({
       env,
       method: "mcp.creator.clips.public.ask",
@@ -34,7 +40,11 @@ export async function onRequest({ request, env }: PagesContext): Promise<Respons
       publicBody,
       parse: parseClipAnswerPublicV0
     });
-    if (projection.clip_id !== body.clip_id || projection.question !== body.question.trim()) {
+    if (
+      projection.clip_id !== body.clip_id ||
+      projection.question !== body.question.trim() ||
+      projection.context_query !== publicBody.context_query
+    ) {
       throw new LuciaRequestError("invalid_request", "Clip Ask response binding failed");
     }
     return jsonResponse(projection);
