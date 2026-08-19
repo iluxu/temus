@@ -53,6 +53,9 @@ mcp.world.moment.ask
 mcp.world.replay.session.create
 mcp.world.replay.session.get
 mcp.world.replay.session.control
+mcp.creator.clips.public.collection
+mcp.creator.clips.public.find
+mcp.creator.clips.public.ask
 ```
 
 Never expose it in `NEXT_PUBLIC_*`, a static file, a build log, or a browser
@@ -103,6 +106,11 @@ Pages route coverage, Worker copying, and the pinned compatibility date.
 9. `/lucia` has the route-specific security headers in `public/_headers`.
 10. `/app`, `/privacy`, `/terms`, `/mini-obs`, and screen-share routes retain their
    existing behavior.
+11. `GET https://api.adoptan.ai/v1/public/houses/lucia/world` returns exactly a
+    WORLD/1 descriptor (`world`, `bindings`) with
+    `Content-Type: application/world+json`; a successful Clip Find/Ask carries
+    a `world-attach-receipt.v1` proving ATTACH happened before inference while
+    `capabilities_mounted` remains false for the bounded prompt worker.
 
 Merge, push, preview creation, production deployment, and DNS changes remain
 explicit delivery-authority boundaries. A successful local build is not a
