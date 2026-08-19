@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import MomentStudio from "../MomentStudio";
+import ClipStudio from "../ClipStudio";
 
 export const metadata: Metadata = {
-  title: "Moment Studio — Maison Lucia",
-  description: "Le Studio privé où Lucia et Luca comprennent, retrouvent et gouvernent les Moments.",
+  title: "Sentinelle Publisher Studio — Maison Lucia",
+  description: "Le catalogue réel où les clips de Lucia se retrouvent, se comprennent et deviennent progressivement des Moments.",
   robots: { index: false, follow: false }
 };
 
 export default function LuciaMomentStudioPage() {
-  return <main style={{ minHeight: "100vh", padding: "clamp(1rem, 4vw, 4rem)", background: "#f5f0f7" }}><MomentStudio operator /></main>;
+  return <ClipStudio />;
 }

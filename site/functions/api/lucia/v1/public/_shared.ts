@@ -9,6 +9,7 @@ import {
   parseHouseExperiencePublicV1
 } from "../../../../../app/lucia/experience-public";
 import { MomentValidationError } from "../../../../../app/lucia/moment-public";
+import { ClipPublicValidationError } from "../../../../../app/lucia/clip-public";
 
 export interface LuciaPagesEnv {
   LLMBASEDOS_API_ORIGIN?: string;
@@ -397,6 +398,7 @@ export async function fetchLuciaProjection<T>({
       error instanceof HousePublicValidationError ||
       error instanceof HouseExperienceValidationError ||
       error instanceof MomentValidationError ||
+      error instanceof ClipPublicValidationError ||
       error instanceof SyntaxError
     ) {
       throw new LuciaUpstreamError(

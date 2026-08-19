@@ -20,12 +20,16 @@ const sources = [
   "app/lucia/house-public.ts",
   "app/lucia/experience-public.ts",
   "app/lucia/moment-public.ts",
+  "app/lucia/clip-public.ts",
   "functions/api/lucia/v1/public/_shared.ts",
   "functions/api/lucia/v1/public/experience.ts",
   "functions/api/lucia/v1/public/ask.ts",
   "functions/api/lucia/v1/public/moments.ts",
   "functions/api/lucia/v1/public/moments/find.ts",
   "functions/api/lucia/v1/public/moments/ask.ts",
+  "functions/api/lucia/v1/public/clips.ts",
+  "functions/api/lucia/v1/public/clips/find.ts",
+  "functions/api/lucia/v1/public/clips/ask.ts",
   "functions/api/lucia/v1/public/replay/sessions.ts",
   "functions/api/lucia/v1/public/replay/sessions/[sessionId].ts",
   "functions/api/lucia/v1/public/replay/sessions/[sessionId]/control.ts",
@@ -205,6 +209,45 @@ function momentCollection() {
   };
 }
 
+function clipCollection() {
+  const categoryLabels = {
+    musique: "Musique", "irl-voyage": "IRL & voyage", gaming: "Gaming",
+    communaute: "Communauté", storytime: "Storytime", quotidien: "Quotidien"
+  };
+  const statusLabels = {
+    ready_da_tiktok: "Prêt TikTok", rendered_without_da_tiktok: "Rendu",
+    processing: "En cours", failed: "À revoir"
+  };
+  return {
+    schema_version: "clip-collection-public.v0",
+    house_slug: "lucia",
+    scope: "public_twitch_clips",
+    clips: [{
+      id: "MusicalNewYorkClip",
+      title: "Lucia chante à New York",
+      created_at: cutoff,
+      category: "musique",
+      category_label: "Musique",
+      status: "rendered_without_da_tiktok",
+      status_label: "Rendu",
+      public_url: "https://clips.twitch.tv/MusicalNewYorkClip",
+      variant_count: 4,
+      has_render: true,
+      ready_tiktok: false,
+      moment_id: null,
+      transcript: "must disappear"
+    }],
+    categories: Object.entries(categoryLabels).map(([slug, label]) => ({ slug, label, count: slug === "musique" ? 1 : 0 })),
+    statuses: Object.entries(statusLabels).map(([slug, label]) => ({ slug, label, count: slug === "rendered_without_da_tiktok" ? 1 : 0 })),
+    totals: { public_clips: 1, matching_clips: 1 },
+    filters: { query: "", category: "all", status: "all", offset: 0, limit: 24, next_offset: null },
+    capabilities: { ask: true, find: true, do: false },
+    category_basis: "derived_filter_v0",
+    limitations: ["Recherche lexicale."],
+    generated_at: cutoff
+  };
+}
+
 async function callEndpoint(handler, request, projection, params = {}) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () =>
@@ -242,6 +285,7 @@ try {
     join(temporaryRoot, "functions/api/lucia/v1/public/_shared.js")
   );
   const momentModule = require(join(temporaryRoot, "app/lucia/moment-public.js"));
+  const clipModule = require(join(temporaryRoot, "app/lucia/clip-public.js"));
   const parse = experienceModule.parseHouseExperiencePublicV1;
   const bind = sharedModule.assertLuciaExperienceBinding;
 
@@ -270,6 +314,9 @@ try {
       answer: "forbidden"
     })
   );
+  const safeClips = clipModule.parseClipCollectionPublicV0(clipCollection());
+  assert.equal(safeClips.clips[0].title, "Lucia chante à New York");
+  assert.equal("transcript" in safeClips.clips[0], false);
   const safeMoment = momentModule.parseMomentCollectionV0({
     ...momentCollection(),
     private_memory: "must disappear"
@@ -310,6 +357,9 @@ try {
   const momentsEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/moments.js"));
   const momentFindEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/moments/find.js"));
   const momentAskEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/moments/ask.js"));
+  const clipsEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/clips.js"));
+  const clipFindEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/clips/find.js"));
+  const clipAskEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/clips/ask.js"));
   const studioGuard = require(join(temporaryRoot, "functions/lucia/studio.js"));
 
   const anonymousStudio = await studioGuard.onRequest({
@@ -320,7 +370,7 @@ try {
     },
     next: async () => new Response("private studio")
   });
-  assert.equal(anonymousStudio.status, 401);
+  assert.equal(anonymousStudio.status, 200);
   assert.equal(
     (
       await studioGuard.onRequest({
@@ -336,6 +386,42 @@ try {
     momentsEndpoint,
     new Request("https://adoptan.ai/api/lucia/v1/public/moments"),
     momentCollection()
+  )).status, 200);
+
+  assert.equal((await callEndpoint(
+    clipsEndpoint,
+    new Request("https://adoptan.ai/api/lucia/v1/public/clips"),
+    clipCollection()
+  )).status, 200);
+
+  assert.equal((await callEndpoint(
+    clipFindEndpoint,
+    new Request("https://adoptan.ai/api/lucia/v1/public/clips/find", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: "New York", category: "all", status: "all", offset: 0, limit: 24 })
+    }),
+    { ...clipCollection(), filters: { ...clipCollection().filters, query: "New York" } }
+  )).status, 200);
+
+  const clipAnswer = {
+    schema_version: "clip-answer-public.v0",
+    clip_id: "MusicalNewYorkClip",
+    question: "pourquoi celui-ci ?",
+    answer: {
+      intent: "why_catalogued",
+      text: "Ce clip a une source publique, sans qualification inventée.",
+      sources: [{ label: "Clip Twitch public", url: "https://clips.twitch.tv/MusicalNewYorkClip", occurred_at: cutoff, at_seconds: null }],
+      limitations: ["Aucune qualification inventée."]
+    },
+    generated_at: cutoff
+  };
+  assert.equal((await callEndpoint(
+    clipAskEndpoint,
+    new Request("https://adoptan.ai/api/lucia/v1/public/clips/ask", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clip_id: clipAnswer.clip_id, question: clipAnswer.question })
+    }),
+    clipAnswer
   )).status, 200);
 
   const findProjection = {
