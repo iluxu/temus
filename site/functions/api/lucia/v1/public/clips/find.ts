@@ -43,7 +43,7 @@ export async function onRequest({ request, env }: PagesContext): Promise<Respons
       publicHttpMethod: "POST",
       publicBody,
       parse: parseClipCollectionPublicV0,
-      timeoutMs: 30_000
+      timeoutMs: 45_000
     });
     return jsonResponse(projection);
   } catch (error) {

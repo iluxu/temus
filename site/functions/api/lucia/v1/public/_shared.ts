@@ -314,7 +314,7 @@ export async function fetchLuciaProjection<T>({
   const controller = new AbortController();
   const timeout = setTimeout(
     () => controller.abort(),
-    Math.max(1_000, Math.min(30_000, timeoutMs))
+    Math.max(1_000, Math.min(45_000, timeoutMs))
   );
   const requestId = `lucia-${crypto.randomUUID()}`;
   const authenticated = upstream.responseShape === "json_rpc";
