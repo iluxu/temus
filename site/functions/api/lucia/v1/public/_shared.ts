@@ -8,11 +8,15 @@ import {
   HouseExperienceValidationError,
   parseHouseExperiencePublicV1
 } from "../../../../../app/lucia/experience-public";
+import { MomentValidationError } from "../../../../../app/lucia/moment-public";
 
 export interface LuciaPagesEnv {
   LLMBASEDOS_API_ORIGIN?: string;
   LLMBASEDOS_PUBLIC_API_KEY?: string;
+  LLMBASEDOS_MOMENT_STUDIO_API_KEY?: string;
   LLMBASEDOS_LUCIA_HOUSE_PATH?: string;
+  CF_ACCESS_TEAM_DOMAIN?: string;
+  CF_ACCESS_AUD?: string;
 }
 
 const MAX_UPSTREAM_BYTES = 128 * 1024;
@@ -392,6 +396,7 @@ export async function fetchLuciaProjection<T>({
     if (
       error instanceof HousePublicValidationError ||
       error instanceof HouseExperienceValidationError ||
+      error instanceof MomentValidationError ||
       error instanceof SyntaxError
     ) {
       throw new LuciaUpstreamError(

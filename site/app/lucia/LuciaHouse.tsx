@@ -13,6 +13,7 @@ import {
   ReplayControlAction
 } from "./experience-public";
 import styles from "./lucia.module.css";
+import MomentStudio from "./MomentStudio";
 
 const PUBLIC_HOUSE_ENDPOINT = "/api/lucia/v1/public/house";
 const PUBLIC_EXPERIENCE_ENDPOINT = "/api/lucia/v1/public/experience";
@@ -843,7 +844,7 @@ function TrustFooter({
         </span>
         <p>
           {experience
-            ? "Ask est ouvert en lecture seule. Find et la participation attendent encore."
+            ? "Ask et Find sont ouverts sur les Moments autorisés. Do reste derrière l’autorité du Studio."
             : "Maison en lecture seule. Ask et Replay sont temporairement indisponibles."}
         </p>
       </div>
@@ -1248,6 +1249,7 @@ export default function LuciaHouse() {
           onStartReplay={() => void startReplay()}
           replayStarting={replayStarting}
         />
+        <MomentStudio />
         {experience ? (
           <ExperienceSection
             experience={experience}

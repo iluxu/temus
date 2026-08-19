@@ -19,12 +19,18 @@ const temporaryRoot = await mkdtemp(join(tmpdir(), "maison-lucia-audit-"));
 const sources = [
   "app/lucia/house-public.ts",
   "app/lucia/experience-public.ts",
+  "app/lucia/moment-public.ts",
   "functions/api/lucia/v1/public/_shared.ts",
   "functions/api/lucia/v1/public/experience.ts",
   "functions/api/lucia/v1/public/ask.ts",
+  "functions/api/lucia/v1/public/moments.ts",
+  "functions/api/lucia/v1/public/moments/find.ts",
+  "functions/api/lucia/v1/public/moments/ask.ts",
   "functions/api/lucia/v1/public/replay/sessions.ts",
   "functions/api/lucia/v1/public/replay/sessions/[sessionId].ts",
-  "functions/api/lucia/v1/public/replay/sessions/[sessionId]/control.ts"
+  "functions/api/lucia/v1/public/replay/sessions/[sessionId]/control.ts",
+  "functions/api/lucia/v1/operator/_shared.ts",
+  "functions/lucia/studio.ts"
 ];
 
 const past = "2026-08-12T11:59:00.000Z";
@@ -149,6 +155,56 @@ function replayExperience(answer = null) {
   };
 }
 
+function publicMoment() {
+  return {
+    id: `mom_${"a".repeat(32)}`,
+    title: "Lucia chante à New York",
+    summary: "Un passage musical relié à sa source.",
+    category: "musique",
+    status: "qualified",
+    public: true,
+    source: {
+      creator: "luciamuccia",
+      started_at: past,
+      ended_at: cutoff,
+      start_seconds: 125,
+      end_seconds: 150,
+      public_url: "https://www.twitch.tv/luciamuccia"
+    },
+    qualification: {
+      hook: "Lucia commence à chanter.",
+      reason: "Le passage a une amorce et une réaction nette.",
+      score: 76,
+      threshold: 70,
+      score_semantics: "selection_score_not_confidence"
+    },
+    derivatives: [{
+      id: `media_${"b".repeat(32)}`,
+      kind: "twitch_clip",
+      platform: "twitch",
+      status: "created",
+      public_url: "https://clips.twitch.tv/Example",
+      duration_seconds: 25,
+      format: "twitch-native",
+      created_at: cutoff
+    }],
+    decisions: [],
+    updated_at: cutoff
+  };
+}
+
+function momentCollection() {
+  return {
+    schema_version: "moment-collection.v0",
+    house_slug: "lucia",
+    mode: "public",
+    moments: [publicMoment()],
+    categories: ["musique"],
+    capabilities: { ask: true, find: true, do: false },
+    generated_at: cutoff
+  };
+}
+
 async function callEndpoint(handler, request, projection, params = {}) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async () =>
@@ -185,6 +241,7 @@ try {
   const sharedModule = require(
     join(temporaryRoot, "functions/api/lucia/v1/public/_shared.js")
   );
+  const momentModule = require(join(temporaryRoot, "app/lucia/moment-public.js"));
   const parse = experienceModule.parseHouseExperiencePublicV1;
   const bind = sharedModule.assertLuciaExperienceBinding;
 
@@ -213,6 +270,18 @@ try {
       answer: "forbidden"
     })
   );
+  const safeMoment = momentModule.parseMomentCollectionV0({
+    ...momentCollection(),
+    private_memory: "must disappear"
+  });
+  assert.equal(safeMoment.moments[0].title, "Lucia chante à New York");
+  assert.equal("private_memory" in safeMoment, false);
+  assert.throws(() =>
+    momentModule.parseMomentCollectionV0({
+      ...momentCollection(),
+      moments: [{ ...publicMoment(), public: false }]
+    })
+  );
 
   const experienceEndpoint = require(
     join(temporaryRoot, "functions/api/lucia/v1/public/experience.js")
@@ -238,6 +307,69 @@ try {
       "functions/api/lucia/v1/public/replay/sessions/[sessionId]/control.js"
     )
   );
+  const momentsEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/moments.js"));
+  const momentFindEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/moments/find.js"));
+  const momentAskEndpoint = require(join(temporaryRoot, "functions/api/lucia/v1/public/moments/ask.js"));
+  const studioGuard = require(join(temporaryRoot, "functions/lucia/studio.js"));
+
+  const anonymousStudio = await studioGuard.onRequest({
+    request: new Request("https://adoptan.ai/lucia/studio"),
+    env: {
+      CF_ACCESS_TEAM_DOMAIN: "maison-lucia.cloudflareaccess.com",
+      CF_ACCESS_AUD: "lucia-studio-audience"
+    },
+    next: async () => new Response("private studio")
+  });
+  assert.equal(anonymousStudio.status, 401);
+  assert.equal(
+    (
+      await studioGuard.onRequest({
+        request: new Request("https://adoptan.ai/lucia/studio", { method: "POST" }),
+        env: {},
+        next: async () => new Response("private studio")
+      })
+    ).status,
+    405
+  );
+
+  assert.equal((await callEndpoint(
+    momentsEndpoint,
+    new Request("https://adoptan.ai/api/lucia/v1/public/moments"),
+    momentCollection()
+  )).status, 200);
+
+  const findProjection = {
+    schema_version: "moment-find.v0",
+    query: "retrouve quand Lucia chantait à New York",
+    scope: "public_moments",
+    results: [{ ...publicMoment(), match_score: 1 }],
+    limitations: ["Contexte borné."],
+    generated_at: cutoff
+  };
+  assert.equal((await callEndpoint(
+    momentFindEndpoint,
+    new Request("https://adoptan.ai/api/lucia/v1/public/moments/find", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: findProjection.query })
+    }),
+    findProjection
+  )).status, 200);
+
+  const answerProjection = {
+    schema_version: "moment-answer.v0",
+    moment_id: publicMoment().id,
+    question: "pourquoi celui-ci a été retenu ?",
+    answer: { intent: "why_selected", text: "Parce que la preuve est nette.", sources: [{ label: "Live Twitch de Lucia", url: "https://www.twitch.tv/luciamuccia", occurred_at: past, at_seconds: 125 }] },
+    generated_at: cutoff
+  };
+  assert.equal((await callEndpoint(
+    momentAskEndpoint,
+    new Request("https://adoptan.ai/api/lucia/v1/public/moments/ask", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ moment_id: answerProjection.moment_id, question: answerProjection.question })
+    }),
+    answerProjection
+  )).status, 200);
 
   assert.equal(
     (
@@ -366,6 +498,14 @@ try {
     "/api/lucia/v1/public/house",
     "/api/lucia/v1/public/experience",
     "/api/lucia/v1/public/ask",
+    "/api/lucia/v1/public/moments",
+    "/api/lucia/v1/public/moments/find",
+    "/api/lucia/v1/public/moments/ask",
+    "/api/lucia/v1/operator/moments",
+    "/api/lucia/v1/operator/moments/find",
+    "/api/lucia/v1/operator/moments/ask",
+    "/api/lucia/v1/operator/moments/do",
+    "/lucia/studio",
     "/api/lucia/v1/public/replay/sessions",
     "/api/lucia/v1/public/replay/sessions/:sessionId",
     "/api/lucia/v1/public/replay/sessions/:sessionId/control"

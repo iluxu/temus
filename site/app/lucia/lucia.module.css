@@ -193,6 +193,7 @@
     "hero contract"
     "now contract"
     "experience contract"
+    "moments contract"
     "rooms contract";
   column-gap: clamp(30px, 5vw, 82px);
   width: min(1480px, 100%);
@@ -1521,7 +1522,7 @@
   }
 
   .contractRail {
-    order: 5;
+    order: 6;
     width: 100%;
     scroll-margin-top: 82px;
   }
@@ -1538,7 +1539,7 @@
   }
 
   .roomsSection {
-    order: 4;
+    order: 5;
     padding-top: 72px;
   }
 
