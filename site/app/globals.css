@@ -1208,12 +1208,14 @@ a {
 .workspace-pill {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
   border-radius: 999px;
   padding: 8px 12px;
   background: hsl(var(--muted));
   color: hsl(var(--foreground));
   font-size: 0.8rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .workspace-pill.success {
@@ -1271,9 +1273,10 @@ a {
   border: 1px solid hsl(var(--border));
   border-radius: 14px;
   padding: 14px 16px;
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  align-items: start;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -1286,11 +1289,10 @@ a {
 
 .workspace-metric-list li strong,
 .workspace-video-list li strong {
-  flex: 0 1 130px;
   text-align: right;
   font-size: 0.82rem;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  white-space: nowrap;
 }
 
 .workspace-inline-tags {
@@ -1652,6 +1654,7 @@ a {
   color: hsl(var(--foreground));
   font-size: 0.82rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .app-demo-card {
@@ -1703,7 +1706,7 @@ a {
 
 .app-demo-workspace {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: minmax(360px, 0.36fr) minmax(0, 1fr);
   gap: 20px;
   align-items: start;
 }
@@ -1816,7 +1819,12 @@ a {
 .app-demo-profile strong,
 .app-demo-profile p {
   display: block;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+}
+
+.app-demo-workspace > aside.app-demo-card h2 {
+  font-size: 1.35rem;
+  line-height: 1.2;
 }
 
 .app-demo-profile p {
