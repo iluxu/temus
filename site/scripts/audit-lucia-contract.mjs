@@ -243,9 +243,22 @@ function clipCollection() {
     totals: { public_clips: 1, matching_clips: 1 },
     filters: { query: "", category: "all", status: "all", offset: 0, limit: 24, next_offset: null },
     capabilities: { ask: true, find: true, do: false },
+    world: null,
     category_basis: "derived_filter_v0",
     limitations: ["Recherche lexicale."],
     generated_at: cutoff
+  };
+}
+
+function worldReceipt() {
+  return {
+    schema_version: "world-attach-receipt.v1",
+    world: "https://api.adoptan.ai/v1/public/houses/lucia/world",
+    runtime: "llm-route",
+    attached_before_inference: true,
+    binding_roles: ["workspace", "state", "context", "resources", "guidance", "skills", "extensions", "capabilities"],
+    guidance_loaded: true,
+    capabilities_mounted: false
   };
 }
 
@@ -319,6 +332,13 @@ try {
   assert.equal(safeClips.clips[0].title, "Lucia chante à New York");
   assert.equal("transcript" in safeClips.clips[0], false);
   assert.equal(safeClips.clips[0].match, null);
+  assert.equal(safeClips.world, null);
+  const attachedClips = clipModule.parseClipCollectionPublicV0({
+    ...clipCollection(),
+    world: worldReceipt()
+  });
+  assert.equal(attachedClips.world?.attached_before_inference, true);
+  assert.equal(attachedClips.world?.capabilities_mounted, false);
   const safeMoment = momentModule.parseMomentCollectionV0({
     ...momentCollection(),
     private_memory: "must disappear"
@@ -414,7 +434,8 @@ try {
         },
         raw_transcript: "must disappear"
       })),
-      filters: { ...clipCollection().filters, query: "New York" }
+      filters: { ...clipCollection().filters, query: "New York" },
+      world: worldReceipt()
     }
   )).status, 200);
 
@@ -429,6 +450,7 @@ try {
       sources: [{ label: "Clip Twitch public", url: "https://clips.twitch.tv/MusicalNewYorkClip", occurred_at: cutoff, at_seconds: null }],
       limitations: ["Aucune qualification inventée."]
     },
+    world: worldReceipt(),
     generated_at: cutoff
   };
   assert.equal((await callEndpoint(

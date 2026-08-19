@@ -121,6 +121,7 @@ export default function ClipStudio() {
     () => clips.find((clip) => clip.id === selectedId) ?? clips[0] ?? null,
     [clips, selectedId]
   );
+  const attachedWorld = answer?.world ?? collection?.world ?? null;
 
   async function find(nextCategory = category, nextStatus = status, offset = 0, append = false, query = input.trim()) {
     setBusy(true); setError(null); setAnswer(null); setNotice(null);
@@ -271,6 +272,16 @@ export default function ClipStudio() {
             <small>{humanMode === "find" ? "Find comprend la demande, choisit seulement les meilleurs passages et explique chaque choix." : humanMode === "ask" ? "Ask répond sur le clip sélectionné et garde sa source Twitch." : "Do exige un Moment canonique et l’identité vérifiée de Lucia ou Luca."}</small>
           </form>
         </section>
+        {attachedWorld ? (
+          <aside className={styles.worldProof} aria-label="Preuve d’attachement WORLD">
+            <span aria-hidden="true">◎</span>
+            <div>
+              <strong>WORLD Lucia attaché avant la réponse</strong>
+              <p>Le worker est entré dans l’environnement Lucia avec une seule adresse. Ses capacités MCP restent séparées et aucune permission n’a été ajoutée.</p>
+            </div>
+            <a href={attachedWorld.world} target="_blank" rel="noreferrer">Voir le World ↗</a>
+          </aside>
+        ) : null}
         {answer ? <div className={styles.response} role="status"><strong>Sentinelle</strong><p>{answer.answer.text}</p>{answer.answer.sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label} ↗</a>)}</div> : null}
         {notice ? <div className={styles.response} role="status"><strong>Do · limite d’autorité</strong><p>{notice}</p></div> : null}
         {error && collection ? <div className={styles.error} role="alert">{error}</div> : null}

@@ -37,6 +37,18 @@ export type ClipPublicV0 = {
 
 export type ClipFacetV0 = { slug: string; label: string; count: number };
 
+export type WorldAttachReceiptV1 = {
+  schema_version: "world-attach-receipt.v1";
+  world: "https://api.adoptan.ai/v1/public/houses/lucia/world";
+  runtime: "llm-route";
+  attached_before_inference: true;
+  binding_roles: Array<
+    "workspace" | "state" | "context" | "resources" | "guidance" | "skills" | "extensions" | "capabilities"
+  >;
+  guidance_loaded: true;
+  capabilities_mounted: false;
+};
+
 export type ClipCollectionPublicV0 = {
   schema_version: "clip-collection-public.v0";
   house_slug: "lucia";
@@ -54,6 +66,7 @@ export type ClipCollectionPublicV0 = {
     next_offset: number | null;
   };
   capabilities: { ask: true; find: true; do: false };
+  world: WorldAttachReceiptV1 | null;
   category_basis: "derived_filter_v0";
   limitations: string[];
   generated_at: string;
@@ -75,6 +88,7 @@ export type ClipAnswerPublicV0 = {
     }>;
     limitations: string[];
   };
+  world: WorldAttachReceiptV1 | null;
   generated_at: string;
 };
 
@@ -141,6 +155,37 @@ function list(value: unknown, field: string, maximum: number): unknown[] {
     throw new ClipPublicValidationError(`${field} is invalid`);
   }
   return value;
+}
+
+const worldRoles: WorldAttachReceiptV1["binding_roles"] = [
+  "workspace", "state", "context", "resources", "guidance", "skills", "extensions", "capabilities"
+];
+
+function parseWorldReceipt(value: unknown): WorldAttachReceiptV1 | null {
+  if (value === null || value === undefined) return null;
+  const source = record(value, "world");
+  const roles = list(source.binding_roles, "world.binding_roles", worldRoles.length);
+  if (
+    source.schema_version !== "world-attach-receipt.v1" ||
+    source.world !== "https://api.adoptan.ai/v1/public/houses/lucia/world" ||
+    source.runtime !== "llm-route" ||
+    source.attached_before_inference !== true ||
+    source.guidance_loaded !== true ||
+    source.capabilities_mounted !== false ||
+    roles.length !== worldRoles.length ||
+    roles.some((role, index) => role !== worldRoles[index])
+  ) {
+    throw new ClipPublicValidationError("WORLD attachment receipt is invalid");
+  }
+  return {
+    schema_version: "world-attach-receipt.v1",
+    world: "https://api.adoptan.ai/v1/public/houses/lucia/world",
+    runtime: "llm-route",
+    attached_before_inference: true,
+    binding_roles: [...worldRoles],
+    guidance_loaded: true,
+    capabilities_mounted: false
+  };
 }
 
 function parseMatch(value: unknown, field: string): ClipMatchV0 | null {
@@ -276,6 +321,7 @@ export function parseClipCollectionPublicV0(value: unknown): ClipCollectionPubli
       next_offset: nextOffset
     },
     capabilities: { ask: true, find: true, do: false },
+    world: parseWorldReceipt(source.world),
     category_basis: "derived_filter_v0",
     limitations: list(source.limitations, "limitations", 16).map((item) => text(item, "limitation", 600)),
     generated_at: iso(source.generated_at, "generated_at")
@@ -317,6 +363,7 @@ export function parseClipAnswerPublicV0(value: unknown): ClipAnswerPublicV0 {
       }),
       limitations: list(answer.limitations, "answer.limitations", 16).map((item) => text(item, "limitation", 600))
     },
+    world: parseWorldReceipt(source.world),
     generated_at: iso(source.generated_at, "generated_at")
   };
 }
