@@ -270,19 +270,19 @@ export default function WebWorkspaceHome() {
                       <div className="workspace-setting-grid">
                         <div className="workspace-setting">
                           <span>Privacy</span>
-                          <strong>PUBLIC_TO_EVERYONE</strong>
+                          <strong>Manual selection required</strong>
                         </div>
                         <div className="workspace-setting">
                           <span>Comments</span>
-                          <strong>Allowed</strong>
+                          <strong>Off until user opt-in</strong>
                         </div>
                         <div className="workspace-setting">
                           <span>Duet</span>
-                          <strong>Allowed</strong>
+                          <strong>Off until user opt-in</strong>
                         </div>
                         <div className="workspace-setting">
                           <span>Stitch</span>
-                          <strong>Disabled</strong>
+                          <strong>Off or disabled by TikTok</strong>
                         </div>
                         <div className="workspace-setting">
                           <span>Commercial content</span>

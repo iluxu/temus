@@ -11,6 +11,8 @@ const TIKTOK_CLIENT_KEY_STORAGE = "adoptan.workspace.tiktok_client_key";
 const TIKTOK_CODE_VERIFIER_STORAGE = "adoptan.workspace.tiktok_code_verifier";
 const TIKTOK_STATE_STORAGE = "adoptan.workspace.tiktok_state";
 const TIKTOK_REVIEW_API_BASE = "https://api.adoptan.ai/tiktok-review";
+const SAMPLE_VIDEO_URL = "/demo/tiktok-creator-clip.mp4";
+const SAMPLE_VIDEO_NAME = "adoptan-sample-creator-clip.mp4";
 const BRANDED_CONTENT_PRIVATE_PROMPT = "Branded content visibility cannot be set to private.";
 const COMMERCIAL_SELECTION_PROMPT =
   "You need to indicate if your content promotes yourself, a third party, or both.";
@@ -35,12 +37,41 @@ const fallbackCreator = {
   videoCount: "0"
 } as const;
 
+const reviewSequence = [
+  {
+    point: "1",
+    title: "Load creator_info before rendering controls",
+    body: "Nickname, posting availability, privacy options, interaction availability, and max duration are shown before the user can publish."
+  },
+  {
+    point: "2",
+    title: "User enters post metadata manually",
+    body: "Caption is editable, privacy starts empty, and comments, duet, and stitch are all off until the user opts in."
+  },
+  {
+    point: "3",
+    title: "Commercial content disclosure",
+    body: "Disclosure is off by default. If enabled, the user must choose Your brand, Branded content, or both before publishing."
+  },
+  {
+    point: "4",
+    title: "Compliance declaration changes",
+    body: "The consent statement switches to Branded Content Policy plus Music Usage Confirmation when branded content is selected."
+  },
+  {
+    point: "5",
+    title: "Full awareness and control",
+    body: "The creator sees the video preview, editable title, selected settings, consent, upload status, processing notice, and disconnect control."
+  }
+] as const;
+
 type SelectedVideo = {
   name: string;
   size: string;
   type: string;
   url: string;
-  file: File;
+  source: "sample" | "upload";
+  file: Blob;
 };
 
 type CreatorProfile = {
@@ -65,6 +96,10 @@ type CreatorInfo = {
   commentDisabled: boolean;
   duetDisabled: boolean;
   stitchDisabled: boolean;
+  nickname: string;
+  avatarUrl: string;
+  maxVideoDurationSec: number;
+  canPostNow: boolean;
 };
 
 type PublishResult = {
@@ -125,7 +160,11 @@ export default function TikTokReviewApp() {
     privacyOptions: ["FOLLOWER_OF_CREATOR", "MUTUAL_FOLLOW_FRIENDS", "SELF_ONLY"],
     commentDisabled: false,
     duetDisabled: true,
-    stitchDisabled: true
+    stitchDisabled: true,
+    nickname: fallbackCreator.displayName,
+    avatarUrl: "",
+    maxVideoDurationSec: 600,
+    canPostNow: true
   });
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState("");
@@ -217,8 +256,7 @@ export default function TikTokReviewApp() {
           bio: user.bio_description || fallbackCreator.bio,
           openId: maskOpenId(user.open_id) || fallbackCreator.openId,
           profileWebLink:
-            user.profile_deep_link ||
-            (user.username ? `https://www.tiktok.com/@${user.username}` : fallbackCreator.profileWebLink),
+            user.username ? `https://www.tiktok.com/@${user.username}` : user.profile_deep_link || fallbackCreator.profileWebLink,
           followers: String(user.follower_count ?? fallbackCreator.followers),
           likes: String(user.likes_count ?? fallbackCreator.likes),
           videoCount: String(user.video_count ?? fallbackCreator.videoCount)
@@ -227,7 +265,18 @@ export default function TikTokReviewApp() {
           privacyOptions,
           commentDisabled: Boolean(creatorInfoPayload.comment_disabled),
           duetDisabled: Boolean(creatorInfoPayload.duet_disabled),
-          stitchDisabled: Boolean(creatorInfoPayload.stitch_disabled)
+          stitchDisabled: Boolean(creatorInfoPayload.stitch_disabled),
+          nickname:
+            String(creatorInfoPayload.creator_nickname || creatorInfoPayload.nickname || user.display_name || "") ||
+            fallbackCreator.displayName,
+          avatarUrl: String(creatorInfoPayload.creator_avatar_url || user.avatar_url || ""),
+          maxVideoDurationSec: Number(creatorInfoPayload.max_video_post_duration_sec || 600),
+          canPostNow:
+            creatorInfoPayload.can_post === false ||
+            creatorInfoPayload.creator_can_post === false ||
+            creatorInfoPayload.is_available_to_post === false
+              ? false
+              : true
         });
         setRecentVideos(
           Array.isArray(payload.videos)
@@ -296,6 +345,8 @@ export default function TikTokReviewApp() {
         : "";
   const complianceIssues = [
     !profileLoaded ? "Load creator_info before rendering publish controls." : "",
+    !creatorInfo.canPostNow ? "creator_info says this creator cannot make more posts right now." : "",
+    !selectedVideo ? "Select or load a video preview before upload starts." : "",
     !privacy ? "Select a privacy status manually from the creator_info dropdown." : "",
     commercialSelectionMissing ? COMMERCIAL_SELECTION_PROMPT : "",
     brandedContentPrivateConflict ? BRANDED_CONTENT_PRIVATE_PROMPT : "",
@@ -347,11 +398,41 @@ export default function TikTokReviewApp() {
       size: formatFileSize(file.size),
       type: file.type || "video/mp4",
       url,
+      source: "upload",
       file
     });
     setDraftResult(null);
     setPublishResult(null);
     setPublishError("");
+  }
+
+  async function loadSampleVideo() {
+    setPublishError("");
+    try {
+      const response = await fetch(SAMPLE_VIDEO_URL);
+      if (!response.ok) {
+        throw new Error("Sample clip unavailable.");
+      }
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      setSelectedVideo({
+        name: SAMPLE_VIDEO_NAME,
+        size: formatFileSize(blob.size),
+        type: blob.type || "video/mp4",
+        url,
+        source: "sample",
+        file: blob
+      });
+      setDraftResult(null);
+      setPublishResult(null);
+    } catch (error) {
+      setPublishError(
+        error instanceof Error
+          ? error.message
+          : "The sample creator clip could not be loaded. Upload a local MP4 instead."
+      );
+    }
   }
 
   function handleCommercialDisclosureChange(checked: boolean) {
@@ -577,6 +658,25 @@ export default function TikTokReviewApp() {
               <section className="app-demo-card">
                 <div className="workspace-panel-head">
                   <div>
+                    <p className="workspace-panel-kicker">TikTok Required UX</p>
+                    <h2>Publish controls shown in guideline order</h2>
+                  </div>
+                  <span className="workspace-pill success">Points 1-5</span>
+                </div>
+                <div className="review-sequence-grid">
+                  {reviewSequence.map((item) => (
+                    <article className="review-sequence-item" key={item.point}>
+                      <span>{item.point}</span>
+                      <strong>{item.title}</strong>
+                      <p>{item.body}</p>
+                    </article>
+                  ))}
+                </div>
+              </section>
+
+              <section className="app-demo-card">
+                <div className="workspace-panel-head">
+                  <div>
                     <p className="workspace-panel-kicker">Recent public videos</p>
                     <h2>Duplicate check</h2>
                   </div>
@@ -609,12 +709,42 @@ export default function TikTokReviewApp() {
               <section className="app-demo-card">
                 <div className="workspace-panel-head">
                   <div>
-                    <p className="workspace-panel-kicker">Selected clip</p>
+                    <p className="workspace-panel-kicker">Content Posting API</p>
                     <h2>Prepare TikTok action</h2>
                   </div>
                   <span className={`workspace-pill ${profileLoaded ? "success" : "warning"}`}>
                     {profileLoaded ? "creator_info.loaded" : "loading creator_info"}
                   </span>
+                </div>
+
+                <div className="creator-info-panel">
+                  <div>
+                    <span>creator_info nickname</span>
+                    <strong>{creatorInfo.nickname}</strong>
+                  </div>
+                  <div>
+                    <span>Can post now</span>
+                    <strong>{creatorInfo.canPostNow ? "Yes" : "Try later"}</strong>
+                  </div>
+                  <div>
+                    <span>Max video duration</span>
+                    <strong>{creatorInfo.maxVideoDurationSec}s</strong>
+                  </div>
+                  <div>
+                    <span>Privacy options</span>
+                    <strong>{creatorInfo.privacyOptions.length}</strong>
+                  </div>
+                  <div>
+                    <span>Comment availability</span>
+                    <strong>{creatorInfo.commentDisabled ? "Disabled by TikTok" : "Available"}</strong>
+                  </div>
+                  <div>
+                    <span>Duet / Stitch availability</span>
+                    <strong>
+                      {creatorInfo.duetDisabled ? "Duet disabled" : "Duet available"} ·{" "}
+                      {creatorInfo.stitchDisabled ? "Stitch disabled" : "Stitch available"}
+                    </strong>
+                  </div>
                 </div>
 
                 <div className="workspace-preview">
@@ -630,11 +760,15 @@ export default function TikTokReviewApp() {
                       Upload video file
                       <input accept="video/mp4,video/quicktime,video/*" type="file" onChange={handleVideoSelected} />
                     </label>
+                    <button className="btn btn-outline btn-compact" type="button" onClick={loadSampleVideo}>
+                      Use sample creator clip
+                    </button>
                     {selectedVideo ? (
                       <div className="workspace-upload-summary">
                         <strong>{selectedVideo.name}</strong>
                         <span>
-                          {selectedVideo.type} · {selectedVideo.size}
+                          {selectedVideo.type} · {selectedVideo.size} ·{" "}
+                          {selectedVideo.source === "sample" ? "Sample asset" : "Uploaded by user"}
                         </span>
                       </div>
                     ) : (
@@ -671,6 +805,36 @@ export default function TikTokReviewApp() {
                         Options are rendered from TikTok creator_info. No privacy value is selected by default.
                       </span>
                     </label>
+
+                    <div className="app-demo-policy-block">
+                      <p className="app-demo-setting-title">Post info preview sent after consent</p>
+                      <div className="post-info-grid">
+                        <div>
+                          <span>privacy_level</span>
+                          <strong>{privacy || "not selected"}</strong>
+                        </div>
+                        <div>
+                          <span>disable_comment</span>
+                          <strong>{allowComments ? "false" : "true"}</strong>
+                        </div>
+                        <div>
+                          <span>disable_duet</span>
+                          <strong>{allowDuet ? "false" : "true"}</strong>
+                        </div>
+                        <div>
+                          <span>disable_stitch</span>
+                          <strong>{allowStitch ? "false" : "true"}</strong>
+                        </div>
+                        <div>
+                          <span>brand_organic_toggle</span>
+                          <strong>{commercialDisclosure && brandOrganic ? "true" : "false"}</strong>
+                        </div>
+                        <div>
+                          <span>brand_content_toggle</span>
+                          <strong>{commercialDisclosure && brandContent ? "true" : "false"}</strong>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="app-demo-policy-block">
                       <div>
@@ -812,6 +976,10 @@ export default function TikTokReviewApp() {
                         {activeAction === "direct" ? "Publishing..." : "Confirm and publish to TikTok"}
                       </button>
                     </div>
+                    <p className="workspace-note">
+                      After upload starts, TikTok may need a few minutes before the draft or direct
+                      post is fully processed and visible on the creator profile.
+                    </p>
                   </div>
                 </div>
               </section>
@@ -834,6 +1002,32 @@ export default function TikTokReviewApp() {
                       </div>
                     </div>
                   ))}
+                  {events.length === 0 ? (
+                    <div className="workspace-status-item">
+                      <span className="workspace-status-dot" />
+                      <div>
+                        <strong>waiting_for_user_action</strong>
+                        <p>
+                          Connect TikTok, load creator_info, select a video, then start draft
+                          upload or direct post.
+                        </p>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+                <div className="result-grid">
+                  <div>
+                    <span>Draft upload result</span>
+                    <strong>
+                      {draftResult ? `${draftResult.status.status} · ${draftResult.publishId}` : "not started"}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>Direct post result</span>
+                    <strong>
+                      {publishResult ? `${publishResult.status.status} · ${publishResult.publishId}` : "not started"}
+                    </strong>
+                  </div>
                 </div>
               </section>
             </div>

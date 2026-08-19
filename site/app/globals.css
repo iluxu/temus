@@ -1713,6 +1713,94 @@ a {
   gap: 20px;
 }
 
+.review-sequence-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.review-sequence-item {
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  padding: 14px;
+  background: hsl(var(--background));
+}
+
+.review-sequence-item span {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  background: var(--gradient);
+  color: white;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.review-sequence-item strong {
+  display: block;
+  color: hsl(var(--foreground));
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.review-sequence-item p {
+  margin-top: 8px;
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.creator-info-panel,
+.post-info-grid,
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.creator-info-panel {
+  margin-bottom: 18px;
+}
+
+.creator-info-panel div,
+.post-info-grid div,
+.result-grid div {
+  min-width: 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: hsl(var(--background));
+}
+
+.creator-info-panel span,
+.post-info-grid span,
+.result-grid span {
+  display: block;
+  color: hsl(var(--muted-foreground));
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.creator-info-panel strong,
+.post-info-grid strong,
+.result-grid strong {
+  display: block;
+  color: hsl(var(--foreground));
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.result-grid {
+  margin-top: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .app-demo-profile {
   display: flex;
   align-items: center;
@@ -1923,6 +2011,12 @@ a {
   font-size: 0.9rem;
 }
 
+.btn-compact {
+  width: fit-content;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+}
+
 .btn:disabled,
 .btn.disabled {
   cursor: not-allowed;
@@ -1946,7 +2040,11 @@ a {
 
   .app-demo-hero,
   .app-demo-workspace,
-  .app-demo-checks {
+  .app-demo-checks,
+  .review-sequence-grid,
+  .creator-info-panel,
+  .post-info-grid,
+  .result-grid {
     grid-template-columns: 1fr;
   }
 }
