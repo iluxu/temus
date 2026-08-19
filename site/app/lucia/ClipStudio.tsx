@@ -78,7 +78,7 @@ function ClipDetail({ clip, host, onShare, shareState }: { clip: ClipPublicV0; h
           <section className={styles.matchExplanation} aria-labelledby="match-explanation-title">
             <p className={styles.eyebrow} id="match-explanation-title">Pourquoi ce résultat</p>
             <ul>{clip.match.reasons.map((reason) => <li key={reason}>{reason}</li>)}</ul>
-            <small>Pertinence de recherche : {Math.round(clip.match.score * 100)} %. Ce n’est ni une note de qualité ni une confiance éditoriale.</small>
+            <small>Sentinelle justifie ce choix uniquement à partir du passage disponible.</small>
           </section>
         ) : null}
         <p className={styles.truthNote}>Ce média reste un Clip. Il ne devient Moment qu’avec une qualification, une provenance et un <code>moment_id</code> canoniques.</p>
@@ -268,7 +268,7 @@ export default function ClipStudio() {
               <input value={input} onChange={(event) => setInput(event.target.value)} maxLength={600} placeholder={humanMode === "find" ? "retrouve quand Lucia était marrante" : humanMode === "ask" ? "pourquoi celui-ci a été retenu ?" : "fais-en une version TikTok et demande à Lucia"} aria-label={`${humanMode} dans le Studio`} />
               <button type="submit" disabled={busy}>{busy ? "…" : humanMode}</button>
             </div>
-            <small>{humanMode === "find" ? "Find cherche dans les titres, angles et transcriptions disponibles sans exposer le transcript brut." : humanMode === "ask" ? "Ask répond sur le clip sélectionné et garde sa source Twitch." : "Do exige un Moment canonique et l’identité vérifiée de Lucia ou Luca."}</small>
+            <small>{humanMode === "find" ? "Find comprend la demande, choisit seulement les meilleurs passages et explique chaque choix." : humanMode === "ask" ? "Ask répond sur le clip sélectionné et garde sa source Twitch." : "Do exige un Moment canonique et l’identité vérifiée de Lucia ou Luca."}</small>
           </form>
         </section>
         {answer ? <div className={styles.response} role="status"><strong>Sentinelle</strong><p>{answer.answer.text}</p>{answer.answer.sources.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.label} ↗</a>)}</div> : null}

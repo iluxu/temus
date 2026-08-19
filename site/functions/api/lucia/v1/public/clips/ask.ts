@@ -38,7 +38,8 @@ export async function onRequest({ request, env }: PagesContext): Promise<Respons
       publicPath: "/v1/public/houses/lucia/clips/ask",
       publicHttpMethod: "POST",
       publicBody,
-      parse: parseClipAnswerPublicV0
+      parse: parseClipAnswerPublicV0,
+      timeoutMs: 30_000
     });
     if (
       projection.clip_id !== body.clip_id ||

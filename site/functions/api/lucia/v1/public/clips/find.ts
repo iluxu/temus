@@ -42,7 +42,8 @@ export async function onRequest({ request, env }: PagesContext): Promise<Respons
       publicPath: "/v1/public/houses/lucia/clips/find",
       publicHttpMethod: "POST",
       publicBody,
-      parse: parseClipCollectionPublicV0
+      parse: parseClipCollectionPublicV0,
+      timeoutMs: 30_000
     });
     return jsonResponse(projection);
   } catch (error) {

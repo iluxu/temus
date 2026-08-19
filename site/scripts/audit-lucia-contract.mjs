@@ -408,9 +408,9 @@ try {
         ...clip,
         match: {
           score: 0.75,
-          score_semantics: "lexical_editorial_relevance_not_quality",
+          score_semantics: "bounded_worker_relevance_not_quality",
           evidence: ["title", "transcript"],
-          reasons: ["Le titre correspond à New York.", "La transcription contient des marqueurs pertinents sans être exposée."]
+          reasons: ["Lucia chante réellement dans les rues de New York, ce qui correspond directement au souvenir demandé."]
         },
         raw_transcript: "must disappear"
       })),

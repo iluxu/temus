@@ -14,7 +14,7 @@ export type ClipStatusSlug =
 
 export type ClipMatchV0 = {
   score: number;
-  score_semantics: "lexical_editorial_relevance_not_quality";
+  score_semantics: "bounded_worker_relevance_not_quality";
   evidence: Array<"title" | "editorial" | "transcript">;
   reasons: string[];
 };
@@ -149,7 +149,7 @@ function parseMatch(value: unknown, field: string): ClipMatchV0 | null {
   if (
     typeof source.score !== "number" || !Number.isFinite(source.score) ||
     source.score < 0 || source.score > 1 ||
-    source.score_semantics !== "lexical_editorial_relevance_not_quality"
+    source.score_semantics !== "bounded_worker_relevance_not_quality"
   ) {
     throw new ClipPublicValidationError(`${field} is invalid`);
   }
@@ -165,10 +165,15 @@ function parseMatch(value: unknown, field: string): ClipMatchV0 | null {
   const reasons = list(source.reasons, `${field}.reasons`, 6).map((item, index) =>
     text(item, `${field}.reasons[${index}]`, 500)
   );
-  if (!reasons.length) throw new ClipPublicValidationError(`${field}.reasons is invalid`);
+  if (
+    !reasons.length ||
+    reasons.some((reason) => /\b(?:marqueurs?|lexical|transcript(?:ion)?|score|candidat|mod[eè]le)\b/i.test(reason))
+  ) {
+    throw new ClipPublicValidationError(`${field}.reasons is invalid`);
+  }
   return {
     score: source.score,
-    score_semantics: "lexical_editorial_relevance_not_quality",
+    score_semantics: "bounded_worker_relevance_not_quality",
     evidence,
     reasons
   };
@@ -247,6 +252,10 @@ export function parseClipCollectionPublicV0(value: unknown): ClipCollectionPubli
   if (clips.some((clip) => query.trim() ? clip.match === null : clip.match !== null)) {
     throw new ClipPublicValidationError("clips match context is invalid");
   }
+  const matchingClips = integer(totals.matching_clips, "totals.matching_clips");
+  if (query.trim() && (matchingClips !== clips.length || nextOffset !== null)) {
+    throw new ClipPublicValidationError("Find selection is not bounded");
+  }
   return {
     schema_version: "clip-collection-public.v0",
     house_slug: "lucia",
@@ -256,7 +265,7 @@ export function parseClipCollectionPublicV0(value: unknown): ClipCollectionPubli
     statuses: parseFacets(source.statuses, statuses, "statuses"),
     totals: {
       public_clips: integer(totals.public_clips, "totals.public_clips"),
-      matching_clips: integer(totals.matching_clips, "totals.matching_clips")
+      matching_clips: matchingClips
     },
     filters: {
       query,

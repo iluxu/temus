@@ -74,6 +74,7 @@ interface ProjectionRequest<T> {
   publicBody?: Record<string, unknown>;
   parse: ProjectionParser<T>;
   fetchImpl?: typeof fetch;
+  timeoutMs?: number;
 }
 
 function configuredUpstream(
@@ -306,11 +307,15 @@ export async function fetchLuciaProjection<T>({
   publicHttpMethod,
   publicBody,
   parse,
-  fetchImpl = fetch
+  fetchImpl = fetch,
+  timeoutMs = UPSTREAM_TIMEOUT_MS
 }: ProjectionRequest<T>): Promise<T> {
   const upstream = configuredUpstream(env, publicPath);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+  const timeout = setTimeout(
+    () => controller.abort(),
+    Math.max(1_000, Math.min(30_000, timeoutMs))
+  );
   const requestId = `lucia-${crypto.randomUUID()}`;
   const authenticated = upstream.responseShape === "json_rpc";
 
