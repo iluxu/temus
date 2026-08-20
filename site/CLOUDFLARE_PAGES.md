@@ -115,3 +115,22 @@ Pages route coverage, Worker copying, and the pinned compatibility date.
 Merge, push, preview creation, production deployment, and DNS changes remain
 explicit delivery-authority boundaries. A successful local build is not a
 deployment receipt.
+
+## Sentinelle Shared Reality
+
+`/sentinelle` is the public sandbox surface for the first Shared Reality
+product slice. It renders canonical Blank and Lucia Worlds from
+`https://api.adoptan.ai/v1/sentinelle`; it does not carry credentials or expose
+publishing capabilities. Browser mutations use the bounded
+`/workspaces/{template}/actions/{action}` surface, while AI-DOM consumers use
+the corresponding WORLD address. Both surfaces invoke the same semantic domain
+operations and preserve exact WORLD Entity IDs.
+
+Production verification requires:
+
+1. `/sentinelle` returns 200 with its route-specific CSP.
+2. Blank World renders and edits `urn:adoptan:text:1` canonically.
+3. Lucia renders real Moment Entities and `urn:adoptan:selection:44`.
+4. An AI mutation appears after the SSE invalidation and canonical refetch.
+5. A browser remove/reorder is visible to a fresh AI-DOM `LOOK`.
+6. Stale versions fail with 409 instead of overwriting newer World state.
