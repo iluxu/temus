@@ -59,9 +59,14 @@
 .versionToggle { position: absolute; z-index: 4; top: 12px; left: 50%; display: flex; padding: 3px; transform: translateX(-50%); border: 1px solid rgba(255,255,255,.12); border-radius: 999px; background: rgba(7,8,7,.7); backdrop-filter: blur(14px); }
 .versionToggle button { padding: 5px 8px; border: 0; border-radius: 999px; color: #858980; background: transparent; font-size: .53rem; cursor: pointer; }
 .versionToggle .versionActive { color: #161b0e; background: var(--accent); }
-.workingLayer { position: absolute; z-index: 3; inset: 0; display: grid; place-content: center; text-align: center; background: rgba(8,9,8,.4); backdrop-filter: blur(2px); }
-.workingLayer span { color: var(--accent); font-size: 1.7rem; animation: breathe 1s ease infinite; }
-.workingLayer p { margin: 8px 0 0; color: white; font-size: .68rem; }
+.workBubble { position: absolute; z-index: 6; top: 53px; left: 13px; display: grid; width: min(290px, calc(100% - 78px)); gap: 5px; pointer-events: none; animation: arrive .25s ease both; }
+.requestBubble { display: flex; width: fit-content; max-width: 100%; padding: 8px 11px; align-items: flex-start; gap: 7px; border: 1px solid rgba(255,255,255,.12); border-radius: 14px 14px 14px 5px; color: rgba(255,255,255,.9); background: rgba(8,9,8,.72); box-shadow: 0 12px 38px rgba(0,0,0,.25); backdrop-filter: blur(16px); }
+.requestBubble span { padding-top: 2px; color: #f4f4ef; font-size: .45rem; }
+.requestBubble p { display: -webkit-box; margin: 0; overflow: hidden; font-size: .61rem; line-height: 1.35; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.sentinelleProgress { display: grid; width: fit-content; max-width: 100%; padding: 8px 11px; grid-template-columns: 15px minmax(0, 1fr) 13px; align-items: center; gap: 6px; border: 1px solid rgba(210,255,116,.2); border-radius: 5px 14px 14px 14px; color: #e4e7df; background: rgba(22,25,19,.88); box-shadow: 0 16px 45px rgba(0,0,0,.32); backdrop-filter: blur(16px); }
+.sentinelleProgress > span { color: var(--accent); font-size: .7rem; animation: breathe 1.15s ease infinite; }
+.sentinelleProgress p { margin: 0; overflow: hidden; font-size: .58rem; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.sentinelleProgress i { width: 12px; height: 12px; border: 1px solid rgba(210,255,116,.25); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
 .play { position: absolute; z-index: 2; top: 43%; left: 50%; display: grid; width: 54px; height: 54px; transform: translate(-50%,-50%); place-items: center; border: 1px solid rgba(255,255,255,.18); border-radius: 50%; color: #10140a; background: rgba(210,255,116,.9); box-shadow: 0 14px 45px rgba(0,0,0,.35); cursor: pointer; backdrop-filter: blur(10px); }
 .play span { margin-left: 3px; font-size: .86rem; }
 .nav { position: absolute; z-index: 4; top: 42%; display: grid; width: 31px; height: 48px; place-items: center; border: 1px solid rgba(255,255,255,.11); color: rgba(255,255,255,.72); background: rgba(8,9,8,.48); font-size: 1.15rem; cursor: pointer; backdrop-filter: blur(10px); }
@@ -139,6 +144,7 @@
 .relations span { padding: 6px 8px; border-radius: 8px; color: #b7d986; background: #242b1f; font-size: .53rem; }
 
 @keyframes breathe { 0%,100% { opacity: .42; transform: scale(.94); } 50% { opacity: 1; transform: scale(1); } }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 @keyframes rise { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: none; } }
 

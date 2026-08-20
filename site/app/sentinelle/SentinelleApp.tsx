@@ -132,6 +132,7 @@ export default function SentinelleApp() {
   const [compose, setCompose] = useState(false);
   const [dragged, setDragged] = useState<string | null>(null);
   const [conversationActive, setConversationActive] = useState(false);
+  const [workStep, setWorkStep] = useState(0);
 
   const entities = useMemo(() => mapEntities(workspace), [workspace]);
   const moments = useMemo(() => [...entities.values()].filter((entity) => typeName(entity) === "Moment" && Boolean(entity.contentUrl)), [entities]);
@@ -149,6 +150,7 @@ export default function SentinelleApp() {
   const instructionEntities = [...entities.values()].filter((entity) => typeName(entity) === "Instruction").sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
   const currentInstruction = instructionEntities[0] ?? null;
   const instructionStatus = String(currentInstruction ? nested(currentInstruction.state, "instruction", "status") ?? "" : "");
+  const instructionText = String(currentInstruction ? nested(currentInstruction.state, "instruction", "text") ?? "" : "");
   const instructionMessage = String(currentInstruction ? nested(currentInstruction.state, "instruction", "message") ?? "" : "");
   const instructionError = String(currentInstruction ? nested(currentInstruction.state, "instruction", "error") ?? "" : "");
   const working = instructionStatus === "open" || instructionStatus === "working";
@@ -206,6 +208,19 @@ export default function SentinelleApp() {
     setPlayhead(0);
     setPlaying(false);
   }, [activeMediaId, currentMoment?.["@id"]]);
+
+  useEffect(() => {
+    if (!working) {
+      setWorkStep(0);
+      return;
+    }
+    setWorkStep(0);
+    const timer = window.setInterval(
+      () => setWorkStep((value) => (value + 1) % 4),
+      3_200
+    );
+    return () => window.clearInterval(timer);
+  }, [currentInstruction?.["@id"], working]);
 
   const unlock = useCallback(async (password: string) => {
     try {
@@ -342,6 +357,12 @@ export default function SentinelleApp() {
   const duration = videoDuration || knownDuration;
   const progress = duration > 0 ? Math.min(100, (playhead / duration) * 100) : 0;
   const shellStyle = videoSource ? ({ "--moment-art": `url("${videoSource}")` } as CSSProperties) : undefined;
+  const progressText = [
+    "Je regarde ce Moment avec toi.",
+    "J’explore les moyens utiles à ta demande.",
+    "Je façonne une nouvelle version jouable.",
+    "Je vérifie le résultat dans le World."
+  ][workStep];
 
   return (
     <main className={styles.shell} style={shellStyle}>
@@ -380,8 +401,11 @@ export default function SentinelleApp() {
             <div className={styles.momentCount}>{currentIndex + 1}<span>/</span>{moments.length}</div>
             <div className={`${styles.coPresence} ${sentinelFocus === currentMoment["@id"] ? styles.together : ""}`} title="Luca et Sentinelle regardent le même Moment"><span>●</span><span>✦</span></div>
             {hasVersion ? <div className={styles.versionToggle}><button type="button" className={showOriginal ? styles.versionActive : ""} onClick={() => setShowOriginal(true)}>Original</button><button type="button" className={!showOriginal ? styles.versionActive : ""} onClick={() => setShowOriginal(false)}>Version ✦</button></div> : null}
-            {working ? <div className={styles.workingLayer}><span>✦</span><p>Je façonne ce Moment…</p></div> : null}
-            {!playing && !working ? <button type="button" className={styles.play} onClick={togglePlayback} aria-label="Lire"><span>▶</span></button> : null}
+            {working ? <div className={styles.workBubble} aria-live="polite">
+              <div className={styles.requestBubble}><span>●</span><p>{instructionText || "Ta demande"}</p></div>
+              <div className={styles.sentinelleProgress}><span>✦</span><p>{progressText}</p><i /></div>
+            </div> : null}
+            {!playing ? <button type="button" className={styles.play} onClick={togglePlayback} aria-label="Lire"><span>▶</span></button> : null}
             <button className={`${styles.nav} ${styles.previous}`} type="button" onClick={() => navigate(-1)} aria-label="Moment précédent">‹</button>
             <button className={`${styles.nav} ${styles.next}`} type="button" onClick={() => navigate(1)} aria-label="Moment suivant">›</button>
             <div className={styles.actions}>
