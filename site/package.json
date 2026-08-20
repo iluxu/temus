@@ -5,6 +5,7 @@
     "dev": "next dev",
     "build": "next build && wrangler pages functions build functions --outdir .pages-worker --project-directory . --fallback-service ASSETS && cp .pages-worker/index.js out/_worker.js",
     "audit:lucia": "node scripts/audit-lucia-contract.mjs",
+    "audit:sentinelle": "node scripts/audit-sentinelle-contract.mjs",
     "start": "next start",
     "lint": "next lint"
   },
