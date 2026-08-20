@@ -17,7 +17,7 @@
   X-Frame-Options: DENY
 
 /sentinelle
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.adoptan.ai; frame-src https://clips.twitch.tv https://player.twitch.tv; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://api.adoptan.ai; media-src 'self' https://api.adoptan.ai; connect-src 'self' https://api.adoptan.ai; frame-src https://api.adoptan.ai https://clips.twitch.tv https://player.twitch.tv; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
@@ -26,7 +26,7 @@
   X-Frame-Options: DENY
 
 /sentinelle/*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.adoptan.ai; frame-src https://clips.twitch.tv https://player.twitch.tv; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: https://api.adoptan.ai; media-src 'self' https://api.adoptan.ai; connect-src 'self' https://api.adoptan.ai; frame-src https://api.adoptan.ai https://clips.twitch.tv https://player.twitch.tv; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'; upgrade-insecure-requests
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Resource-Policy: same-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()

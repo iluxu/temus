@@ -24,12 +24,13 @@ export type WorldEntity = {
   affordances: WorldAffordanceRef[];
   orderedEntityIds?: string[];
   currentFocus?: string | null;
+  contentUrl?: string | null;
 };
 
 export type WorkspaceProjection = {
   schema: "sentinelle-workspace.v1";
   product: "Sentinelle";
-  mode: "public-sandbox";
+  mode: "full";
   template: WorldTemplate;
   world: string;
   graph: {
@@ -143,7 +144,8 @@ function parseEntity(value: unknown): WorldEntity {
             (item) => text(item, "entity.orderedEntityIds[]")
           )
         }),
-    currentFocus: optionalText(source.currentFocus, "entity.currentFocus")
+    currentFocus: optionalText(source.currentFocus, "entity.currentFocus"),
+    contentUrl: optionalText(source.contentUrl, "entity.contentUrl")
   };
 }
 
@@ -160,7 +162,7 @@ export function parseWorkspace(value: unknown): WorkspaceProjection {
   if (
     source.schema !== "sentinelle-workspace.v1" ||
     source.product !== "Sentinelle" ||
-    source.mode !== "public-sandbox"
+    source.mode !== "full"
   ) {
     throw new ProjectionError("workspace projection is incompatible");
   }
@@ -208,7 +210,7 @@ export function parseWorkspace(value: unknown): WorkspaceProjection {
   return {
     schema: "sentinelle-workspace.v1",
     product: "Sentinelle",
-    mode: "public-sandbox",
+    mode: "full",
     template: parseTemplate(source.template),
     world: text(source.world, "workspace.world"),
     graph: {
