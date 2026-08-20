@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import SentinelleApp from "./SentinelleApp";
 
 export const metadata: Metadata = {
-  title: "Sentinelle — Same reality. Different eyes.",
+  title: "Sentinelle — Lucia Moments",
   description:
-    "Work with Sentinelle inside the same structured World: shared objects, direct manipulation and one canonical reality."
+    "Watch, shape and compose Lucia Moments with Sentinelle inside the same shared reality."
 };
 
 export default function SentinellePage() {

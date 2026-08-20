@@ -17,9 +17,11 @@ assert.match(app, /withCredentials: true/, "server push must keep the FULL sessi
 assert.match(app, /credentials: "include"/, "workspace calls must keep the FULL session");
 assert.match(app, /auth\/login/, "FULL mode must have a password gate");
 assert.match(app, /actions\/\$\{action\}/, "human actions must use semantic World operations");
-assert.match(app, /kind: fileKind\(file\)/, "drag and drop must create canonical imported Entities");
 assert.match(app, /data-semantic-world-id/, "the semantic view must retain the World ID");
-assert.match(renderers, /data-world-id/, "human renderers must retain the World ID");
+assert.match(app, /data-world-id/, "human Moment renderers must retain the World ID");
+assert.match(app, /<video/, "the product must render real playable Moment media");
+assert.match(app, /rangeStartSeconds/, "the human playhead must become shared semantic attention");
+assert.match(app, /set-selection|set-compilation/, "constellations of Moments must remain canonical collections");
 assert.match(renderers, /GenericEntityRenderer/, "unknown Entities need a fallback renderer");
 assert.match(world, /sentinelle-workspace\.v1/, "the frontend must parse the bounded projection");
 assert.match(world, /mode: "full"/, "the frontend must reject the archived public sandbox projection");
