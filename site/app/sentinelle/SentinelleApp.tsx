@@ -42,18 +42,21 @@ function secondsLabel(value: number): string {
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
 
+function cleanMomentName(value: string): string {
+  return value.replace(/^Radar\s+\d+\s*[-–—]\s*/i, "").trim();
+}
+
 function LockScreen({ onUnlock }: { onUnlock: (password: string) => Promise<boolean> }) {
   const [password, setPassword] = useState("");
   const [working, setWorking] = useState(false);
   const [error, setError] = useState(false);
   return (
     <main className={styles.lockScreen}>
-      <div className={styles.lockGlow} />
+      <div className={styles.lockAura} />
       <section className={styles.lockCard}>
         <span className={styles.sigil}>✦</span>
-        <p className={styles.kicker}>Sentinelle · Lucia</p>
-        <h1>Entre dans son monde.</h1>
-        <p>Les mêmes Moments. Deux regards. Un seul espace où les façonner ensemble.</p>
+        <h1>Sentinelle</h1>
+        <p>Lucia, en Moments.</p>
         <form onSubmit={async (event) => {
           event.preventDefault();
           if (!password || working) return;
@@ -64,7 +67,7 @@ function LockScreen({ onUnlock }: { onUnlock: (password: string) => Promise<bool
           if (!ok) setError(true);
         }}>
           <input autoFocus type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mot de passe" aria-label="Mot de passe Sentinelle" />
-          <button type="submit" disabled={working}>{working ? "Ouverture…" : "Entrer"}</button>
+          <button type="submit" disabled={working} aria-label="Entrer">{working ? "…" : "→"}</button>
         </form>
         {error ? <small>Ce mot de passe ne passe pas.</small> : null}
       </section>
@@ -77,16 +80,23 @@ function Inspect({ entity, entities, onClose }: {
   entities: Map<string, WorldEntity>;
   onClose: () => void;
 }) {
+  const state = (nested(entity.state, "moment") as Record<string, unknown>) ?? {};
   return (
     <div className={styles.modalBackdrop} onMouseDown={onClose}>
       <section className={styles.inspect} onMouseDown={(event) => event.stopPropagation()} data-semantic-world-id={entity["@id"]}>
-        <header><div><p className={styles.kicker}>Ce que Sentinelle voit</p><h2>{entity.name}</h2></div><button type="button" onClick={onClose}>×</button></header>
-        <div className={styles.sameObject}><span>Moment</span><code>{entity["@id"]}</code></div>
-        <div className={styles.semanticGrid}>
-          <section><h3>Propriétés</h3>{Object.entries((nested(entity.state, "moment") as Record<string, unknown>) ?? {}).filter(([, value]) => value !== null && value !== "").slice(0, 8).map(([key, value]) => <p key={key}><span>{key.replaceAll("_", " ")}</span><strong>{String(value)}</strong></p>)}</section>
-          <section><h3>Relations</h3>{entity.links.filter((link) => entities.has(link.href)).slice(0, 8).map((link) => <p key={`${link.rel}:${link.href}`}><span>{link.rel.split("/").pop()}</span><strong>{entities.get(link.href)?.name ?? link.href}</strong></p>)}</section>
+        <header>
+          <div><span className={styles.eyebrow}>Le même Moment</span><h2>{cleanMomentName(entity.name)}</h2></div>
+          <button type="button" onClick={onClose}>×</button>
+        </header>
+        <div className={styles.sameMoment}>
+          <div><span>Toi</span><strong>une scène de Lucia</strong></div>
+          <i>↔</i>
+          <div><span>Sentinelle</span><strong>le même objet, avec son sens</strong></div>
         </div>
-        <section className={styles.possible}><h3>Actions possibles</h3><div>{entity.affordances.map((item) => <span key={item["@id"]}>{item["@id"].split(":").pop()?.replaceAll("-", " ")}</span>)}</div></section>
+        <dl>
+          {Object.entries(state).filter(([, value]) => value !== null && value !== "").slice(0, 6).map(([key, value]) => <div key={key}><dt>{key.replaceAll("_", " ")}</dt><dd>{String(value)}</dd></div>)}
+        </dl>
+        <div className={styles.relations}>{entity.links.filter((link) => entities.has(link.href)).slice(0, 5).map((link) => <span key={`${link.rel}:${link.href}`}>{link.rel.split("/").pop()} · {entities.get(link.href)?.name}</span>)}</div>
       </section>
     </div>
   );
@@ -105,6 +115,7 @@ export default function SentinelleApp() {
   const [inspect, setInspect] = useState(false);
   const [compose, setCompose] = useState(false);
   const [dragged, setDragged] = useState<string | null>(null);
+  const [conversationActive, setConversationActive] = useState(false);
 
   const entities = useMemo(() => mapEntities(workspace), [workspace]);
   const moments = useMemo(() => [...entities.values()].filter((entity) => typeName(entity) === "Moment" && Boolean(entity.contentUrl)), [entities]);
@@ -115,25 +126,20 @@ export default function SentinelleApp() {
   const currentIndex = currentMoment ? moments.findIndex((item) => item["@id"] === currentMoment["@id"]) : -1;
   const selection = entities.get(SELECTION_ID) ?? null;
   const compilation = entities.get(COMPILATION_ID) ?? null;
-  const sharedCollection = workspace
-    ? attentionValue(workspace, "current_selection")
-    : null;
-  const sharedCollectionEntity = typeof sharedCollection === "string"
-    ? entities.get(sharedCollection) ?? null
-    : null;
-  const activeCollection = sharedCollectionEntity?.orderedEntityIds
-    ? sharedCollectionEntity
-    : compilation ?? selection;
+  const sharedCollection = workspace ? attentionValue(workspace, "current_selection") : null;
+  const sharedCollectionEntity = typeof sharedCollection === "string" ? entities.get(sharedCollection) ?? null : null;
+  const activeCollection = sharedCollectionEntity?.orderedEntityIds ? sharedCollectionEntity : compilation ?? selection;
   const ordered = collectionIds(activeCollection);
   const instructionEntities = [...entities.values()].filter((entity) => typeName(entity) === "Instruction").sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
   const currentInstruction = instructionEntities[0] ?? null;
   const instructionStatus = String(currentInstruction ? nested(currentInstruction.state, "instruction", "status") ?? "" : "");
+  const instructionMessage = String(currentInstruction ? nested(currentInstruction.state, "instruction", "message") ?? "" : "");
+  const instructionError = String(currentInstruction ? nested(currentInstruction.state, "instruction", "error") ?? "" : "");
   const working = instructionStatus === "open" || instructionStatus === "working";
   const transcriptLink = currentMoment?.links.find((link) => link.rel.endsWith("/transcript"));
   const transcript = transcriptLink ? entities.get(transcriptLink.href) ?? null : null;
   const excerpt = String(transcript ? nested(transcript.state, "transcript", "excerpt") ?? "" : "");
   const momentState = (currentMoment ? nested(currentMoment.state, "moment") : {}) as Record<string, unknown>;
-  const sharedStart = Number(workspace ? attentionValue(workspace, "range_start_seconds") ?? 0 : 0);
 
   const acceptWorkspace = useCallback((value: WorkspaceProjection) => {
     workspaceRef.current = value;
@@ -150,8 +156,9 @@ export default function SentinelleApp() {
       }
       if (!response.ok) throw new Error();
       acceptWorkspace(parseWorkspace(await response.json()));
+      setNotice("");
     } catch {
-      setNotice("Le monde de Lucia ne répond pas encore.");
+      setNotice("Connexion en cours…");
     }
   }, [acceptWorkspace, api]);
 
@@ -166,7 +173,7 @@ export default function SentinelleApp() {
     void loadWorkspace();
     const events = new EventSource(`${api}/events/lucia`, { withCredentials: true });
     events.addEventListener("world-changed", () => void loadWorkspace());
-    events.onerror = () => setNotice("Sentinelle se reconnecte…");
+    events.onerror = () => setNotice("Reconnexion…");
     const fallback = window.setInterval(() => void loadWorkspace(), 6_000);
     return () => { events.close(); window.clearInterval(fallback); };
   }, [api, auth, loadWorkspace]);
@@ -187,7 +194,7 @@ export default function SentinelleApp() {
     try {
       const response = await fetch(`${api}/workspaces/lucia/actions/${action}`, { method: "POST", credentials: "include", headers: { Accept: "application/json", "Content-Type": "application/json" }, body: JSON.stringify(payload), cache: "no-store" });
       if (response.status === 409) {
-        setNotice("Le Moment a changé. Je recharge sa version actuelle.");
+        setNotice("Le Moment vient de changer — version actuelle chargée.");
         await loadWorkspace();
         return null;
       }
@@ -199,7 +206,7 @@ export default function SentinelleApp() {
       acceptWorkspace(next);
       return next;
     } catch {
-      setNotice("Cette transformation n’a pas pu être appliquée.");
+      setNotice("Je n’ai pas pu appliquer ça.");
       return null;
     }
   }, [acceptWorkspace, api, loadWorkspace]);
@@ -261,7 +268,6 @@ export default function SentinelleApp() {
 
   const toggleCurrentMoment = () => {
     if (!currentMoment) return;
-    setCompose(true);
     const exists = ordered.includes(currentMoment["@id"]);
     void updateCollection(exists ? ordered.filter((id) => id !== currentMoment["@id"]) : [...ordered, currentMoment["@id"]], exists ? null : currentMoment["@id"]);
   };
@@ -269,6 +275,7 @@ export default function SentinelleApp() {
   const submitInstruction = async (event: FormEvent) => {
     event.preventDefault();
     if (!instruction.trim() || !currentMoment || working) return;
+    setConversationActive(true);
     await shareCurrentTime();
     const next = await mutate("instruct", {
       mutationId: mutationId("human-instruction"),
@@ -280,19 +287,26 @@ export default function SentinelleApp() {
 
   if (auth === "loading") return <main className={styles.loading}><span>✦</span></main>;
   if (auth === "locked") return <LockScreen onUnlock={unlock} />;
-  if (!workspace || !currentMoment) return <main className={styles.loading}><span>✦</span><p>{notice || "Ouverture du monde de Lucia…"}</p></main>;
+  if (!workspace || !currentMoment) return <main className={styles.loading}><span>✦</span><p>{notice || "Lucia arrive…"}</p></main>;
+
+  const selected = ordered.includes(currentMoment["@id"]);
+  const title = cleanMomentName(currentMoment.name);
+  const duration = Number(momentState.active_duration_seconds ?? momentState.duration_seconds ?? 0);
 
   return (
     <main className={styles.shell}>
       <header className={styles.topbar}>
         <div className={styles.brand}><span className={styles.sigil}>✦</span><strong>Sentinelle</strong></div>
-        <div className={styles.worldName}><span>Lucia</span><i>·</i><strong>Moments</strong></div>
-        <div className={styles.presence}><span>● Luca</span><span className={styles.sentinel}>✦ Sentinelle</span></div>
+        <div className={styles.channel}><span>Lucia</span><b>Moments</b></div>
+        <div className={styles.headerActions}>
+          <button type="button" onClick={() => setCompose(true)} className={styles.constellation}>{ordered.length ? `${ordered.length} gardés` : "Ma sélection"}</button>
+          <div className={styles.presence}><span>● Luca</span><span>✦</span></div>
+        </div>
       </header>
 
       <section className={styles.stage} data-semantic-world-id={currentMoment["@id"]}>
         {notice ? <button type="button" className={styles.notice} onClick={() => setNotice("")}>{notice}<span>×</span></button> : null}
-        <div className={styles.playerColumn}>
+        <div className={styles.momentExperience}>
           <button className={`${styles.navArrow} ${styles.previous}`} type="button" onClick={() => navigate(-1)} aria-label="Moment précédent">‹</button>
           <div className={styles.videoFrame}>
             <video
@@ -306,42 +320,40 @@ export default function SentinelleApp() {
               onPause={() => void shareCurrentTime()}
               onSeeked={() => void shareCurrentTime()}
             />
-            <div className={styles.sharedGaze}><span>●</span><span>✦</span><small>{sentinelFocus === currentMoment["@id"] ? "Vous regardez le même Moment" : "Sentinelle voit ce Moment"}</small></div>
-            {currentMoment.lastChangeKind === "sentinelle" ? <div className={styles.changed}>✦ façonné par Sentinelle</div> : null}
+            <div className={styles.counter}>{String(currentIndex + 1).padStart(2, "0")} / {String(moments.length).padStart(2, "0")}</div>
+            <div className={`${styles.coPresence} ${sentinelFocus === currentMoment["@id"] ? styles.together : ""}`} title="Sentinelle regarde le même Moment"><span>●</span><span>✦</span></div>
+            {currentMoment.lastChangeKind === "sentinelle" ? <div className={styles.changed}>✦ façonné</div> : null}
           </div>
           <button className={`${styles.navArrow} ${styles.next}`} type="button" onClick={() => navigate(1)} aria-label="Moment suivant">›</button>
-        </div>
 
-        <article className={styles.momentDetails}>
-          <p className={styles.kicker}>Moment {String(currentIndex + 1).padStart(2, "0")} · {String(moments.length).padStart(2, "0")}</p>
-          <h1>{currentMoment.name}</h1>
-          {momentState.hook ? <p className={styles.hook}>{String(momentState.hook)}</p> : null}
-          <div className={styles.meta}><span>{String(momentState.location ?? "Lucia")}</span><span>{secondsLabel(Number(momentState.active_duration_seconds ?? momentState.duration_seconds ?? 0))}</span>{Number(momentState.range_start_seconds ?? 0) > 0 ? <span>commence à {secondsLabel(Number(momentState.range_start_seconds))}</span> : null}</div>
-          {excerpt ? <blockquote>“{excerpt.slice(0, 360)}{excerpt.length > 360 ? "…" : ""}”</blockquote> : null}
-          <div className={styles.actions}>
-            <button type="button" className={styles.primaryAction} onClick={() => void shareCurrentTime()}>Commencer ici <span>{secondsLabel(playhead)}</span></button>
-            <button type="button" onClick={toggleCurrentMoment}>{ordered.includes(currentMoment["@id"]) ? "Retirer de la composition" : "+ Composer"}</button>
-            <button type="button" className={styles.more} onClick={() => setInspect(true)} aria-label="Inspecter ce Moment">•••</button>
+          <div className={styles.momentCopy}>
+            <h1>{title}</h1>
+            <p>{excerpt ? `${excerpt.slice(0, 150)}${excerpt.length > 150 ? "…" : ""}` : String(momentState.hook ?? "Un Moment de Lucia")}</p>
+            <div className={styles.meta}><span>{String(momentState.location ?? "Lucia")}</span><i>·</i><span>{secondsLabel(duration)}</span>{Number(momentState.range_start_seconds ?? 0) > 0 ? <><i>·</i><span>façonné</span></> : null}</div>
           </div>
-          {sharedStart > 0 ? <p className={styles.sharedMarker}><span /> Point partagé avec Sentinelle · {secondsLabel(sharedStart)}</p> : null}
-        </article>
+
+          <div className={styles.momentActions}>
+            <button type="button" className={selected ? styles.kept : ""} onClick={toggleCurrentMoment} aria-label={selected ? "Retirer de ma sélection" : "Garder ce Moment"}><span>{selected ? "✓" : "+"}</span><small>{selected ? "Gardé" : "Garder"}</small></button>
+            <button type="button" onClick={() => setInspect(true)} aria-label="En savoir plus"><span>•••</span><small>Voir</small></button>
+          </div>
+        </div>
       </section>
 
       <nav className={styles.momentRail} aria-label="Moments Lucia">
-        {moments.map((moment, index) => <button type="button" key={moment["@id"]} className={moment["@id"] === currentMoment["@id"] ? styles.activeMoment : ""} onClick={() => void focusMoment(moment)} data-world-id={moment["@id"]}><span>{String(index + 1).padStart(2, "0")}</span><strong>{moment.name}</strong></button>)}
+        {moments.map((moment, index) => <button type="button" key={moment["@id"]} className={moment["@id"] === currentMoment["@id"] ? styles.activeMoment : ""} onClick={() => void focusMoment(moment)} data-world-id={moment["@id"]}><span>{String(index + 1).padStart(2, "0")}</span><strong>{cleanMomentName(moment.name)}</strong></button>)}
       </nav>
 
       {compose ? <section className={styles.composition}>
-        <header><div><p className={styles.kicker}>{compilation ? "Compilation" : "Sélection"}</p><h2>Composition</h2></div><span>{ordered.length} Moments</span><button type="button" onClick={() => setCompose(false)}>×</button></header>
-        <div className={styles.timeline}>{ordered.map((id, index) => { const moment = entities.get(id); if (!moment) return null; return <button type="button" key={id} draggable onDragStart={() => setDragged(id)} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (!dragged || dragged === id) return; const next = [...ordered]; const from = next.indexOf(dragged); const to = next.indexOf(id); next.splice(from, 1); next.splice(to, 0, dragged); setDragged(null); void updateCollection(next, dragged); }} onClick={() => void focusMoment(moment)}><span>{index + 1}</span><strong>{moment.name}</strong><i onClick={(event) => { event.stopPropagation(); void updateCollection(ordered.filter((item) => item !== id), null); }}>×</i></button>; })}</div>
+        <header><div><span className={styles.eyebrow}>Ta constellation</span><h2>{ordered.length ? `${ordered.length} Moments` : "Rien ici pour l’instant"}</h2></div><button type="button" onClick={() => setCompose(false)}>×</button></header>
+        {ordered.length ? <div className={styles.timeline}>{ordered.map((id, index) => { const moment = entities.get(id); if (!moment) return null; return <button type="button" key={id} draggable onDragStart={() => setDragged(id)} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (!dragged || dragged === id) return; const next = [...ordered]; const from = next.indexOf(dragged); const to = next.indexOf(id); next.splice(from, 1); next.splice(to, 0, dragged); setDragged(null); void updateCollection(next, dragged); }} onClick={() => { void focusMoment(moment); setCompose(false); }}><span>{index + 1}</span><strong>{cleanMomentName(moment.name)}</strong><i onClick={(event) => { event.stopPropagation(); void updateCollection(ordered.filter((item) => item !== id), null); }}>×</i></button>; })}</div> : <p className={styles.emptyComposition}>Garde les Moments qui te donnent envie. Sentinelle saura exactement lesquels.</p>}
       </section> : null}
 
       <footer className={styles.composer}>
-        <div className={styles.sentient}><span className={working ? styles.working : ""}>✦</span><small>{working ? "Sentinelle façonne le Moment…" : "Sentinelle est ici"}</small></div>
+        {conversationActive && (working || instructionMessage || instructionError) ? <div className={`${styles.reply} ${instructionError ? styles.replyError : ""}`}><span className={working ? styles.working : ""}>✦</span><p>{working ? "Je façonne ce Moment…" : instructionError ? "Je n’ai pas réussi cette transformation." : instructionMessage}</p><button type="button" onClick={() => setConversationActive(false)}>×</button></div> : null}
         <form onSubmit={submitInstruction}>
-          <span className={styles.contextPill}>celui-là · {secondsLabel(playhead)}</span>
+          <span className={styles.contextPill}>✦ ce Moment · {secondsLabel(playhead)}</span>
           <input value={instruction} onChange={(event) => setInstruction(event.target.value)} placeholder="Que veux-tu faire avec celui-là ?" aria-label="Que veux-tu faire avec ce Moment ?" />
-          <button type="submit" disabled={!instruction.trim() || working}>↑</button>
+          <button type="submit" disabled={!instruction.trim() || working} aria-label="Envoyer">↑</button>
         </form>
       </footer>
 
