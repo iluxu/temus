@@ -445,7 +445,7 @@ export default function SentinelleApp() {
         <header className={styles.topbar}>
           <div className={styles.brand}><span>✦</span><strong>Sentinelle</strong></div>
           <div className={styles.sharedPresence}><span>● Luca</span><i>+</i><span>✦ ici</span></div>
-          <button type="button" onClick={() => composedWorlds.length ? setWorldMenu(true) : setCompose(true)} className={styles.constellation}><b>{activeSurface ? composedWorlds.length : ordered.length}</b><span>{activeSurface ? "Worlds" : "Moments"}</span></button>
+          <button type="button" onClick={() => composedWorlds.length ? setWorldMenu(true) : setCompose(true)} className={styles.constellation}><b>{composedWorlds.length || ordered.length}</b><span>{composedWorlds.length ? "Worlds" : "Moments"}</span></button>
         </header>
 
         {working ? <div className={styles.globalWorkBubble} aria-live="polite">
