@@ -285,9 +285,9 @@ export default function SentinelleApp() {
   }, [activeCollection, mutate]);
 
   useEffect(() => {
-    if (activeSurface || !workspace || !moments.length || (humanFocus && entities.get(humanFocus)?.contentUrl)) return;
+    if (activeArtifact || humanFocus || !workspace || !moments.length) return;
     void focusMoment(moments[0]);
-  }, [activeSurface, entities, focusMoment, humanFocus, moments, workspace]);
+  }, [activeArtifact, focusMoment, humanFocus, moments, workspace]);
 
   useEffect(() => {
     if (!activeCollection) return;
@@ -310,6 +310,14 @@ export default function SentinelleApp() {
 
   const shareCurrentTime = async () => {
     if (!currentMoment) return;
+    const canonical = workspaceRef.current;
+    if (canonical) {
+      const artifact = attentionValue(canonical, "active_artifact");
+      const artifactEntity = typeof artifact === "string"
+        ? mapEntities(canonical).get(artifact) ?? null
+        : null;
+      if (artifactEntity && typeName(artifactEntity) === "ComposedWorld") return;
+    }
     const at = Number((video.current?.currentTime ?? playhead).toFixed(3));
     await focusMoment(currentMoment, at);
   };
