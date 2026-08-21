@@ -19,6 +19,7 @@ type Mission = {
   version: number;
   currentStep?: string | null;
   waiting?: Record<string, unknown> | null;
+  result?: { summary?: string; delivery_state?: string } | null;
   currentWork?: {
     id: string;
     status: string;
@@ -26,6 +27,7 @@ type Mission = {
     attempt?: { id: string; status: string; worker: string } | null;
     changedFiles: string[];
     tests: Array<{ command?: string; exitCode?: number }>;
+    deliverable?: { text?: string; truncated?: boolean } | null;
   } | null;
   createdAt: string;
   updatedAt: string;
@@ -344,6 +346,10 @@ export default function TradingRoom() {
                   {mission.currentWork.changedFiles.length ? <small>{mission.currentWork.changedFiles.length} fichier{mission.currentWork.changedFiles.length > 1 ? "s" : ""} modifié{mission.currentWork.changedFiles.length > 1 ? "s" : ""}</small> : null}
                   {mission.currentWork.tests.length ? <small>{mission.currentWork.tests.filter((item) => item.exitCode === 0).length}/{mission.currentWork.tests.length} tests reçus</small> : null}
                 </div> : null}
+                {mission.status === "completed" && (mission.result?.summary || mission.currentWork?.deliverable?.text) ? <details className={styles.result}>
+                  <summary>Voir le résultat vérifié</summary>
+                  <p>{mission.result?.summary || mission.currentWork?.deliverable?.text}</p>
+                </details> : null}
                 {(["running", "queued", "waiting", "paused"] as string[]).includes(mission.status) ? <footer>
                   {mission.status === "paused" ? <button onClick={() => void control(mission.id, "resume")}>Reprendre</button> : <button onClick={() => void control(mission.id, "pause")}>Pause</button>}
                   <button onClick={() => void control(mission.id, "cancel")}>Arrêter</button>
