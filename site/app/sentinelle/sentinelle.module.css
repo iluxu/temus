@@ -184,7 +184,7 @@
 .surfaceMoment:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--surface-accent) 42%, transparent); box-shadow: 0 18px 48px rgba(0,0,0,.32); }
 .surfaceMomentFocused { border-color: var(--surface-accent); box-shadow: 0 0 0 1px color-mix(in srgb, var(--surface-accent) 24%, transparent), 0 18px 50px rgba(0,0,0,.35); }
 .surfaceMedia { position: relative; min-height: 132px; overflow: hidden; background: #050605; }
-.surfaceMedia video { width: 100%; height: 100%; object-fit: cover; }
+.surfaceMedia video, .surfaceMedia iframe { width: 100%; height: 100%; min-height: inherit; border: 0; object-fit: cover; }
 .surfaceMedia > span { display: grid; height: 100%; min-height: 130px; place-items: center; color: var(--surface-accent); }
 .surfaceMedia > i { position: absolute; top: 9px; left: 9px; display: grid; min-width: 27px; height: 27px; padding: 0 7px; place-items: center; border: 1px solid rgba(255,255,255,.15); border-radius: 999px; color: #fff; background: rgba(5,6,5,.66); font-size: .53rem; font-style: normal; backdrop-filter: blur(10px); }
 .surfaceMomentCopy { min-width: 0; padding: 12px 13px 14px; }
@@ -193,7 +193,7 @@
 .surfaceMomentCopy p { display: -webkit-box; margin: 7px 0 0; overflow: hidden; color: #8d9187; font-size: .59rem; line-height: 1.4; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .surfaceMomentCopy small { display: block; margin-top: 8px; color: #5f635b; font-size: .5rem; }
 .surfaceScore { display: grid; align-self: center; color: var(--surface-accent); font-size: 1.4rem; font-weight: 540; letter-spacing: -.06em; }
-.surfaceScore::after { content: "/100"; margin-top: -3px; color: #5f635b; font-size: .43rem; font-weight: 500; letter-spacing: 0; }
+.surfaceScore small { margin-top: -3px; color: #5f635b; font-size: .43rem; font-weight: 500; letter-spacing: 0; }
 .surfaceRemove { position: absolute; z-index: 3; top: 8px; right: 8px; display: grid; width: 25px; height: 25px; place-items: center; border: 1px solid rgba(255,255,255,.13); border-radius: 50%; color: #d1d3cd; background: rgba(6,7,6,.72); opacity: 0; cursor: pointer; backdrop-filter: blur(8px); transition: opacity .18s ease; }
 .surfaceMoment:hover .surfaceRemove, .surfaceRemove:focus-visible { opacity: 1; }
 

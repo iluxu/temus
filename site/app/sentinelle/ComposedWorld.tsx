@@ -38,6 +38,14 @@ function annotation(section: WorldEntity, entityId: string): Record<string, unkn
     : {};
 }
 
+function twitchEmbed(moment: WorldEntity): string | null {
+  const publicUrl = String(nested(moment.state, "moment", "public_url") ?? "");
+  const match = publicUrl.match(/\/clip\/([^/?#]+)/i);
+  if (!match) return null;
+  const parent = typeof window === "undefined" ? "adoptan.ai" : window.location.hostname;
+  return `https://clips.twitch.tv/embed?clip=${encodeURIComponent(match[1])}&parent=${encodeURIComponent(parent)}&autoplay=false&muted=true`;
+}
+
 function MomentTile({
   moment,
   section,
@@ -47,7 +55,8 @@ function MomentTile({
   onFocus,
   onRemove,
   onDrag,
-  onDrop
+  onDrop,
+  scoreScale
 }: {
   moment: WorldEntity;
   section: WorldEntity;
@@ -58,6 +67,7 @@ function MomentTile({
   onRemove: () => void;
   onDrag: () => void;
   onDrop: () => void;
+  scoreScale: number;
 }) {
   const note = annotation(section, moment["@id"]);
   const score = typeof note.score === "number" ? Math.round(note.score) : null;
@@ -65,6 +75,7 @@ function MomentTile({
   const description = String(note.note ?? nested(moment.state, "moment", "hook") ?? "");
   const location = String(nested(moment.state, "moment", "location") ?? "Lucia");
   const ranking = visual === "ranked-list";
+  const embedUrl = twitchEmbed(moment);
   return (
     <article
       className={`${styles.surfaceMoment} ${focused ? styles.surfaceMomentFocused : ""}`}
@@ -88,6 +99,8 @@ function MomentTile({
               else event.currentTarget.pause();
             }}
           />
+        ) : embedUrl ? (
+          <iframe src={embedUrl} title={cleanName(moment.name)} allowFullScreen loading="lazy" />
         ) : <span>✦</span>}
         <i>{ranking ? `#${index + 1}` : String(index + 1).padStart(2, "0")}</i>
       </div>
@@ -99,7 +112,7 @@ function MomentTile({
         {description ? <p>{description}</p> : null}
         <small>{location}</small>
       </div>
-      {score !== null ? <strong className={styles.surfaceScore}>{score}</strong> : null}
+      {score !== null ? <strong className={styles.surfaceScore}>{score}<small>/{scoreScale}</small></strong> : null}
       <button
         type="button"
         className={styles.surfaceRemove}
@@ -160,6 +173,8 @@ export default function ComposedWorld({
           const subtitle = String(nested(section.state, "surface", "subtitle") ?? "");
           const ids = section.orderedEntityIds ?? [];
           const items = ids.map((id) => entities.get(id)).filter(Boolean) as WorldEntity[];
+          const scores = ids.map((id) => annotation(section, id).score).filter((value): value is number => typeof value === "number");
+          const scoreScale = scores.length && Math.max(...scores) <= 10 ? 10 : 100;
           return (
             <section key={section["@id"]} className={styles.surfaceSection} data-semantic-world-id={section["@id"]}>
               <header>
@@ -179,6 +194,7 @@ export default function ComposedWorld({
                     onRemove={() => onChange(section, ids.filter((id) => id !== moment["@id"]), null)}
                     onDrag={() => setDragged({ sectionId: section["@id"], entityId: moment["@id"] })}
                     onDrop={() => dropInto(section, moment["@id"])}
+                    scoreScale={scoreScale}
                   />
                 ))}
               </div>
