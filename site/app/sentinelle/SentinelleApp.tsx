@@ -18,6 +18,7 @@ import {
   sentinelleApiBase,
   typeName
 } from "./world";
+import ComposedWorld from "./ComposedWorld";
 import styles from "./sentinelle.module.css";
 
 const SELECTION_ID = "urn:adoptan:selection:44";
@@ -133,6 +134,7 @@ export default function SentinelleApp() {
   const [dragged, setDragged] = useState<string | null>(null);
   const [conversationActive, setConversationActive] = useState(false);
   const [workStep, setWorkStep] = useState(0);
+  const [worldMenu, setWorldMenu] = useState(false);
 
   const entities = useMemo(() => mapEntities(workspace), [workspace]);
   const moments = useMemo(() => [...entities.values()].filter((entity) => typeName(entity) === "Moment" && Boolean(entity.contentUrl)), [entities]);
@@ -143,11 +145,23 @@ export default function SentinelleApp() {
   const currentIndex = currentMoment ? moments.findIndex((item) => item["@id"] === currentMoment["@id"]) : -1;
   const selection = entities.get(SELECTION_ID) ?? null;
   const compilation = entities.get(COMPILATION_ID) ?? null;
+  const baseCollection = compilation ?? selection;
   const sharedCollection = workspace ? attentionValue(workspace, "current_selection") : null;
   const sharedCollectionEntity = typeof sharedCollection === "string" ? entities.get(sharedCollection) ?? null : null;
-  const activeCollection = sharedCollectionEntity?.orderedEntityIds ? sharedCollectionEntity : compilation ?? selection;
+  const activeCollection = sharedCollectionEntity?.orderedEntityIds ? sharedCollectionEntity : baseCollection;
   const ordered = collectionIds(activeCollection);
-  const instructionEntities = [...entities.values()].filter((entity) => typeName(entity) === "Instruction").sort((a, b) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
+  const composedWorlds = [...entities.values()]
+    .filter((entity) => typeName(entity) === "ComposedWorld")
+    .sort((a, b) => String(nested(b.state, "surface", "created_at") ?? b.updatedAt ?? "").localeCompare(String(nested(a.state, "surface", "created_at") ?? a.updatedAt ?? "")));
+  const activeArtifact = workspace ? attentionValue(workspace, "active_artifact") : null;
+  const activeArtifactEntity = typeof activeArtifact === "string" ? entities.get(activeArtifact) ?? null : null;
+  const activeSurface = activeArtifactEntity && typeName(activeArtifactEntity) === "ComposedWorld" ? activeArtifactEntity : null;
+  const instructionEntities = [...entities.values()].filter((entity) => typeName(entity) === "Instruction").sort((a, b) => {
+    const aCreated = nested(a.state, "instruction", "created_at");
+    const bCreated = nested(b.state, "instruction", "created_at");
+    if (Boolean(aCreated) !== Boolean(bCreated)) return bCreated ? 1 : -1;
+    return String(bCreated ?? b.updatedAt ?? "").localeCompare(String(aCreated ?? a.updatedAt ?? ""));
+  });
   const currentInstruction = instructionEntities[0] ?? null;
   const instructionStatus = String(currentInstruction ? nested(currentInstruction.state, "instruction", "status") ?? "" : "");
   const instructionText = String(currentInstruction ? nested(currentInstruction.state, "instruction", "text") ?? "" : "");
@@ -271,9 +285,9 @@ export default function SentinelleApp() {
   }, [activeCollection, mutate]);
 
   useEffect(() => {
-    if (!workspace || !moments.length || (humanFocus && entities.get(humanFocus)?.contentUrl)) return;
+    if (activeSurface || !workspace || !moments.length || (humanFocus && entities.get(humanFocus)?.contentUrl)) return;
     void focusMoment(moments[0]);
-  }, [entities, focusMoment, humanFocus, moments, workspace]);
+  }, [activeSurface, entities, focusMoment, humanFocus, moments, workspace]);
 
   useEffect(() => {
     if (!activeCollection) return;
@@ -317,13 +331,14 @@ export default function SentinelleApp() {
   };
 
   const sendInstruction = async (text: string) => {
-    if (!text.trim() || !currentMoment || working) return;
+    const focusEntity = (humanFocus ? entities.get(humanFocus) ?? null : null) ?? activeSurface ?? currentMoment;
+    if (!text.trim() || !focusEntity || working) return;
     setConversationActive(true);
-    await shareCurrentTime();
+    if (typeName(focusEntity) === "Moment") await shareCurrentTime();
     const next = await mutate("instruct", {
       mutationId: mutationId("human-instruction"),
       text: text.trim(),
-      currentFocus: currentMoment["@id"]
+      currentFocus: focusEntity["@id"]
     });
     if (next) setInstruction("");
   };
@@ -347,6 +362,56 @@ export default function SentinelleApp() {
     if (Math.abs(distance) > 54) navigate(distance > 0 ? -1 : 1);
   };
 
+  const focusSurfaceMoment = async (moment: WorldEntity, section: WorldEntity) => {
+    const current = workspaceRef.current;
+    if (!current || !activeSurface) return;
+    await mutate("set-attention", {
+      mutationId: mutationId("human-focus-surface-moment"),
+      expectedVersion: current.attention.worldVersion,
+      currentFocus: moment["@id"],
+      currentSelection: section["@id"],
+      activeArtifact: activeSurface["@id"]
+    });
+  };
+
+  const changeSurfaceCollection = async (section: WorldEntity, ids: string[], focusId: string | null) => {
+    await mutate("set-surface-collection", {
+      mutationId: mutationId("human-shapes-surface"),
+      expectedVersion: section.worldVersion ?? 0,
+      entityId: section["@id"],
+      entityIds: ids,
+      currentFocus: focusId
+    });
+  };
+
+  const openSurface = async (surface: WorldEntity) => {
+    const current = workspaceRef.current;
+    if (!current) return;
+    const sectionIds = Array.isArray(nested(surface.state, "surface", "section_ids"))
+      ? nested(surface.state, "surface", "section_ids") as string[]
+      : [];
+    setWorldMenu(false);
+    await mutate("set-attention", {
+      mutationId: mutationId("human-opens-composed-world"),
+      expectedVersion: current.attention.worldVersion,
+      currentFocus: surface["@id"],
+      currentSelection: sectionIds[0] ?? null,
+      activeArtifact: surface["@id"]
+    });
+  };
+
+  const leaveSurface = async () => {
+    const current = workspaceRef.current;
+    if (!current || !currentMoment) return;
+    await mutate("set-attention", {
+      mutationId: mutationId("human-returns-to-moments"),
+      expectedVersion: current.attention.worldVersion,
+      currentFocus: currentMoment["@id"],
+      currentSelection: baseCollection?.["@id"] ?? null,
+      activeArtifact: String(nested(currentMoment.state, "moment", "active_media_derivative_id") ?? currentMoment["@id"])
+    });
+  };
+
   if (auth === "loading") return <main className={styles.loading}><span>✦</span></main>;
   if (auth === "locked") return <LockScreen onUnlock={unlock} />;
   if (!workspace || !currentMoment) return <main className={styles.loading}><span>✦</span><p>{notice || "Lucia arrive…"}</p></main>;
@@ -357,11 +422,12 @@ export default function SentinelleApp() {
   const duration = videoDuration || knownDuration;
   const progress = duration > 0 ? Math.min(100, (playhead / duration) * 100) : 0;
   const shellStyle = videoSource ? ({ "--moment-art": `url("${videoSource}")` } as CSSProperties) : undefined;
+  const intentPreview = instructionText.length > 54 ? `${instructionText.slice(0, 54)}…` : instructionText;
   const progressText = [
-    "Je regarde ce Moment avec toi.",
-    "J’explore les moyens utiles à ta demande.",
-    "Je façonne une nouvelle version jouable.",
-    "Je vérifie le résultat dans le World."
+    `Je prends « ${intentPreview || "ton intention"} » au sérieux.`,
+    "Je regarde les mêmes Moments que toi.",
+    "Je compose l’espace utile autour de cette intention.",
+    "Le nouveau World prend vie devant nous."
   ][workStep];
 
   return (
@@ -371,9 +437,22 @@ export default function SentinelleApp() {
         <header className={styles.topbar}>
           <div className={styles.brand}><span>✦</span><strong>Sentinelle</strong></div>
           <div className={styles.sharedPresence}><span>● Luca</span><i>+</i><span>✦ ici</span></div>
-          <button type="button" onClick={() => setCompose(true)} className={styles.constellation}><b>{ordered.length}</b><span>Moments</span></button>
+          <button type="button" onClick={() => composedWorlds.length ? setWorldMenu(true) : setCompose(true)} className={styles.constellation}><b>{activeSurface ? composedWorlds.length : ordered.length}</b><span>{activeSurface ? "Worlds" : "Moments"}</span></button>
         </header>
 
+        {working ? <div className={styles.globalWorkBubble} aria-live="polite">
+          <div className={styles.requestBubble}><span>●</span><p>{instructionText || "Ta demande"}</p></div>
+          <div className={styles.sentinelleProgress}><span>✦</span><p>{progressText}</p><i /></div>
+        </div> : null}
+
+        {activeSurface ? <ComposedWorld
+          world={activeSurface}
+          entities={entities}
+          focusedId={humanFocus}
+          onBack={() => void leaveSurface()}
+          onFocus={(moment, section) => void focusSurfaceMoment(moment, section)}
+          onChange={(section, ids, focusId) => void changeSurfaceCollection(section, ids, focusId)}
+        /> :
         <section
           className={styles.moment}
           data-semantic-world-id={currentMoment["@id"]}
@@ -401,10 +480,6 @@ export default function SentinelleApp() {
             <div className={styles.momentCount}>{currentIndex + 1}<span>/</span>{moments.length}</div>
             <div className={`${styles.coPresence} ${sentinelFocus === currentMoment["@id"] ? styles.together : ""}`} title="Luca et Sentinelle regardent le même Moment"><span>●</span><span>✦</span></div>
             {hasVersion ? <div className={styles.versionToggle}><button type="button" className={showOriginal ? styles.versionActive : ""} onClick={() => setShowOriginal(true)}>Original</button><button type="button" className={!showOriginal ? styles.versionActive : ""} onClick={() => setShowOriginal(false)}>Version ✦</button></div> : null}
-            {working ? <div className={styles.workBubble} aria-live="polite">
-              <div className={styles.requestBubble}><span>●</span><p>{instructionText || "Ta demande"}</p></div>
-              <div className={styles.sentinelleProgress}><span>✦</span><p>{progressText}</p><i /></div>
-            </div> : null}
             {!playing ? <button type="button" className={styles.play} onClick={togglePlayback} aria-label="Lire"><span>▶</span></button> : null}
             <button className={`${styles.nav} ${styles.previous}`} type="button" onClick={() => navigate(-1)} aria-label="Moment précédent">‹</button>
             <button className={`${styles.nav} ${styles.next}`} type="button" onClick={() => navigate(1)} aria-label="Moment suivant">›</button>
@@ -429,19 +504,25 @@ export default function SentinelleApp() {
           <nav className={styles.momentRail} aria-label="Moments Lucia">
             {moments.map((moment, index) => <button type="button" key={moment["@id"]} className={moment["@id"] === currentMoment["@id"] ? styles.activeMoment : ""} onClick={() => void focusMoment(moment)} data-world-id={moment["@id"]} aria-label={cleanMomentName(moment.name)}><span>{String(index + 1).padStart(2, "0")}</span></button>)}
           </nav>
-        </section>
+        </section>}
 
         <footer className={styles.composer}>
           {conversationActive && (instructionMessage || instructionError) && !working ? <div className={`${styles.reply} ${instructionError ? styles.replyError : ""}`}><span>✦</span><p>{instructionError ? "Je n’ai pas réussi cette transformation." : instructionMessage}</p><button type="button" onClick={() => setConversationActive(false)}>×</button></div> : null}
-          <div className={styles.suggestions} aria-label="Idées de transformation">
-            {["Plus nerveux", "Coupe les blancs", "Noir & blanc", "Format carré"].map((idea) => <button type="button" key={idea} disabled={working} onClick={() => void sendInstruction(`${idea}, sur celui-là.`)}>{idea}</button>)}
+          <div className={styles.suggestions} aria-label="Idées de Worlds">
+            {["Trouve une histoire", "Classe les plus absurdes", "Compare ceux-là"].map((idea) => <button type="button" key={idea} disabled={working} onClick={() => void sendInstruction(`${idea} avec ces Moments.`)}>{idea}</button>)}
           </div>
           <form onSubmit={submitInstruction}>
             <span>✦</span>
-            <input value={instruction} onChange={(event) => setInstruction(event.target.value)} placeholder="Que veux-tu faire avec celui-là ?" aria-label="Que veux-tu faire avec ce Moment ?" />
+            <input value={instruction} onChange={(event) => setInstruction(event.target.value)} placeholder={activeSurface ? "Que veux-tu faire dans ce World ?" : "Que veux-tu faire avec ces Moments ?"} aria-label="Dis à Sentinelle ce que tu veux faire" />
             <button type="submit" disabled={!instruction.trim() || working} aria-label="Envoyer">↑</button>
           </form>
         </footer>
+
+        {worldMenu ? <section className={styles.worldMenu}>
+          <header><div><span>TES WORLDS</span><h2>Intentions vivantes</h2></div><button type="button" onClick={() => setWorldMenu(false)}>×</button></header>
+          <p>Chaque espace garde les mêmes Moments, mais une forme adaptée à ce que tu voulais accomplir.</p>
+          <div>{composedWorlds.map((surface, index) => <button type="button" key={surface["@id"]} onClick={() => void openSurface(surface)} data-semantic-world-id={surface["@id"]}><i style={{ background: String(nested(surface.state, "surface", "accent") ?? "#d2ff74") }} /><span><small>WORLD {String(composedWorlds.length - index).padStart(2, "0")}</small><strong>{surface.name}</strong><em>{String(nested(surface.state, "surface", "intention") ?? "")}</em></span><b>→</b></button>)}</div>
+        </section> : null}
 
         {compose ? <section className={styles.composition}>
           <header><div><span>CONSTELLATION</span><h2>{ordered.length ? `${ordered.length} Moments` : "Choisis tes Moments"}</h2></div><button type="button" onClick={() => setCompose(false)}>×</button></header>

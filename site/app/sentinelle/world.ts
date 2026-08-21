@@ -167,7 +167,7 @@ export function parseWorkspace(value: unknown): WorkspaceProjection {
     throw new ProjectionError("workspace projection is incompatible");
   }
   const graph = record(source.graph, "workspace.graph");
-  const entities = list(graph.entities, "workspace.graph.entities", 200).map(parseEntity);
+  const entities = list(graph.entities, "workspace.graph.entities", 500).map(parseEntity);
   const attention = parseEntity(source.attention);
   const presence = list(source.presence, "workspace.presence", 10).map((item) => {
     const entry = record(item, "presence");
