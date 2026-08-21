@@ -38,14 +38,6 @@ function annotation(section: WorldEntity, entityId: string): Record<string, unkn
     : {};
 }
 
-function twitchEmbed(moment: WorldEntity): string | null {
-  const publicUrl = String(nested(moment.state, "moment", "public_url") ?? "");
-  const match = publicUrl.match(/\/clip\/([^/?#]+)/i);
-  if (!match) return null;
-  const parent = typeof window === "undefined" ? "adoptan.ai" : window.location.hostname;
-  return `https://clips.twitch.tv/embed?clip=${encodeURIComponent(match[1])}&parent=${encodeURIComponent(parent)}&autoplay=false&muted=true`;
-}
-
 function MomentTile({
   moment,
   section,
@@ -75,7 +67,7 @@ function MomentTile({
   const description = String(note.note ?? nested(moment.state, "moment", "hook") ?? "");
   const location = String(nested(moment.state, "moment", "location") ?? "Lucia");
   const ranking = visual === "ranked-list";
-  const embedUrl = twitchEmbed(moment);
+  const sourceUrl = String(nested(moment.state, "moment", "public_url") ?? "");
   return (
     <article
       className={`${styles.surfaceMoment} ${focused ? styles.surfaceMomentFocused : ""}`}
@@ -99,8 +91,10 @@ function MomentTile({
               else event.currentTarget.pause();
             }}
           />
-        ) : embedUrl ? (
-          <iframe src={embedUrl} title={cleanName(moment.name)} allowFullScreen loading="lazy" />
+        ) : sourceUrl ? (
+          <a className={styles.surfaceSourcePreview} href={sourceUrl} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>
+            <span>▶</span><small>Voir le clip source</small>
+          </a>
         ) : <span>✦</span>}
         <i>{ranking ? `#${index + 1}` : String(index + 1).padStart(2, "0")}</i>
       </div>
