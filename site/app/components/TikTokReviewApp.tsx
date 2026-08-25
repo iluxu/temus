@@ -804,6 +804,9 @@ export default function TikTokReviewApp() {
                       <span className="workspace-note">
                         Options are rendered from TikTok creator_info. No privacy value is selected by default.
                       </span>
+                      <span className={`control-state-pill ${privacy ? "is-on" : "is-off"}`}>
+                        Selected privacy_level: {privacy || "not selected"}
+                      </span>
                     </label>
 
                     <div className="app-demo-policy-block">
@@ -816,6 +819,14 @@ export default function TikTokReviewApp() {
                         <div>
                           <span>disable_comment</span>
                           <strong>{allowComments ? "false" : "true"}</strong>
+                        </div>
+                        <div>
+                          <span>allow_comments_control</span>
+                          <strong>{allowComments ? "ON" : "OFF"}</strong>
+                        </div>
+                        <div>
+                          <span>content_disclosure_setting</span>
+                          <strong>{commercialDisclosure ? "ON" : "OFF"}</strong>
                         </div>
                         <div>
                           <span>disable_duet</span>
@@ -854,6 +865,9 @@ export default function TikTokReviewApp() {
                           <span>
                             Allow comments
                             <small>{creatorInfo.commentDisabled ? "Disabled by TikTok creator_info" : "Manual opt-in"}</small>
+                            <small className={allowComments ? "control-state is-on" : "control-state is-off"}>
+                              State: {allowComments ? "ON - comments allowed" : "OFF - comments disabled"}
+                            </small>
                           </span>
                         </label>
                         <label className={creatorInfo.duetDisabled ? "is-disabled" : ""}>
@@ -894,6 +908,9 @@ export default function TikTokReviewApp() {
                           Content Disclosure Setting
                           <small>
                             Off by default. Turn on only if this content promotes yourself, a brand, product, or service.
+                          </small>
+                          <small className={commercialDisclosure ? "control-state is-on" : "control-state is-off"}>
+                            State: {commercialDisclosure ? "ON" : "OFF"}
                           </small>
                         </span>
                       </label>
