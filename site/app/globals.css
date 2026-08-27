@@ -1833,6 +1833,50 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.tiktok-final-proof {
+  margin-top: 16px;
+  border: 1px solid hsl(152 62% 72%);
+  border-radius: 18px;
+  padding: 16px;
+  background: hsl(152 69% 97%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.tiktok-final-proof div {
+  min-width: 0;
+}
+
+.tiktok-final-proof span {
+  display: block;
+  color: hsl(152 62% 26%);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.tiktok-final-proof strong {
+  display: block;
+  color: hsl(var(--foreground));
+  font-size: 1.05rem;
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+
+.tiktok-final-proof p {
+  margin: 0;
+  color: hsl(var(--muted-foreground));
+  line-height: 1.5;
+}
+
+.tiktok-final-proof p + p {
+  margin-top: 4px;
+}
+
 .app-demo-profile {
   display: flex;
   align-items: center;

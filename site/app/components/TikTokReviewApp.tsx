@@ -62,6 +62,11 @@ const reviewSequence = [
     point: "5",
     title: "Full awareness and control",
     body: "The creator sees the video preview, editable title, selected settings, consent, upload status, processing notice, and disconnect control."
+  },
+  {
+    point: "6",
+    title: "Verify the post in TikTok",
+    body: "After PUBLISH_COMPLETE, the creator opens the connected TikTok profile and confirms the posted video is visible in TikTok."
   }
 ] as const;
 
@@ -1046,6 +1051,32 @@ export default function TikTokReviewApp() {
                     </strong>
                   </div>
                 </div>
+                {publishResult ? (
+                  <div className="tiktok-final-proof">
+                    <div>
+                      <span>Final TikTok verification</span>
+                      <strong>{publishResult.status.status}</strong>
+                      <p>
+                        Direct Post has completed on TikTok. The creator now opens the connected
+                        TikTok profile and shows the newly posted video inside TikTok.
+                      </p>
+                      {privacy === "SELF_ONLY" ? (
+                        <p>
+                          Privacy is SELF_ONLY, so the video is verified from the authenticated
+                          creator account's private posts area.
+                        </p>
+                      ) : null}
+                    </div>
+                    <a
+                      className="btn btn-primary"
+                      href={creator.profileWebLink}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      Open connected TikTok profile
+                    </a>
+                  </div>
+                ) : null}
               </section>
             </div>
           </section>
