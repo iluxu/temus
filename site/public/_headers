@@ -35,12 +35,16 @@
   X-Frame-Options: DENY
 
 /sentinelle.webmanifest
-  Cache-Control: no-cache, max-age=0
+  Cache-Control: no-store, max-age=0, must-revalidate
+  CDN-Cache-Control: no-store
+  Cloudflare-CDN-Cache-Control: no-store
   Content-Type: application/manifest+json; charset=utf-8
   X-Content-Type-Options: nosniff
 
 /sentinelle-sw.js
-  Cache-Control: no-cache, max-age=0
+  Cache-Control: no-store, max-age=0, must-revalidate
+  CDN-Cache-Control: no-store
+  Cloudflare-CDN-Cache-Control: no-store
   Service-Worker-Allowed: /sentinelle
   X-Content-Type-Options: nosniff
 

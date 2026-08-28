@@ -35,7 +35,8 @@ assert.match(renderers, /GenericEntityRenderer/, "unknown Entities need a fallba
 assert.match(world, /sentinelle-workspace\.v1/, "the frontend must parse the bounded projection");
 assert.match(world, /mode: "full"/, "the frontend must reject the archived public sandbox projection");
 assert.match(headers, /\/sentinelle[\s\S]*connect-src 'self' https:\/\/api\.adoptan\.ai/);
-assert.match(headers, /\/sentinelle-sw\.js[\s\S]*Cache-Control: no-cache/);
+assert.match(headers, /\/sentinelle-sw\.js[\s\S]*Cache-Control: no-store/);
+assert.match(headers, /\/sentinelle-sw\.js[\s\S]*Cloudflare-CDN-Cache-Control: no-store/);
 assert.equal(manifest.id, "/sentinelle");
 assert.equal(manifest.display, "standalone");
 assert.equal(manifest.scope, "/sentinelle");
