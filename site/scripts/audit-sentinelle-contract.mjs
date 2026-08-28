@@ -27,6 +27,7 @@ assert.match(app, /data-world-id/, "human Moment renderers must retain the World
 assert.match(app, /<video/, "the product must render real playable Moment media");
 assert.match(app, /Math\.abs\(index - currentMomentIndex\) <= 1/, "only the active Moment and its neighbours may own media sources");
 assert.match(app, /shouldWarmNext \? "metadata"/, "the next Moment must be warmed without downloading the full feed");
+assert.match(app, /rendition", "mobile"/, "phone playback must request the lightweight canonical rendition");
 assert.doesNotMatch(app, /--moment-art/, "a video URL must not be fetched again as decorative CSS");
 assert.match(app, /rangeStartSeconds/, "the human playhead must become shared semantic attention");
 assert.match(app, /set-selection|set-compilation/, "constellations of Moments must remain canonical collections");

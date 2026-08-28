@@ -98,6 +98,17 @@ function collectionIds(entity: WorldEntity | null): string[] {
   return entity?.orderedEntityIds ?? [];
 }
 
+function playbackSource(source: string): string {
+  if (!source) return "";
+  try {
+    const url = new URL(source);
+    url.searchParams.set("rendition", "mobile");
+    return url.toString();
+  } catch {
+    return source;
+  }
+}
+
 function secondsLabel(value: number): string {
   const safe = Number.isFinite(value) ? Math.max(0, value) : 0;
   const minutes = Math.floor(safe / 60);
@@ -559,7 +570,7 @@ export default function SentinelleApp() {
             const active = entities.get(activeId) ?? null;
             const versioned = Boolean(originalId && activeId && originalId !== activeId);
             const media = isActive && showOriginal && original?.contentUrl ? original : active;
-            const source = media?.contentUrl ?? moment.contentUrl ?? "";
+            const source = playbackSource(media?.contentUrl ?? moment.contentUrl ?? "");
             const shouldAttach = Math.abs(index - currentMomentIndex) <= 1;
             const shouldWarmNext = index === currentMomentIndex + 1;
             const mediaLoading = isActive && (
