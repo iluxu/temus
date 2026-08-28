@@ -24,6 +24,61 @@ const COMPILATION_ID = "urn:adoptan:compilation:12";
 
 type AuthState = "loading" | "locked" | "authenticated";
 
+type BeforeInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+};
+
+type CreativeIdea = {
+  id: string;
+  family: string;
+  icon: string;
+  label: string;
+  prompt: string;
+  hue: number;
+};
+
+const CREATIVE_IDEAS: CreativeIdea[] = [
+  { id: "surgical-cut", family: "CUT", icon: "✂", label: "Cut chirurgical", prompt: "Construis un cut chirurgical qui ne garde que ce qui sert vraiment ce Moment.", hue: 78 },
+  { id: "remove-pauses", family: "CUT", icon: "⌁", label: "Coupe les silences", prompt: "Coupe les silences et les respirations inutiles sans rendre la parole artificielle.", hue: 78 },
+  { id: "keep-peak", family: "CUT", icon: "◆", label: "Garde le pic", prompt: "Repère le passage le plus fort et construis tout le montage autour de ce pic.", hue: 78 },
+  { id: "eight-seconds", family: "CUT", icon: "8s", label: "Version 8 secondes", prompt: "Fais une version irrésistible de huit secondes maximum.", hue: 78 },
+  { id: "fast-pace", family: "CUT", icon: "↯", label: "Rythme nerveux", prompt: "Donne un rythme très nerveux avec des coupes franches et aucune seconde molle.", hue: 78 },
+  { id: "reaction-slowmo", family: "CUT", icon: "½", label: "Ralenti réaction", prompt: "Isole la meilleure réaction et ralentis-la juste assez pour lui donner du poids.", hue: 78 },
+  { id: "perfect-loop", family: "CUT", icon: "∞", label: "Boucle parfaite", prompt: "Transforme ce Moment en boucle parfaite dont la fin rejoint naturellement le début.", hue: 78 },
+  { id: "boomerang", family: "CUT", icon: "↔", label: "Boomerang", prompt: "Crée un boomerang court autour du geste ou du regard le plus mémorable.", hue: 78 },
+
+  { id: "vertical", family: "CADRE", icon: "↕", label: "9:16 plein écran", prompt: "Recadre ce Moment en 9:16 plein écran en préservant toujours le sujet important.", hue: 185 },
+  { id: "square", family: "CADRE", icon: "□", label: "Carré 1:1", prompt: "Compose une version carrée 1:1 dense et parfaitement centrée.", hue: 185 },
+  { id: "face-track", family: "CADRE", icon: "◎", label: "Suis le visage", prompt: "Recadre dynamiquement pour suivre le visage de Lucia sans mouvement de caméra brutal.", hue: 185 },
+  { id: "reaction-punch", family: "CADRE", icon: "+", label: "Zoom réaction", prompt: "Ajoute un punch-in précis sur la réaction la plus savoureuse.", hue: 185 },
+  { id: "blurred-canvas", family: "CADRE", icon: "◫", label: "Fond flou vertical", prompt: "Fais une version verticale avec un fond flou élégant dérivé de l’image, jamais un cadre vide.", hue: 185 },
+  { id: "stabilize", family: "CADRE", icon: "≈", label: "Stabilise l’image", prompt: "Stabilise les mouvements parasites tout en gardant l’énergie naturelle de la caméra.", hue: 185 },
+
+  { id: "instant-hook", family: "TEXTE", icon: "↗", label: "Hook immédiat", prompt: "Fais comprendre la promesse du Moment dès la première seconde avec un hook très court.", hue: 316 },
+  { id: "premium-captions", family: "TEXTE", icon: "Aa", label: "Sous-titres premium", prompt: "Crée des sous-titres premium, très lisibles et synchronisés avec la parole sans doubler le texte déjà présent.", hue: 316 },
+  { id: "strong-words", family: "TEXTE", icon: "B", label: "Mots forts", prompt: "Fais apparaître seulement les mots les plus forts avec une animation typographique sobre.", hue: 316 },
+  { id: "minimal-title", family: "TEXTE", icon: "—", label: "Titre minimal", prompt: "Remplace le traitement de titre actuel par une accroche minimale digne d’un générique de film.", hue: 316 },
+  { id: "english-version", family: "TEXTE", icon: "EN", label: "Version anglaise", prompt: "Crée une version anglaise fidèle avec des sous-titres naturels, courts et bien placés.", hue: 316 },
+  { id: "loop-end-card", family: "TEXTE", icon: "↵", label: "Fin qui reboucle", prompt: "Ajoute une fin typographique très brève qui donne envie de revoir immédiatement le début.", hue: 316 },
+
+  { id: "warm-cinema", family: "IMAGE", icon: "◒", label: "Cinéma chaud", prompt: "Donne une colorimétrie cinéma chaude avec des peaux naturelles et des noirs profonds.", hue: 32 },
+  { id: "monochrome", family: "IMAGE", icon: "◐", label: "Noir & blanc", prompt: "Passe ce Moment dans un noir et blanc contrasté, doux sur les visages et riche dans les ombres.", hue: 32 },
+  { id: "matcha-acid", family: "IMAGE", icon: "✦", label: "Matcha acid", prompt: "Invente un look matcha acid très SF, subtil sur la peau et audacieux dans les hautes lumières.", hue: 32 },
+  { id: "dreamy-glow", family: "IMAGE", icon: "☼", label: "Glow dreamy", prompt: "Ajoute un glow onirique léger autour des hautes lumières sans perdre les détails du visage.", hue: 32 },
+  { id: "nineties-grain", family: "IMAGE", icon: "⁙", label: "Grain 90s", prompt: "Donne une texture vidéo 90s avec un grain vivant, sans transformer l’image en filtre cheap.", hue: 32 },
+  { id: "soft-glitch", family: "IMAGE", icon: "≋", label: "Glitch subtil", prompt: "Place un glitch très court sur un changement d’idée ou une réaction, puis reviens à une image propre.", hue: 32 },
+
+  { id: "clean-voice", family: "SON", icon: "♪", label: "Nettoie la voix", prompt: "Nettoie et rapproche la voix tout en conservant son grain naturel.", hue: 248 },
+  { id: "reduce-noise", family: "SON", icon: "≈", label: "Coupe le bruit", prompt: "Réduis le bruit de fond sans créer d’artefacts métalliques sur la voix.", hue: 248 },
+  { id: "dramatic-silence", family: "SON", icon: "…", label: "Silence dramatique", prompt: "Crée un silence dramatique très court juste avant la phrase ou la réaction décisive.", hue: 248 },
+  { id: "sound-design", family: "SON", icon: "◉", label: "Sound design subtil", prompt: "Crée un sound design original et discret qui souligne les coupes sans voler la scène.", hue: 248 },
+  { id: "warm-voiceover", family: "SON", icon: "●", label: "Voix off chaude", prompt: "Écris puis ajoute une voix off française chaude et très courte qui éclaire ce Moment.", hue: 248 },
+  { id: "whisper-voiceover", family: "SON", icon: "◌", label: "Voix off chuchotée", prompt: "Ajoute une voix off française chuchotée, intime et parfaitement mixée avec le son original.", hue: 248 },
+
+  { id: "surprise", family: "CARTE BLANCHE", icon: "✦", label: "Fais baver un monteur", prompt: "Prends carte blanche et transforme ce Moment en une pièce que même un excellent monteur voudrait rembobiner, sans trahir Lucia.", hue: 92 }
+];
+
 function mutationId(prefix: string): string {
   const suffix = typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -116,6 +171,7 @@ export default function SentinelleApp() {
   const api = sentinelleApiBase();
   const video = useRef<HTMLVideoElement | null>(null);
   const momentFeed = useRef<HTMLElement | null>(null);
+  const composerInput = useRef<HTMLInputElement | null>(null);
   const workspaceRef = useRef<WorkspaceProjection | null>(null);
   const observedCollection = useRef<string | null>(null);
   const feedPositioned = useRef(false);
@@ -134,6 +190,10 @@ export default function SentinelleApp() {
   const [dragged, setDragged] = useState<string | null>(null);
   const [conversationActive, setConversationActive] = useState(false);
   const [workStep, setWorkStep] = useState(0);
+  const [activeIdea, setActiveIdea] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [installed, setInstalled] = useState(false);
+  const [installGuide, setInstallGuide] = useState(false);
 
   const entities = useMemo(() => mapEntities(workspace), [workspace]);
   const moments = useMemo(() => [...entities.values()].filter((entity) => typeName(entity) === "Moment" && Boolean(entity.contentUrl)), [entities]);
@@ -193,6 +253,37 @@ export default function SentinelleApp() {
       setNotice("Je reviens…");
     }
   }, [acceptWorkspace, api]);
+
+  useEffect(() => {
+    const navigatorWithStandalone = navigator as Navigator & { standalone?: boolean };
+    const standalone = window.matchMedia("(display-mode: standalone)").matches
+      || navigatorWithStandalone.standalone === true;
+    setInstalled(standalone);
+
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sentinelle-sw.js", {
+        scope: "/sentinelle",
+        updateViaCache: "none"
+      }).catch(() => undefined);
+    }
+
+    const rememberPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as BeforeInstallPromptEvent);
+    };
+    const rememberInstall = () => {
+      setInstalled(true);
+      setInstallPrompt(null);
+      setInstallGuide(false);
+      setNotice("Sentinelle est installée ✦");
+    };
+    window.addEventListener("beforeinstallprompt", rememberPrompt);
+    window.addEventListener("appinstalled", rememberInstall);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", rememberPrompt);
+      window.removeEventListener("appinstalled", rememberInstall);
+    };
+  }, []);
 
   useEffect(() => {
     fetch(`${api}/auth/status`, { credentials: "include", cache: "no-store" })
@@ -371,9 +462,29 @@ export default function SentinelleApp() {
     void updateCollection(exists ? ordered.filter((id) => id !== moment["@id"]) : [...ordered, moment["@id"]], exists ? null : moment["@id"]);
   };
 
+  const chooseIdea = (idea: CreativeIdea) => {
+    setActiveIdea(idea.id);
+    setInstruction(idea.prompt);
+    window.requestAnimationFrame(() => composerInput.current?.focus());
+  };
+
+  const requestInstall = async () => {
+    if (!installPrompt) {
+      setInstallGuide(true);
+      return;
+    }
+    try {
+      await installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === "accepted") setInstalled(true);
+      setInstallPrompt(null);
+    } catch {
+      setInstallGuide(true);
+    }
+  };
+
   const sendInstruction = async (text: string) => {
-    const humanEntity = humanFocus ? entities.get(humanFocus) ?? null : null;
-    const focusEntity = humanEntity && typeName(humanEntity) === "Moment" ? humanEntity : currentMoment;
+    const focusEntity = currentMoment;
     if (!text.trim() || !focusEntity || working) return;
     setConversationActive(true);
     if (typeName(focusEntity) === "Moment") await shareCurrentTime();
@@ -382,7 +493,10 @@ export default function SentinelleApp() {
       text: text.trim(),
       currentFocus: focusEntity["@id"]
     });
-    if (next) setInstruction("");
+    if (next) {
+      setInstruction("");
+      setActiveIdea(null);
+    }
   };
 
   const submitInstruction = (event: FormEvent) => {
@@ -421,7 +535,10 @@ export default function SentinelleApp() {
         <header className={styles.topbar}>
           <div className={styles.brand}><span>✦</span><strong>Sentinelle</strong></div>
           <div className={styles.sharedPresence}><span>● Luca</span><i>+</i><span>✦ ici</span></div>
-          <button type="button" onClick={() => setCompose(true)} className={styles.constellation}><b>{ordered.length}</b><span>Montage</span></button>
+          <div className={styles.topActions}>
+            {!installed ? <button type="button" onClick={() => void requestInstall()} className={styles.installApp} aria-label="Installer Sentinelle sur cet appareil"><b>↓</b><span>Installer</span></button> : null}
+            <button type="button" onClick={() => setCompose(true)} className={styles.constellation}><b>{ordered.length}</b><span>Montage</span></button>
+          </div>
         </header>
 
         {working ? <div className={styles.globalWorkBubble} aria-live="polite">
@@ -512,12 +629,22 @@ export default function SentinelleApp() {
 
         <footer className={styles.composer}>
           {conversationActive && (instructionMessage || instructionError) && !working ? <div className={`${styles.reply} ${instructionError ? styles.replyError : ""}`}><span>✦</span><p>{instructionError ? "Je n’ai pas réussi cette transformation." : instructionMessage}</p><button type="button" onClick={() => setConversationActive(false)}>×</button></div> : null}
-          <div className={styles.suggestions} aria-label="Idées de montage">
-            {["Coupe les silences", "Recadre en 9:16", "Ajoute des sous-titres"].map((idea) => <button type="button" key={idea} disabled={working} onClick={() => void sendInstruction(`${idea} sur ce Moment.`)}>{idea}</button>)}
+          <div className={styles.ideasIntro}><span>✦ POSSIBILITÉS DU WORKER</span><small>Touche une bulle, puis rends la demande encore plus tienne.</small></div>
+          <div className={styles.ideaCloud} aria-label="Possibilités créatives pour ce Moment" role="list">
+            {CREATIVE_IDEAS.map((idea) => <button
+              type="button"
+              role="listitem"
+              key={idea.id}
+              disabled={working}
+              className={`${styles.ideaBubble} ${activeIdea === idea.id ? styles.ideaActive : ""}`}
+              style={{ "--idea-hue": idea.hue } as CSSProperties}
+              onClick={() => chooseIdea(idea)}
+              aria-label={`${idea.family} — ${idea.label}`}
+            ><span>{idea.icon}</span><strong>{idea.label}</strong><small>{idea.family}</small></button>)}
           </div>
           <form onSubmit={submitInstruction}>
             <span>✦</span>
-            <input value={instruction} onChange={(event) => setInstruction(event.target.value)} placeholder="Décris librement le montage de ce Moment…" aria-label="Décris le montage vidéo à Sentinelle" />
+            <input ref={composerInput} value={instruction} onChange={(event) => { setInstruction(event.target.value); setActiveIdea(null); }} placeholder="Décris librement le montage de ce Moment…" aria-label="Décris le montage vidéo à Sentinelle" />
             <button type="submit" disabled={!instruction.trim() || working} aria-label="Envoyer">↑</button>
           </form>
         </footer>
@@ -526,6 +653,18 @@ export default function SentinelleApp() {
           <header><div><span>TON MONTAGE</span><h2>{ordered.length ? `${ordered.length} Moments` : "Ajoute des Moments"}</h2></div><button type="button" onClick={() => setCompose(false)}>×</button></header>
           {ordered.length ? <div className={styles.timeline}>{ordered.map((id, index) => { const moment = entities.get(id); if (!moment) return null; return <button type="button" key={id} draggable onDragStart={() => setDragged(id)} onDragOver={(event) => event.preventDefault()} onDrop={() => { if (!dragged || dragged === id) return; const next = [...ordered]; const from = next.indexOf(dragged); const to = next.indexOf(id); next.splice(from, 1); next.splice(to, 0, dragged); setDragged(null); void updateCollection(next, dragged); }} onClick={() => { setActiveMomentId(moment["@id"]); setCompose(false); const slide = Array.from(momentFeed.current?.querySelectorAll<HTMLElement>("[data-moment-slide]") ?? []).find((item) => item.dataset.momentId === moment["@id"]); slide?.scrollIntoView({ behavior: "smooth", block: "start" }); }}><span>{index + 1}</span><strong>{cleanMomentName(moment.name)}</strong><i onClick={(event) => { event.stopPropagation(); void updateCollection(ordered.filter((item) => item !== id), null); }}>×</i></button>; })}</div> : <p>Fais défiler les Moments et ajoute ceux que tu veux monter. Rien n’est publié automatiquement.</p>}
         </section> : null}
+
+        {installGuide ? <div className={styles.modalBackdrop} onMouseDown={() => setInstallGuide(false)}>
+          <section className={styles.installGuide} onMouseDown={(event) => event.stopPropagation()} aria-label="Installer Sentinelle">
+            <header><div><span>TON APP SENTINELLE</span><h2>Installe-moi sur ton écran d’accueil.</h2></div><button type="button" onClick={() => setInstallGuide(false)}>×</button></header>
+            <p>Ensuite je m’ouvre en plein écran, comme une vraie app — sans tunnel SSH ni barre de navigateur.</p>
+            <div className={styles.installPaths}>
+              <div><b>iPhone / iPad</b><span><i>1</i> Touche Partager <strong>↥</strong></span><span><i>2</i> Choisis « Sur l’écran d’accueil »</span></div>
+              <div><b>Android / Chrome</b><span><i>1</i> Ouvre le menu <strong>⋮</strong></span><span><i>2</i> Choisis « Installer l’application »</span></div>
+            </div>
+            <button type="button" className={styles.installDone} onClick={() => setInstallGuide(false)}>J’ai trouvé <span>✦</span></button>
+          </section>
+        </div> : null}
 
         {inspect ? <Inspect entity={currentMoment} entities={entities} onClose={() => setInspect(false)} /> : null}
       </section>

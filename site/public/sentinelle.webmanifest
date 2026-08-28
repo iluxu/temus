@@ -1,0 +1,49 @@
+{
+  "id": "/sentinelle",
+  "name": "Sentinelle · Lucia Moments",
+  "short_name": "Sentinelle",
+  "description": "Regarde, façonne et monte les Moments de Lucia avec Sentinelle.",
+  "lang": "fr",
+  "dir": "ltr",
+  "start_url": "/sentinelle?source=pwa",
+  "scope": "/sentinelle",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#080908",
+  "theme_color": "#080908",
+  "categories": ["photo", "video", "productivity"],
+  "icons": [
+    {
+      "src": "/sentinelle-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/sentinelle-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/sentinelle-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Ouvrir les Moments",
+      "short_name": "Moments",
+      "url": "/sentinelle?source=shortcut",
+      "icons": [
+        {
+          "src": "/sentinelle-icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

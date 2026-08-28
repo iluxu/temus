@@ -34,8 +34,8 @@
 .lockCard button { display: grid; width: 42px; height: 42px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 12px; color: #11150b; background: var(--accent); cursor: pointer; }
 .lockCard small { display: block; margin-top: 12px; color: #e5a38e; }
 
-.app { position: relative; display: grid; width: min(430px, 100vw); height: min(900px, calc(100dvh - 28px)); grid-template-rows: 58px minmax(0, 1fr) auto; overflow: hidden; border: 1px solid rgba(255,255,255,.12); border-radius: 31px; background: #0a0b0a; box-shadow: 0 42px 150px rgba(0,0,0,.72), 0 0 0 8px rgba(255,255,255,.025); }
-.topbar { z-index: 20; display: flex; padding: 0 15px; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,.07); background: rgba(10,11,10,.88); backdrop-filter: blur(20px); }
+.app { position: relative; display: grid; width: min(430px, 100vw); height: min(900px, calc(100dvh - 28px)); grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border: 1px solid rgba(255,255,255,.12); border-radius: 31px; background: #0a0b0a; box-shadow: 0 42px 150px rgba(0,0,0,.72), 0 0 0 8px rgba(255,255,255,.025); }
+.topbar { z-index: 20; display: flex; min-height: 58px; padding: 0 15px; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid rgba(255,255,255,.07); background: rgba(10,11,10,.88); backdrop-filter: blur(20px); }
 .brand { display: flex; align-items: center; gap: 8px; }
 .brand > span { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 10px; color: #14190d; background: var(--accent); font-size: .78rem; }
 .brand strong { font-size: .82rem; font-weight: 610; letter-spacing: -.025em; }
@@ -43,6 +43,10 @@
 .sharedPresence span:first-child { color: #b4b6b0; }
 .sharedPresence span:last-child { color: var(--accent); }
 .sharedPresence i { font-style: normal; opacity: .35; }
+.topActions { display: flex; flex: 0 0 auto; align-items: center; gap: 6px; }
+.installApp { display: flex; height: 34px; padding: 4px 9px 4px 5px; align-items: center; gap: 6px; border: 1px solid rgba(210,255,116,.16); border-radius: 999px; color: #bdcaac; background: rgba(210,255,116,.06); cursor: pointer; }
+.installApp b { display: grid; width: 23px; height: 23px; place-items: center; border-radius: 50%; color: #11150a; background: var(--accent); font-size: .65rem; }
+.installApp span { font-size: .55rem; }
 .constellation { display: flex; padding: 6px 9px 6px 6px; align-items: center; gap: 6px; border: 0; border-radius: 999px; color: #adafa9; background: #181a17; cursor: pointer; }
 .constellation b { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; color: #11150a; background: var(--accent); font-size: .62rem; }
 .constellation span { font-size: .59rem; }
@@ -99,11 +103,21 @@
 .scrollCue { display: flex; align-items: center; justify-content: center; gap: 7px; color: #595d55; font-size: .49rem; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
 .scrollCue b { color: var(--accent); font-size: .72rem; font-weight: 500; animation: scrollNudge 1.7s ease-in-out infinite; }
 
-.composer { position: relative; z-index: 15; padding: 5px 11px 13px; background: #0a0b0a; }
-.suggestions { display: flex; padding: 4px 0 8px; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-.suggestions::-webkit-scrollbar { display: none; }
-.suggestions button { flex: 0 0 auto; padding: 6px 9px; border: 1px solid rgba(255,255,255,.09); border-radius: 999px; color: #898d83; background: #111310; font-size: .55rem; cursor: pointer; }
-.suggestions button:hover { border-color: rgba(210,255,116,.35); color: var(--accent); }
+.composer { position: relative; z-index: 15; width: 100%; min-width: 0; padding: 7px 11px 13px; border-top: 1px solid rgba(255,255,255,.055); background: linear-gradient(180deg, rgba(10,11,10,.97), #0a0b0a 35%); }
+.ideasIntro { display: flex; padding: 0 2px 7px; align-items: center; justify-content: space-between; gap: 12px; }
+.ideasIntro span { flex: 0 0 auto; color: var(--accent); font-size: .48rem; font-weight: 760; letter-spacing: .13em; }
+.ideasIntro small { overflow: hidden; color: #5f635a; font-size: .48rem; text-overflow: ellipsis; white-space: nowrap; }
+.ideaCloud { display: grid; width: 100%; min-width: 0; max-width: 100%; padding: 0 0 9px; grid-template-rows: repeat(2, 31px); grid-auto-flow: column; grid-auto-columns: max-content; gap: 6px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; }
+.ideaCloud::-webkit-scrollbar { display: none; }
+.ideaBubble { --idea-hue: 78; display: grid; height: 31px; padding: 3px 9px 3px 4px; grid-template-columns: 24px auto auto; align-items: center; gap: 6px; scroll-snap-align: start; border: 1px solid hsla(var(--idea-hue), 72%, 70%, .17); border-radius: 999px; color: #c7cac2; background: linear-gradient(135deg, hsla(var(--idea-hue), 70%, 58%, .095), rgba(18,20,17,.86)); cursor: pointer; transition: color .16s ease, border-color .16s ease, background .16s ease, transform .16s ease; }
+.ideaBubble:hover { transform: translateY(-1px); border-color: hsla(var(--idea-hue), 78%, 72%, .4); color: white; }
+.ideaBubble > span { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; color: hsl(var(--idea-hue), 82%, 72%); background: hsla(var(--idea-hue), 75%, 56%, .12); font-size: .56rem; font-weight: 700; }
+.ideaBubble strong { font-size: .54rem; font-weight: 570; white-space: nowrap; }
+.ideaBubble small { color: hsla(var(--idea-hue), 48%, 76%, .48); font-size: .4rem; font-weight: 760; letter-spacing: .09em; }
+.ideaBubble:disabled { cursor: default; opacity: .42; transform: none; }
+.ideaActive { border-color: rgba(210,255,116,.62); color: #10140b; background: var(--accent); box-shadow: 0 8px 26px rgba(210,255,116,.14); }
+.ideaActive > span { color: var(--accent); background: #11150c; }
+.ideaActive small { color: rgba(15,19,10,.5); }
 .composer form { display: flex; padding: 5px 5px 5px 11px; align-items: center; gap: 8px; border: 1px solid #30342d; border-radius: 17px; background: #151714; box-shadow: 0 14px 48px rgba(0,0,0,.32); }
 .composer form > span { color: var(--accent); font-size: .72rem; }
 .composer input { width: 100%; min-width: 0; padding: 10px 0; border: 0; outline: 0; color: white; background: transparent; font-size: .73rem; }
@@ -116,6 +130,20 @@
 .reply button { border: 0; color: #74786f; background: transparent; cursor: pointer; }
 .replyError { border-color: rgba(230,156,128,.3); }
 .notice { position: absolute; z-index: 30; top: 8px; left: 50%; display: flex; padding: 8px 10px; gap: 8px; transform: translateX(-50%); border: 1px solid #534b42; border-radius: 999px; color: #e1c7b7; background: #211c18; font-size: .56rem; white-space: nowrap; cursor: pointer; }
+
+.installGuide { width: 100%; padding: 22px; border: 1px solid rgba(210,255,116,.2); border-radius: 24px; background: radial-gradient(circle at 85% 0, rgba(210,255,116,.13), transparent 37%), #161916; box-shadow: 0 30px 100px #000; animation: rise .28s ease both; }
+.installGuide header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.installGuide header span { color: var(--accent); font-size: .52rem; font-weight: 760; letter-spacing: .14em; }
+.installGuide h2 { max-width: 290px; margin: 7px 0 0; font-size: 1.45rem; letter-spacing: -.055em; line-height: 1.05; }
+.installGuide header button { display: grid; width: 31px; height: 31px; flex: 0 0 auto; place-items: center; border: 0; border-radius: 50%; color: #aaa; background: #292c27; cursor: pointer; }
+.installGuide > p { margin: 16px 0 20px; color: #90948a; font-size: .68rem; line-height: 1.5; }
+.installPaths { display: grid; gap: 8px; }
+.installPaths > div { display: grid; padding: 13px; gap: 8px; border: 1px solid rgba(255,255,255,.08); border-radius: 14px; background: rgba(7,9,7,.65); }
+.installPaths b { color: #eff0eb; font-size: .64rem; }
+.installPaths span { display: flex; align-items: center; gap: 7px; color: #8f9389; font-size: .59rem; }
+.installPaths i { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 50%; color: #11150a; background: var(--accent); font-size: .46rem; font-style: normal; font-weight: 750; }
+.installPaths strong { color: var(--accent); font-size: .8rem; }
+.installDone { display: flex; width: 100%; margin-top: 14px; padding: 12px 15px; align-items: center; justify-content: center; gap: 7px; border: 0; border-radius: 13px; color: #11150a; background: var(--accent); font-size: .68rem; font-weight: 650; cursor: pointer; }
 
 .composition { position: absolute; z-index: 45; right: 9px; bottom: 9px; left: 9px; min-height: 210px; padding: 18px; border: 1px solid rgba(255,255,255,.12); border-radius: 23px; background: rgba(18,20,17,.98); box-shadow: 0 28px 100px #000; backdrop-filter: blur(24px); animation: rise .28s ease both; }
 .composition header { display: flex; align-items: flex-start; justify-content: space-between; }
@@ -225,6 +253,7 @@
 
 @media (max-width: 600px) {
   .app { width: 100vw; height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+  .composer input, .lockCard input { font-size: 16px; }
   .ambient { display: none; }
   .shell::after { display: none; }
   .app:has(.surfaceWorld) { width: 100vw; }
@@ -247,13 +276,30 @@
   .surfaceRemove { opacity: .8; }
 }
 
+@media (max-width: 360px) {
+  .sharedPresence { display: none; }
+  .installApp span { display: none; }
+  .installApp { padding-right: 5px; }
+}
+
 @media (min-width: 1000px) {
   .app { width: 500px; }
 }
 
 @media (max-height: 760px) {
   .app { height: 100dvh; border-radius: 0; }
-  .topbar { height: 52px; }
-  .suggestions { padding-bottom: 6px; }
+  .topbar { min-height: 52px; }
+  .ideasIntro { padding-bottom: 5px; }
+  .ideasIntro small { display: none; }
+  .ideaCloud { padding-bottom: 6px; grid-template-rows: repeat(2, 27px); }
+  .ideaBubble { height: 27px; }
+  .ideaBubble > span { width: 21px; height: 21px; }
+  .composer { padding-top: 5px; }
   .caption p { -webkit-line-clamp: 1; }
+}
+
+@media (display-mode: standalone) {
+  .app { width: min(430px, 100vw); height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
+  .topbar { min-height: calc(58px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+  .composer { padding-bottom: max(13px, env(safe-area-inset-bottom)); }
 }

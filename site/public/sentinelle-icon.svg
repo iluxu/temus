@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Sentinelle">
+  <defs>
+    <radialGradient id="matcha" cx="30%" cy="20%" r="90%">
+      <stop offset="0" stop-color="#efffc4"/>
+      <stop offset="0.52" stop-color="#d2ff74"/>
+      <stop offset="1" stop-color="#aeea45"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="228" fill="url(#matcha)"/>
+  <path d="M512 194c16 201 117 302 318 318-201 16-302 117-318 318-16-201-117-302-318-318 201-16 302-117 318-318Z" fill="#080908"/>
+  <circle cx="744" cy="280" r="31" fill="#080908" opacity=".82"/>
+</svg>
