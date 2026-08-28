@@ -47,7 +47,9 @@
 .constellation b { display: grid; width: 22px; height: 22px; place-items: center; border-radius: 50%; color: #11150a; background: var(--accent); font-size: .62rem; }
 .constellation span { font-size: .59rem; }
 
-.moment { position: relative; display: grid; min-height: 0; padding: 9px 11px 0; grid-template-rows: minmax(0, 1fr) 30px; touch-action: pan-y; }
+.momentFeed { position: relative; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior-y: contain; scroll-snap-type: y mandatory; scrollbar-width: none; }
+.momentFeed::-webkit-scrollbar { display: none; }
+.momentSlide { position: relative; display: grid; width: 100%; height: 100%; min-height: 100%; padding: 9px 11px 0; grid-template-rows: minmax(0, 1fr) 30px; scroll-snap-align: start; scroll-snap-stop: always; }
 .videoFrame { position: relative; min-height: 0; overflow: hidden; border-radius: 22px; background: #000; box-shadow: 0 24px 65px rgba(0,0,0,.46); }
 .videoFrame video { display: block; width: 100%; height: 100%; object-fit: cover; background: #000; cursor: pointer; }
 .videoShade { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(to bottom, rgba(0,0,0,.16), transparent 28%, transparent 47%, rgba(0,0,0,.08) 58%, rgba(0,0,0,.92) 100%); }
@@ -94,9 +96,8 @@
 .playerControls input { width: 100%; height: 2px; margin: 0; appearance: none; border-radius: 99px; background: linear-gradient(to right, var(--accent) var(--progress), rgba(255,255,255,.24) var(--progress)); cursor: pointer; }
 .playerControls input::-webkit-slider-thumb { width: 10px; height: 10px; appearance: none; border: 0; border-radius: 50%; background: white; }
 .playerControls input::-moz-range-thumb { width: 10px; height: 10px; border: 0; border-radius: 50%; background: white; }
-.momentRail { display: flex; padding: 8px 2px 0; align-items: center; justify-content: center; gap: 4px; overflow: hidden; }
-.momentRail button { display: grid; width: 20px; height: 18px; padding: 0; place-items: center; border: 0; border-radius: 7px; color: #555851; background: transparent; font-size: .48rem; cursor: pointer; transition: .2s ease; }
-.momentRail .activeMoment { width: 34px; color: #13180c; background: var(--accent); }
+.scrollCue { display: flex; align-items: center; justify-content: center; gap: 7px; color: #595d55; font-size: .49rem; letter-spacing: .06em; text-transform: uppercase; pointer-events: none; }
+.scrollCue b { color: var(--accent); font-size: .72rem; font-weight: 500; animation: scrollNudge 1.7s ease-in-out infinite; }
 
 .composer { position: relative; z-index: 15; padding: 5px 11px 13px; background: #0a0b0a; }
 .suggestions { display: flex; padding: 4px 0 8px; gap: 6px; overflow-x: auto; scrollbar-width: none; }
@@ -220,6 +221,7 @@
 @keyframes arrive { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
 @keyframes arriveCentered { from { opacity: 0; transform: translate(-50%, 7px); } to { opacity: 1; transform: translate(-50%, 0); } }
 @keyframes rise { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: none; } }
+@keyframes scrollNudge { 0%, 100% { transform: translateY(-1px); } 50% { transform: translateY(3px); } }
 
 @media (max-width: 600px) {
   .app { width: 100vw; height: 100dvh; border: 0; border-radius: 0; box-shadow: none; }
