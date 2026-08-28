@@ -191,6 +191,8 @@ export default function SentinelleApp() {
   const [conversationActive, setConversationActive] = useState(false);
   const [workStep, setWorkStep] = useState(0);
   const [activeIdea, setActiveIdea] = useState<string | null>(null);
+  const [readySources, setReadySources] = useState<Set<string>>(() => new Set());
+  const [bufferingMomentId, setBufferingMomentId] = useState<string | null>(null);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [installed, setInstalled] = useState(false);
   const [installGuide, setInstallGuide] = useState(false);
@@ -228,10 +230,7 @@ export default function SentinelleApp() {
   const momentState = (currentMoment ? nested(currentMoment.state, "moment") : {}) as Record<string, unknown>;
   const originalMediaId = String(momentState.media_derivative_id ?? "");
   const activeMediaId = String(momentState.active_media_derivative_id ?? originalMediaId);
-  const originalMedia = entities.get(originalMediaId) ?? null;
-  const activeMedia = entities.get(activeMediaId) ?? null;
-  const visibleMedia = showOriginal && originalMedia?.contentUrl ? originalMedia : activeMedia;
-  const videoSource = visibleMedia?.contentUrl ?? currentMoment?.contentUrl ?? "";
+  const currentMomentIndex = moments.findIndex((moment) => moment["@id"] === currentMoment?.["@id"]);
 
   const acceptWorkspace = useCallback((value: WorkspaceProjection) => {
     workspaceRef.current = value;
@@ -297,7 +296,7 @@ export default function SentinelleApp() {
     const events = new EventSource(`${api}/events/lucia`, { withCredentials: true });
     events.addEventListener("world-changed", () => void loadWorkspace());
     events.onerror = () => setNotice("Reconnexion…");
-    const fallback = window.setInterval(() => void loadWorkspace(), 6_000);
+    const fallback = window.setInterval(() => void loadWorkspace(), 30_000);
     return () => { events.close(); window.clearInterval(fallback); };
   }, [api, auth, loadWorkspace]);
 
@@ -519,7 +518,6 @@ export default function SentinelleApp() {
   const knownDuration = Number(momentState.active_duration_seconds ?? momentState.duration_seconds ?? 0);
   const duration = videoDuration || knownDuration;
   const progress = duration > 0 ? Math.min(100, (playhead / duration) * 100) : 0;
-  const shellStyle = videoSource ? ({ "--moment-art": `url("${videoSource}")` } as CSSProperties) : undefined;
   const intentPreview = instructionText.length > 54 ? `${instructionText.slice(0, 54)}…` : instructionText;
   const progressText = [
     `Je relis « ${intentPreview || "ton intention"} ».`,
@@ -529,7 +527,7 @@ export default function SentinelleApp() {
   ][workStep];
 
   return (
-    <main className={styles.shell} style={shellStyle}>
+    <main className={styles.shell}>
       <div className={styles.ambient} />
       <section className={styles.app}>
         <header className={styles.topbar}>
@@ -562,6 +560,11 @@ export default function SentinelleApp() {
             const versioned = Boolean(originalId && activeId && originalId !== activeId);
             const media = isActive && showOriginal && original?.contentUrl ? original : active;
             const source = media?.contentUrl ?? moment.contentUrl ?? "";
+            const shouldAttach = Math.abs(index - currentMomentIndex) <= 1;
+            const shouldWarmNext = index === currentMomentIndex + 1;
+            const mediaLoading = isActive && (
+              !readySources.has(source) || bufferingMomentId === moment["@id"]
+            );
             const transcriptLink = moment.links.find((link) => link.rel.endsWith("/transcript"));
             const transcript = transcriptLink ? entities.get(transcriptLink.href) ?? null : null;
             const momentExcerpt = String(transcript ? nested(transcript.state, "transcript", "excerpt") ?? "" : "");
@@ -581,14 +584,25 @@ export default function SentinelleApp() {
                 <video
                   key={`${moment["@id"]}:${source}`}
                   data-moment-id={moment["@id"]}
-                  src={source || undefined}
+                  data-media-attached={shouldAttach ? "true" : "false"}
+                  src={shouldAttach && source ? source : undefined}
                   playsInline
-                  preload={isActive ? "auto" : "none"}
+                  preload={isActive ? "auto" : shouldWarmNext ? "metadata" : "none"}
                   muted={isActive ? muted : true}
                   onClick={(event) => {
                     setActiveMomentId(moment["@id"]);
                     togglePlayback(event.currentTarget);
                   }}
+                  onLoadStart={() => { if (isActive) setBufferingMomentId(moment["@id"]); }}
+                  onLoadedData={() => {
+                    if (source) setReadySources((current) => current.has(source) ? current : new Set(current).add(source));
+                    setBufferingMomentId((current) => current === moment["@id"] ? null : current);
+                  }}
+                  onCanPlay={() => {
+                    if (source) setReadySources((current) => current.has(source) ? current : new Set(current).add(source));
+                    setBufferingMomentId((current) => current === moment["@id"] ? null : current);
+                  }}
+                  onWaiting={() => { if (isActive) setBufferingMomentId(moment["@id"]); }}
                   onLoadedMetadata={(event) => { if (isActive) setVideoDuration(event.currentTarget.duration); }}
                   onTimeUpdate={(event) => { if (isActive) setPlayhead(event.currentTarget.currentTime); }}
                   onPlay={(event) => {
@@ -596,6 +610,7 @@ export default function SentinelleApp() {
                     video.current = event.currentTarget;
                     setPlaying(true);
                   }}
+                  onPlaying={() => setBufferingMomentId((current) => current === moment["@id"] ? null : current)}
                   onPause={() => { if (isActive) { setPlaying(false); void shareCurrentTime(); } }}
                   onSeeked={() => { if (isActive) void shareCurrentTime(); }}
                   onEnded={() => { if (isActive) setPlaying(false); }}
@@ -604,7 +619,8 @@ export default function SentinelleApp() {
                 <div className={styles.momentCount}>{index + 1}<span>/</span>{moments.length}</div>
                 <div className={`${styles.coPresence} ${sentinelFocus === moment["@id"] ? styles.together : ""}`} title="Luca et Sentinelle regardent le même Moment"><span>●</span><span>✦</span></div>
                 {isActive && versioned ? <div className={styles.versionToggle}><button type="button" className={showOriginal ? styles.versionActive : ""} onClick={() => setShowOriginal(true)}>Original</button><button type="button" className={!showOriginal ? styles.versionActive : ""} onClick={() => setShowOriginal(false)}>Version ✦</button></div> : null}
-                {isActive && !playing ? <button type="button" className={styles.play} onClick={() => togglePlayback()} aria-label={`Lire ${cleanMomentName(moment.name)}`}><span>▶</span></button> : null}
+                {mediaLoading ? <div className={styles.mediaLoading} aria-live="polite"><i /><span>Le Moment arrive</span></div> : null}
+                {isActive && !mediaLoading && !playing ? <button type="button" className={styles.play} onClick={() => togglePlayback()} aria-label={`Lire ${cleanMomentName(moment.name)}`}><span>▶</span></button> : null}
                 <div className={styles.actions}>
                   <button type="button" className={kept ? styles.kept : ""} onClick={() => toggleMoment(moment)} aria-label={kept ? "Retirer du montage" : "Ajouter au montage"}><span>{kept ? "✓" : "+"}</span><small>{kept ? "Montage" : "Ajouter"}</small></button>
                   <button type="button" onClick={() => { setActiveMomentId(moment["@id"]); setInspect(true); }} aria-label="Voir ce que Sentinelle comprend"><span>•••</span><small>Voir</small></button>

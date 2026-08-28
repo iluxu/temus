@@ -25,6 +25,9 @@ assert.match(app, /actions\/\$\{action\}/, "human actions must use semantic Worl
 assert.match(app, /data-semantic-world-id/, "the semantic view must retain the World ID");
 assert.match(app, /data-world-id/, "human Moment renderers must retain the World ID");
 assert.match(app, /<video/, "the product must render real playable Moment media");
+assert.match(app, /Math\.abs\(index - currentMomentIndex\) <= 1/, "only the active Moment and its neighbours may own media sources");
+assert.match(app, /shouldWarmNext \? "metadata"/, "the next Moment must be warmed without downloading the full feed");
+assert.doesNotMatch(app, /--moment-art/, "a video URL must not be fetched again as decorative CSS");
 assert.match(app, /rangeStartSeconds/, "the human playhead must become shared semantic attention");
 assert.match(app, /set-selection|set-compilation/, "constellations of Moments must remain canonical collections");
 assert.match(app, /beforeinstallprompt/, "the install affordance must use the native PWA prompt when available");
