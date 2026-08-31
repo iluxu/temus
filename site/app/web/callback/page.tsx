@@ -8,6 +8,8 @@ const SIGNED_IN_KEY = "adoptan.workspace.signed_in";
 const TIKTOK_CONNECTED_KEY = "adoptan.workspace.tiktok_connected";
 const TIKTOK_CODE_VERIFIER_STORAGE = "adoptan.workspace.tiktok_code_verifier";
 const TIKTOK_STATE_STORAGE = "adoptan.workspace.tiktok_state";
+const TIKTOK_ACCOUNT_STORAGE = "adoptan.workspace.tiktok_account";
+const DEFAULT_TIKTOK_ACCOUNT_ID = "luciamucciareplay";
 
 type CallbackPayload = {
   codePresent: boolean;
@@ -21,6 +23,7 @@ type CallbackPayload = {
 };
 
 export default function TikTokCallbackPage() {
+  const [accountId, setAccountId] = useState(DEFAULT_TIKTOK_ACCOUNT_ID);
   const [payload, setPayload] = useState<CallbackPayload>({
     codePresent: false,
     state: null,
@@ -39,6 +42,12 @@ export default function TikTokCallbackPage() {
     const state = params.get("state");
     const expectedState = window.sessionStorage.getItem(TIKTOK_STATE_STORAGE);
     const codeVerifier = window.sessionStorage.getItem(TIKTOK_CODE_VERIFIER_STORAGE);
+    const selectedAccountId =
+      String(window.sessionStorage.getItem(TIKTOK_ACCOUNT_STORAGE) || DEFAULT_TIKTOK_ACCOUNT_ID)
+        .trim()
+        .toLowerCase()
+        .replace(/^@+/, "") || DEFAULT_TIKTOK_ACCOUNT_ID;
+    setAccountId(selectedAccountId);
     const stateValid = expectedState ? expectedState === state : null;
 
     setPayload({
@@ -82,7 +91,8 @@ export default function TikTokCallbackPage() {
       body: JSON.stringify({
         code,
         codeVerifier,
-        redirectUri: TIKTOK_REDIRECT_URI
+        redirectUri: TIKTOK_REDIRECT_URI,
+        accountId: selectedAccountId
       })
     })
       .then(async (response) => {
@@ -178,7 +188,11 @@ export default function TikTokCallbackPage() {
           <a
             aria-disabled={!connectionComplete}
             className={`btn btn-primary${connectionComplete ? "" : " disabled"}`}
-            href={connectionComplete ? "/app?connected=1" : "#"}
+            href={
+              connectionComplete
+                ? `/app?connected=1&account=${encodeURIComponent(accountId)}`
+                : "#"
+            }
           >
             {connectionComplete ? "Continue to workspace" : "Waiting for server exchange"}
           </a>

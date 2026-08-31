@@ -10,7 +10,9 @@ const TIKTOK_CONNECTED_KEY = "adoptan.workspace.tiktok_connected";
 const TIKTOK_CLIENT_KEY_STORAGE = "adoptan.workspace.tiktok_client_key";
 const TIKTOK_CODE_VERIFIER_STORAGE = "adoptan.workspace.tiktok_code_verifier";
 const TIKTOK_STATE_STORAGE = "adoptan.workspace.tiktok_state";
+const TIKTOK_ACCOUNT_STORAGE = "adoptan.workspace.tiktok_account";
 const TIKTOK_REVIEW_API_BASE = "https://api.adoptan.ai/tiktok-review";
+const DEFAULT_TIKTOK_ACCOUNT_ID = "luciamucciareplay";
 const SAMPLE_VIDEO_URL = "/demo/tiktok-creator-clip.mp4";
 const SAMPLE_VIDEO_NAME = "adoptan-sample-creator-clip.mp4";
 const BRANDED_CONTENT_PRIVATE_PROMPT = "Branded content visibility cannot be set to private.";
@@ -152,10 +154,21 @@ function maskOpenId(value: unknown) {
   return `${raw.slice(0, 8)}...${raw.slice(-6)}`;
 }
 
+function normalizeAccountId(value: unknown) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^@+/, "")
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 64);
+}
+
 export default function TikTokReviewApp() {
   const [signedIn, setSignedIn] = useState(false);
   const [connected, setConnected] = useState(false);
   const [clientKey, setClientKey] = useState(DEFAULT_TIKTOK_CLIENT_KEY);
+  const [accountId, setAccountId] = useState(DEFAULT_TIKTOK_ACCOUNT_ID);
   const [oauthNotice, setOauthNotice] = useState("");
   const [oauthRedirecting, setOauthRedirecting] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<SelectedVideo | null>(null);
@@ -192,13 +205,21 @@ export default function TikTokReviewApp() {
     const resetFlow = params.get("reset") === "1";
     const connectedFromCallback = params.get("connected") === "1";
     const clientKeyFromUrl = params.get("tiktok_client_key")?.trim();
+    const accountFromUrl = normalizeAccountId(params.get("account"));
+    const selectedAccount =
+      accountFromUrl ||
+      normalizeAccountId(window.localStorage.getItem(TIKTOK_ACCOUNT_STORAGE)) ||
+      DEFAULT_TIKTOK_ACCOUNT_ID;
+
+    window.localStorage.setItem(TIKTOK_ACCOUNT_STORAGE, selectedAccount);
+    setAccountId(selectedAccount);
 
     if (resetFlow) {
       window.localStorage.removeItem(SIGNED_IN_KEY);
       window.localStorage.removeItem(TIKTOK_CONNECTED_KEY);
       window.sessionStorage.removeItem(TIKTOK_STATE_STORAGE);
       window.sessionStorage.removeItem(TIKTOK_CODE_VERIFIER_STORAGE);
-      window.history.replaceState(null, "", "/app");
+      window.history.replaceState(null, "", `/app?account=${encodeURIComponent(selectedAccount)}`);
     }
 
     if (clientKeyFromUrl) {
@@ -235,7 +256,8 @@ export default function TikTokReviewApp() {
     async function loadTikTokProfile() {
       setProfileError("");
       try {
-        const response = await fetch(`${TIKTOK_REVIEW_API_BASE}/profile`, {
+        const profileParams = new URLSearchParams({ account: accountId });
+        const response = await fetch(`${TIKTOK_REVIEW_API_BASE}/profile?${profileParams.toString()}`, {
           headers: {
             Accept: "application/json"
           }
@@ -309,7 +331,7 @@ export default function TikTokReviewApp() {
     return () => {
       cancelled = true;
     };
-  }, [connected]);
+  }, [connected, accountId]);
 
   async function buildTikTokAuthUrl() {
     if (!clientKey) {
@@ -321,6 +343,7 @@ export default function TikTokReviewApp() {
     const codeChallenge = await sha256Base64Url(codeVerifier);
     window.sessionStorage.setItem(TIKTOK_STATE_STORAGE, state);
     window.sessionStorage.setItem(TIKTOK_CODE_VERIFIER_STORAGE, codeVerifier);
+    window.sessionStorage.setItem(TIKTOK_ACCOUNT_STORAGE, accountId);
 
     const params = new URLSearchParams({
       client_key: clientKey,
@@ -329,7 +352,8 @@ export default function TikTokReviewApp() {
       redirect_uri: TIKTOK_REDIRECT_URI,
       state,
       code_challenge: codeChallenge,
-      code_challenge_method: "S256"
+      code_challenge_method: "S256",
+      disable_auto_auth: "1"
     });
 
     return `https://www.tiktok.com/v2/auth/authorize/?${params.toString()}`;
@@ -470,6 +494,7 @@ export default function TikTokReviewApp() {
 
     try {
       const params = new URLSearchParams({
+        account: accountId,
         mode,
         title: caption,
         privacy_level: privacy,
@@ -591,6 +616,9 @@ export default function TikTokReviewApp() {
                 The creator sees TikTok's consent page before returning to
                 {" "}
                 <code>{TIKTOK_REDIRECT_URI}</code>.
+              </p>
+              <p>
+                Target account: <code>@{accountId}</code>
               </p>
             </div>
             <div className="oauth-scope-list" aria-label="Requested TikTok scopes">
