@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./tiktok-blocks.module.css";
 
 const API_BASE = "https://api.adoptan.ai/tiktok-review";
@@ -146,6 +146,7 @@ export default function TikTokBlocksApp() {
   const [publishingId, setPublishingId] = useState("");
   const [publishingBlock, setPublishingBlock] = useState(false);
   const [error, setError] = useState("");
+  const knownItemIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const query = new URLSearchParams(window.location.search);
@@ -155,20 +156,29 @@ export default function TikTokBlocksApp() {
   }, []);
 
   const applyBlock = useCallback((nextBlock: ApprovalBlock) => {
+    const nextIds = new Set(nextBlock.items.map((item) => item.id));
+    const hasNewItem = knownItemIds.current.size > 0 &&
+      [...nextIds].some((itemId) => !knownItemIds.current.has(itemId));
+    if (hasNewItem) {
+      setBlockSettings(initialBlockSettings());
+    }
+    knownItemIds.current = nextIds;
     setBlock(nextBlock);
     setForms((current) => Object.fromEntries(
       nextBlock.items.map((item) => [item.id, current[item.id] || initialForm(item)])
     ));
   }, []);
 
-  const loadBlock = useCallback(async () => {
+  const loadBlock = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (!blockId || !approvalToken) {
-      setLoading(false);
+      if (!silent) setLoading(false);
       return;
     }
 
-    setLoading(true);
-    setError("");
+    if (!silent) {
+      setLoading(true);
+      setError("");
+    }
     try {
       const response = await fetch(`${API_BASE}/approval-blocks/${encodeURIComponent(blockId)}`, {
         headers: {
@@ -183,15 +193,25 @@ export default function TikTokBlocksApp() {
       }
       applyBlock(payload.block);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : "Bloc TikTok indisponible.");
+      if (!silent) {
+        setError(loadError instanceof Error ? loadError.message : "Bloc TikTok indisponible.");
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [approvalToken, applyBlock, blockId]);
 
   useEffect(() => {
-    loadBlock();
+    void loadBlock();
   }, [loadBlock]);
+
+  useEffect(() => {
+    if (!blockId || !approvalToken) return;
+    const timer = window.setInterval(() => {
+      if (!document.hidden) void loadBlock({ silent: true });
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [approvalToken, blockId, loadBlock]);
 
   function updateForm(itemId: string, patch: Partial<ItemForm>) {
     setForms((current) => ({
@@ -327,7 +347,7 @@ export default function TikTokBlocksApp() {
             ) : null}
           </div>
           <div className={styles.toolbarActions}>
-            <button className={styles.secondaryButton} disabled={loading || publishingBlock} onClick={loadBlock} type="button">
+            <button className={styles.secondaryButton} disabled={loading || publishingBlock} onClick={() => void loadBlock()} type="button">
               Actualiser
             </button>
             <button
