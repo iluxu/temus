@@ -64,6 +64,9 @@ type ApprovalBlock = {
 
 type ItemForm = {
   title: string;
+};
+
+type BlockSettings = {
   privacyLevel: string;
   allowComments: boolean;
   allowDuet: boolean;
@@ -77,7 +80,12 @@ type ItemForm = {
 
 function initialForm(item: ApprovalItem): ItemForm {
   return {
-    title: item.title,
+    title: item.title
+  };
+}
+
+function initialBlockSettings(): BlockSettings {
+  return {
     privacyLevel: "",
     allowComments: false,
     allowDuet: false,
@@ -101,7 +109,11 @@ function formatDate(value: string) {
   }).format(new Date(value));
 }
 
-function itemIssues(item: ApprovalItem, form: ItemForm | undefined) {
+function itemIssues(
+  item: ApprovalItem,
+  form: ItemForm | undefined,
+  settings: BlockSettings
+) {
   if (!form || item.status === "published") {
     return [];
   }
@@ -109,14 +121,17 @@ function itemIssues(item: ApprovalItem, form: ItemForm | undefined) {
     !item.creator ? "creator_info indisponible" : "",
     item.creator && !item.creator.canPostNow ? "TikTok suspend temporairement les publications" : "",
     !form.title.trim() ? "Ajoute un titre" : "",
-    !form.privacyLevel ? "Choisis la confidentialite" : "",
-    form.commercialDisclosure && !form.brandOrganic && !form.brandContent
+    !settings.privacyLevel ? "Choisis la confidentialite du bloc" : "",
+    settings.allowComments && item.creator?.commentDisabled ? "Commentaires indisponibles pour ce compte" : "",
+    settings.allowDuet && item.creator?.duetDisabled ? "Duet indisponible pour ce compte" : "",
+    settings.allowStitch && item.creator?.stitchDisabled ? "Stitch indisponible pour ce compte" : "",
+    settings.commercialDisclosure && !settings.brandOrganic && !settings.brandContent
       ? "Choisis le type de contenu commercial"
       : "",
-    form.brandContent && form.privacyLevel === "SELF_ONLY"
+    settings.brandContent && settings.privacyLevel === "SELF_ONLY"
       ? "Le contenu de marque ne peut pas etre prive"
       : "",
-    !form.consent ? "Confirme la declaration TikTok" : ""
+    !settings.consent ? "Confirme la declaration TikTok" : ""
   ];
   return issues.filter(Boolean);
 }
@@ -126,6 +141,7 @@ export default function TikTokBlocksApp() {
   const [approvalToken, setApprovalToken] = useState("");
   const [block, setBlock] = useState<ApprovalBlock | null>(null);
   const [forms, setForms] = useState<Record<string, ItemForm>>({});
+  const [blockSettings, setBlockSettings] = useState<BlockSettings>(initialBlockSettings);
   const [loading, setLoading] = useState(true);
   const [publishingId, setPublishingId] = useState("");
   const [publishingBlock, setPublishingBlock] = useState(false);
@@ -187,9 +203,13 @@ export default function TikTokBlocksApp() {
     }));
   }
 
-  async function publishItem(item: ApprovalItem) {
+  function updateBlockSettings(patch: Partial<BlockSettings>) {
+    setBlockSettings((current) => ({ ...current, ...patch }));
+  }
+
+  async function publishItem(item: ApprovalItem, settings = blockSettings) {
     const form = forms[item.id];
-    if (!form || itemIssues(item, form).length > 0 || item.status === "published") {
+    if (!form || itemIssues(item, form, settings).length > 0 || item.status === "published") {
       return false;
     }
 
@@ -207,16 +227,16 @@ export default function TikTokBlocksApp() {
           },
           body: JSON.stringify({
             title: form.title,
-            privacyLevel: form.privacyLevel,
-            allowComments: form.allowComments,
-            allowDuet: form.allowDuet,
-            allowStitch: form.allowStitch,
-            commercialDisclosure: form.commercialDisclosure,
-            brandOrganic: form.commercialDisclosure && form.brandOrganic,
-            brandContent: form.commercialDisclosure && form.brandContent,
-            isAigc: form.isAigc,
-            musicUsageConfirmed: form.consent,
-            expressConsent: form.consent,
+            privacyLevel: settings.privacyLevel,
+            allowComments: settings.allowComments,
+            allowDuet: settings.allowDuet,
+            allowStitch: settings.allowStitch,
+            commercialDisclosure: settings.commercialDisclosure,
+            brandOrganic: settings.commercialDisclosure && settings.brandOrganic,
+            brandContent: settings.commercialDisclosure && settings.brandContent,
+            isAigc: settings.isAigc,
+            musicUsageConfirmed: settings.consent,
+            expressConsent: settings.consent,
             confirmedMediaSha256: item.media.sha256
           })
         }
@@ -241,7 +261,8 @@ export default function TikTokBlocksApp() {
       return;
     }
     const readyItems = block.items.filter((item) =>
-      item.status !== "published" && item.status !== "processing" && itemIssues(item, forms[item.id]).length === 0
+      item.status !== "published" && item.status !== "processing" &&
+      itemIssues(item, forms[item.id], blockSettings).length === 0
     );
     if (readyItems.length === 0) {
       return;
@@ -249,7 +270,7 @@ export default function TikTokBlocksApp() {
 
     setPublishingBlock(true);
     for (const item of readyItems) {
-      const published = await publishItem(item);
+      const published = await publishItem(item, blockSettings);
       if (!published) {
         break;
       }
@@ -258,9 +279,28 @@ export default function TikTokBlocksApp() {
   }
 
   const readyCount = useMemo(() => block?.items.filter((item) =>
-    item.status !== "published" && item.status !== "processing" && itemIssues(item, forms[item.id]).length === 0
-  ).length || 0, [block, forms]);
+    item.status !== "published" && item.status !== "processing" &&
+    itemIssues(item, forms[item.id], blockSettings).length === 0
+  ).length || 0, [block, blockSettings, forms]);
   const publishedCount = block?.items.filter((item) => item.status === "published").length || 0;
+  const activeItems = block?.items.filter((item) =>
+    item.status !== "published" && item.status !== "processing"
+  ) || [];
+  const commonPrivacyOptions = useMemo(() => {
+    const optionLists = activeItems
+      .map((item) => item.creator?.privacyOptions || [])
+      .filter((options) => options.length > 0);
+    if (optionLists.length !== activeItems.length || optionLists.length === 0) return [];
+    return optionLists[0].filter((option) =>
+      optionLists.every((options) => options.includes(option))
+    );
+  }, [activeItems]);
+  const commentsUnavailable = activeItems.some((item) => item.creator?.commentDisabled);
+  const duetUnavailable = activeItems.some((item) => item.creator?.duetDisabled);
+  const stitchUnavailable = activeItems.some((item) => item.creator?.stitchDisabled);
+  const consentText = blockSettings.commercialDisclosure && blockSettings.brandContent
+    ? "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation."
+    : "By posting, you agree to TikTok's Music Usage Confirmation.";
 
   return (
     <div className={styles.page}>
@@ -296,7 +336,7 @@ export default function TikTokBlocksApp() {
               onClick={publishReadyBlock}
               type="button"
             >
-              {publishingBlock ? "Publication en cours..." : `Publier les videos confirmees (${readyCount})`}
+              {publishingBlock ? "Publication en cours..." : `Publier tout le bloc (${readyCount})`}
             </button>
           </div>
         </section>
@@ -310,17 +350,118 @@ export default function TikTokBlocksApp() {
         ) : null}
         {error ? <div className={styles.error} role="alert">{error}</div> : null}
 
+        {block && activeItems.length > 0 ? (
+          <section className={styles.blockSettings}>
+            <div className={styles.blockSettingsHead}>
+              <div>
+                <p className={styles.eyebrow}>Reglage unique</p>
+                <h2>Parametres appliques aux {activeItems.length} videos</h2>
+              </div>
+              <p>Les titres restent editables dans chaque preview.</p>
+            </div>
+
+            <div className={styles.blockSettingsGrid}>
+              <label className={styles.field}>
+                <span>Confidentialite</span>
+                <select
+                  disabled={publishingBlock || commonPrivacyOptions.length === 0}
+                  onChange={(event) => updateBlockSettings({ privacyLevel: event.target.value })}
+                  value={blockSettings.privacyLevel}
+                >
+                  <option value="">Selection obligatoire</option>
+                  {commonPrivacyOptions.map((option) => (
+                    <option
+                      disabled={blockSettings.brandContent && option === "SELF_ONLY"}
+                      key={option}
+                      value={option}
+                    >
+                      {option === "PUBLIC_TO_EVERYONE" ? "Public" : option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <fieldset className={styles.group} disabled={publishingBlock}>
+                <legend>Interactions</legend>
+                <div className={styles.checkGrid}>
+                  <Check
+                    checked={blockSettings.allowComments}
+                    disabled={commentsUnavailable}
+                    label="Commentaires"
+                    onChange={(checked) => updateBlockSettings({ allowComments: checked })}
+                  />
+                  <Check
+                    checked={blockSettings.allowDuet}
+                    disabled={duetUnavailable}
+                    label="Duet"
+                    onChange={(checked) => updateBlockSettings({ allowDuet: checked })}
+                  />
+                  <Check
+                    checked={blockSettings.allowStitch}
+                    disabled={stitchUnavailable}
+                    label="Stitch"
+                    onChange={(checked) => updateBlockSettings({ allowStitch: checked })}
+                  />
+                </div>
+              </fieldset>
+
+              <fieldset className={styles.group} disabled={publishingBlock}>
+                <legend>Declaration du contenu</legend>
+                <Check
+                  checked={blockSettings.commercialDisclosure}
+                  label="Ce contenu promeut une marque, un produit ou un service"
+                  onChange={(checked) => updateBlockSettings({
+                    commercialDisclosure: checked,
+                    brandOrganic: checked ? blockSettings.brandOrganic : false,
+                    brandContent: checked ? blockSettings.brandContent : false
+                  })}
+                />
+                {blockSettings.commercialDisclosure ? (
+                  <div className={styles.checkGrid}>
+                    <Check
+                      checked={blockSettings.brandOrganic}
+                      label="Votre marque"
+                      onChange={(checked) => updateBlockSettings({ brandOrganic: checked })}
+                    />
+                    <Check
+                      checked={blockSettings.brandContent}
+                      label="Contenu de marque"
+                      onChange={(checked) => updateBlockSettings({
+                        brandContent: checked,
+                        privacyLevel: checked && blockSettings.privacyLevel === "SELF_ONLY"
+                          ? ""
+                          : blockSettings.privacyLevel
+                      })}
+                    />
+                  </div>
+                ) : null}
+                <Check
+                  checked={blockSettings.isAigc}
+                  label="Contenu genere par IA"
+                  onChange={(checked) => updateBlockSettings({ isAigc: checked })}
+                />
+              </fieldset>
+            </div>
+
+            <label className={styles.consent}>
+              <input
+                checked={blockSettings.consent}
+                disabled={publishingBlock}
+                onChange={(event) => updateBlockSettings({ consent: event.target.checked })}
+                type="checkbox"
+              />
+              <span>{consentText}</span>
+            </label>
+          </section>
+        ) : null}
+
         <div className={styles.list}>
           {block?.items.map((item, index) => {
             const form = forms[item.id];
             const creator = item.creator;
-            const issues = itemIssues(item, form);
+            const issues = itemIssues(item, form, blockSettings);
             const isBusy = publishingId === item.id;
             const isLocked = item.status === "published" || item.status === "processing" || isBusy || publishingBlock;
-            const consentText = form?.commercialDisclosure && form.brandContent
-              ? "By posting, you agree to TikTok's Branded Content Policy and Music Usage Confirmation."
-              : "By posting, you agree to TikTok's Music Usage Confirmation.";
-
             return (
               <article className={styles.item} key={item.id}>
                 <div className={styles.itemHead}>
@@ -371,94 +512,10 @@ export default function TikTokBlocksApp() {
                           />
                         </label>
 
-                        <label className={styles.field}>
-                          <span>Confidentialite</span>
-                          <select
-                            disabled={isLocked || !creator}
-                            onChange={(event) => updateForm(item.id, { privacyLevel: event.target.value })}
-                            value={form?.privacyLevel || ""}
-                          >
-                            <option value="">Selection obligatoire</option>
-                            {creator?.privacyOptions.map((option) => (
-                              <option
-                                disabled={form?.brandContent && option === "SELF_ONLY"}
-                                key={option}
-                                value={option}
-                              >
-                                {option}
-                              </option>
-                            ))}
-                          </select>
-                        </label>
-
-                        <fieldset className={styles.group} disabled={isLocked}>
-                          <legend>Interactions</legend>
-                          <div className={styles.checkGrid}>
-                            <Check
-                              checked={Boolean(form?.allowComments)}
-                              disabled={Boolean(creator?.commentDisabled)}
-                              label="Commentaires"
-                              onChange={(checked) => updateForm(item.id, { allowComments: checked })}
-                            />
-                            <Check
-                              checked={Boolean(form?.allowDuet)}
-                              disabled={Boolean(creator?.duetDisabled)}
-                              label="Duet"
-                              onChange={(checked) => updateForm(item.id, { allowDuet: checked })}
-                            />
-                            <Check
-                              checked={Boolean(form?.allowStitch)}
-                              disabled={Boolean(creator?.stitchDisabled)}
-                              label="Stitch"
-                              onChange={(checked) => updateForm(item.id, { allowStitch: checked })}
-                            />
-                          </div>
-                        </fieldset>
-
-                        <fieldset className={styles.group} disabled={isLocked}>
-                          <legend>Declaration du contenu</legend>
-                          <Check
-                            checked={Boolean(form?.commercialDisclosure)}
-                            label="Ce contenu promeut une marque, un produit ou un service"
-                            onChange={(checked) => updateForm(item.id, {
-                              commercialDisclosure: checked,
-                              brandOrganic: checked ? form?.brandOrganic || false : false,
-                              brandContent: checked ? form?.brandContent || false : false
-                            })}
-                          />
-                          {form?.commercialDisclosure ? (
-                            <div className={styles.checkGrid}>
-                              <Check
-                                checked={form.brandOrganic}
-                                label="Votre marque"
-                                onChange={(checked) => updateForm(item.id, { brandOrganic: checked })}
-                              />
-                              <Check
-                                checked={form.brandContent}
-                                label="Contenu de marque"
-                                onChange={(checked) => updateForm(item.id, {
-                                  brandContent: checked,
-                                  privacyLevel: checked && form.privacyLevel === "SELF_ONLY" ? "" : form.privacyLevel
-                                })}
-                              />
-                            </div>
-                          ) : null}
-                          <Check
-                            checked={Boolean(form?.isAigc)}
-                            label="Contenu genere par IA"
-                            onChange={(checked) => updateForm(item.id, { isAigc: checked })}
-                          />
-                        </fieldset>
-
-                        <label className={styles.consent}>
-                          <input
-                            checked={Boolean(form?.consent)}
-                            disabled={isLocked}
-                            onChange={(event) => updateForm(item.id, { consent: event.target.checked })}
-                            type="checkbox"
-                          />
-                          <span>{consentText}</span>
-                        </label>
+                        <div className={styles.appliedSettings}>
+                          Parametres du bloc: {blockSettings.privacyLevel || "confidentialite a choisir"}
+                          {blockSettings.allowComments ? " · commentaires actifs" : " · commentaires inactifs"}
+                        </div>
 
                         {issues.length > 0 ? <p className={styles.issues}>{issues.join(" · ")}</p> : null}
                         {item.error ? <p className={styles.itemError}>{item.error}</p> : null}

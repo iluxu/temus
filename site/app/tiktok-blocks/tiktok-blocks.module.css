@@ -127,6 +127,55 @@
   background: #ffffff;
 }
 
+.blockSettings {
+  padding: 24px 0;
+  border-bottom: 1px solid #d9d9d9;
+}
+
+.blockSettingsHead {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.blockSettingsHead h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.blockSettingsHead > p {
+  margin: 0;
+  color: #666a70;
+  font-size: 0.82rem;
+}
+
+.blockSettingsGrid {
+  display: grid;
+  grid-template-columns: minmax(190px, 0.7fr) minmax(300px, 1fr) minmax(330px, 1.2fr);
+  align-items: stretch;
+  gap: 12px;
+}
+
+.blockSettings .field,
+.blockSettings .group {
+  min-height: 100%;
+}
+
+.blockSettings > .consent {
+  margin-top: 12px;
+}
+
+.appliedSettings {
+  border-left: 3px solid #00a89b;
+  padding: 9px 11px;
+  background: #f0fbf9;
+  color: #4a5352;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .state strong {
   display: block;
   margin-bottom: 5px;
@@ -482,6 +531,10 @@
     grid-template-columns: 1fr;
   }
 
+  .blockSettingsGrid {
+    grid-template-columns: 1fr;
+  }
+
   .toolbarActions {
     justify-content: flex-start;
     flex-wrap: wrap;
@@ -508,6 +561,11 @@
 
   .toolbar h1 {
     font-size: 1.45rem;
+  }
+
+  .blockSettingsHead {
+    display: grid;
+    gap: 8px;
   }
 
   .toolbarActions,
