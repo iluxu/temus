@@ -7,7 +7,10 @@
     "audit:lucia": "node scripts/audit-lucia-contract.mjs",
     "audit:sentinelle": "node scripts/audit-sentinelle-contract.mjs",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "demo:evidence": "node scripts/build-sentinelle-demo-evidence.mjs",
+    "demo:serve": "node scripts/serve-sentinelle-demo.mjs",
+    "demo:test": "node scripts/test-sentinelle-demo.mjs"
   },
   "dependencies": {
     "next": "14.2.5",

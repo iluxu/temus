@@ -1,0 +1,96 @@
+{
+  "generatedAt": "2026-09-06T18:39:26.044Z",
+  "generator": "scripts/build-sentinelle-demo-evidence.mjs",
+  "caseStudy": {
+    "stream": "twitch-317634897634",
+    "streamStartedAt": "2026-09-03T19:33:01Z",
+    "block": "block-mtmquybz-510952ca90",
+    "heroClip": "radar-twitch-317634897634-9880-10100-78",
+    "designVersion": "lucia-clean-subtitles-v1-tiktok-ae4762e3"
+  },
+  "sources": [
+    "/home/ubuntu/luciamuccia/.data/live-radar/twitch-317634897634/state.json",
+    "/home/ubuntu/luciamuccia/.data/live-radar/twitch-317634897634/chunks.jsonl",
+    "/home/ubuntu/luciamuccia/.data/live-radar/twitch-317634897634/candidates.jsonl",
+    "/home/ubuntu/luciamuccia/.data/clip-renders/clips/radar-twitch-317634897634-9880-10100-78/metadata.json",
+    "/home/ubuntu/luciamuccia/.data/clip-renders/clips/radar-twitch-317634897634-9880-10100-78--lucia-clean-subtitles-v1-tiktok-ae4762e3/metadata.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-approval-blocks/block-mtmquybz-510952ca90.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-approval-manifests/2026-09-04-live-best-unpublished-4x4.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-review-api/approval-v_pub_url_v2-1.7681610566078892054.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/950696ff-c561-43be-b88f-3d31313fc85f.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/f39544c9-6d2a-48fa-a614-fafc7fd1a9eb.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/8ce64b94-644c-4eae-8348-3dfc584119da.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/d40a4fd5-e79d-4dd9-96f5-479aeedf2edb.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/1f747953-b6fe-410c-9396-9ec940d954c6.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/d83ec681-bfa1-42dd-9e09-21b7e25ec027.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/975ff01f-0183-459c-a5c5-00a648c1c1c3.json",
+    "/home/ubuntu/luciamuccia/.data/tiktok-post-analytics/6b618c17-312e-4eb4-b544-5fee6d40614a.json",
+    "/home/ubuntu/luciamuccia/.data/discord-clip-notifications.json",
+    "/home/ubuntu/luciamuccia/config/radar.json"
+  ],
+  "mediaTransform": "Clips réels ré-encodés pour le web (H.264, source 960px de large, vertical 540x960, CRF 30). Aucun recadrage, aucune coupe, aucun sous-titre ajouté ou retiré.",
+  "media": [
+    {
+      "file": "/sentinelle-demo/media/hero-source.mp4",
+      "bytes": 1838555,
+      "sha256": "b21ce187d4c9d34ff211c54f5b1de3f51d2e7aefb00b59eb07aa4d3b0eb0b7c3"
+    },
+    {
+      "file": "/sentinelle-demo/media/hero-vertical.mp4",
+      "bytes": 1156277,
+      "sha256": "dcdfd2e4a81c8191488dc2b65681980b92339bd6a9d6aba8748d0528857e4081"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-bambi-tilt.jpg",
+      "bytes": 16325,
+      "sha256": "b1d6855c0d60bcbab3786acca19b0ce800bbf152fe25ef7d1944b88e45e7ec7d"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-belgique.jpg",
+      "bytes": 15305,
+      "sha256": "0e3a193d4d5095f4f14e9a1670e31d1d017ac593e96ce0d937fa49d2179e4a70"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-demission.jpg",
+      "bytes": 15134,
+      "sha256": "059b97f977176da1a89e4fec88117af2e0dc5e358d5200a428e01da46fe6ff2a"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-iluxu.jpg",
+      "bytes": 13135,
+      "sha256": "67de94d7cd9d9b42f8673ace0575ee8b9b271f167735b205259c4d26bcb802c3"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-mille-euros.jpg",
+      "bytes": 14706,
+      "sha256": "39bdc07ceb4938640957d4fa365c207be2142917f5e94f2501da6ea2770c2890"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-resto-etoile.jpg",
+      "bytes": 15613,
+      "sha256": "90fb48802bfae7f1c9464581830c5d428405f7926877465718a594bd2d1404ee"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-shy.jpg",
+      "bytes": 13101,
+      "sha256": "3e9bf48848ca2398ada91cc933d44ef6392c31b87d93daef88255aedbc90cc97"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-source.jpg",
+      "bytes": 40788,
+      "sha256": "e85b74cf48ca2ce1c6927187629a00324a96f073bf3201f5acde5e90f7775351"
+    },
+    {
+      "file": "/sentinelle-demo/media/poster-souris-fromage.jpg",
+      "bytes": 14147,
+      "sha256": "19f4142b6b426d9198b89dcb1ff9a80139635464cb56b1c2dcf91cf88020b045"
+    }
+  ],
+  "counts": {
+    "chunksProcessed": 317,
+    "candidates": 128,
+    "queueItems": 8,
+    "published": 8,
+    "measuredPublications": 8
+  }
+}
