@@ -22,6 +22,9 @@ const SITE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const ROOT = path.join(SITE, "out");
 const PORT = Number(process.env.PORT || 4310);
 const HOST = process.env.HOST || "127.0.0.1";
+// La Factory a besoin d'un moteur : on le relaie en same-origin pour rester
+// dans la CSP de /sentinelle/* et éviter toute configuration CORS côté page.
+const FACTORY_ORIGIN = process.env.FACTORY_ORIGIN || "http://127.0.0.1:8626";
 
 const TYPES = {
   ".html": "text/html; charset=utf-8",
@@ -79,8 +82,49 @@ function extraHeaders(pathname) {
   return { "Cache-Control": "no-cache" };
 }
 
+/** Relaie /api/factory/* vers le moteur local, flux d'événements compris. */
+function proxyFactory(req, res, pathname) {
+  const target = new URL(
+    pathname.replace(/^\/api\/factory/, "") + (req.url.includes("?") ? `?${req.url.split("?")[1]}` : ""),
+    FACTORY_ORIGIN
+  );
+
+  const headers = {};
+  for (const name of ["content-type", "content-length", "range", "accept"]) {
+    if (req.headers[name]) headers[name] = req.headers[name];
+  }
+
+  const upstream = http.request(
+    { hostname: target.hostname, port: target.port, path: target.pathname + target.search, method: req.method, headers },
+    (response) => {
+      res.writeHead(response.statusCode || 502, {
+        ...response.headers,
+        // Le flux SSE doit traverser sans mise en tampon.
+        "Cache-Control": response.headers["content-type"]?.includes("event-stream")
+          ? "no-store"
+          : response.headers["cache-control"] || "no-store"
+      });
+      response.pipe(res);
+    }
+  );
+
+  upstream.on("error", (error) => {
+    if (res.headersSent) return res.end();
+    res.writeHead(502, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: false, error: "moteur_injoignable", message: String(error.message) }));
+  });
+
+  req.pipe(upstream);
+}
+
 const server = http.createServer((req, res) => {
   const pathname = (req.url || "/").split("?")[0];
+
+  if (pathname.startsWith("/api/factory")) {
+    proxyFactory(req, res, pathname);
+    return;
+  }
+
   const found = resolveFile(pathname);
 
   if (!found) {
@@ -130,5 +174,7 @@ if (!fs.existsSync(ROOT)) {
 }
 
 server.listen(PORT, HOST, () => {
-  console.log(`Replay de démo Sentinelle : http://${HOST}:${PORT}/sentinelle/demo`);
+  console.log(`Replay de démo  : http://${HOST}:${PORT}/sentinelle/demo`);
+  console.log(`Factory         : http://${HOST}:${PORT}/sentinelle/factory`);
+  console.log(`Moteur Factory  : ${FACTORY_ORIGIN} (relayé sur /api/factory)`);
 });

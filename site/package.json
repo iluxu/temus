@@ -10,7 +10,8 @@
     "lint": "next lint",
     "demo:evidence": "node scripts/build-sentinelle-demo-evidence.mjs",
     "demo:serve": "node scripts/serve-sentinelle-demo.mjs",
-    "demo:test": "node scripts/test-sentinelle-demo.mjs"
+    "demo:test": "node scripts/test-sentinelle-demo.mjs",
+    "factory:test": "node scripts/test-sentinelle-factory.mjs"
   },
   "dependencies": {
     "next": "14.2.5",
