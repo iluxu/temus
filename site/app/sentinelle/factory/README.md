@@ -1,5 +1,33 @@
 # Sentinelle Factory (`/sentinelle/factory`)
 
+## Studio deploye le 6 septembre 2026
+
+La PWA est desormais accessible sur https://adoptan.ai/sentinelle/factory.
+Cloudflare relaie `/api/factory/*` vers un service protege sur le serveur, port 8627.
+L'invitation privee cree une session HttpOnly ; le nouveau bouton OAuth connecte
+uniquement le compte `@XavierNielReplays`, en verifiant l'identite retournee.
+
+Le studio accepte une source video importee (80 MiB, 5 minutes maximum), ou la
+bibliotheque Lucia. Un entretien de Xavier est precharge pour la demonstration.
+Le prompt declenche une selection reelle, le montage et les apercus MP4.
+La source prechargee n'est pas une preuve de droits de reutilisation acquis.
+
+La confidentialite et les interactions ne sont **plus predefinies** : choix
+communs visibles, consentement explicite, puis un clic sur la selection figee.
+Les envois sont reels, sequences, avec recus SHA256 et suivi TikTok. Les erreurs
+ou delais ambigus ne declenchent pas de nouvelle publication automatique.
+
+`node scripts/test-sentinelle-studio.mjs` teste la nouvelle interface ; avec
+`STUDIO_BASE=https://adoptan.ai` et `STUDIO_RUN_ID=<run>` il verifie les vrais
+MP4 sur l'URL publique, sans cliquer Publier. Le preset `studio` conserve des
+blocs de sous-titres stables, avec seulement la couleur du mot actif qui change.
+
+Les notes ci-dessous decrivent la premiere version locale et ses choix initiaux.
+Pour l'etat operationnel courant, voir le handoff backend :
+`docs/sentinelle-studio-2026-09-06.md` dans `/home/ubuntu/luciamuccia`.
+
+## Archives : premiere version locale
+
 Un prompt. Un worker Codex qui cherche, choisit et écrit. Un montage vertical
 monté à la volée. Un bouton qui publie sur TikTok.
 

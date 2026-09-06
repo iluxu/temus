@@ -23,7 +23,7 @@ try {
     await page.goto(`${base}/sentinelle/factory`, { waitUntil: "networkidle" });
     await page.getByText("Studio connecté", { exact: true }).waitFor({ state: "attached" });
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
-    assert.ok(await page.getByRole("button", { name: "Connecter TikTok", exact: true }).isEnabled());
+    assert.ok(await page.getByRole("button", { name: /^(Connecter TikTok|TikTok connecté)$/ }).isEnabled());
     await page.screenshot({ path: `${output}${name}-studio-v2.png`, fullPage: true });
     if (process.env.STUDIO_RUN_ID) {
       await page.waitForFunction(() => document.querySelectorAll("article video").length === 3);
