@@ -67,6 +67,7 @@ function resolveFile(pathname) {
 }
 
 function extraHeaders(pathname) {
+  if (pathname === "/sentinelle-factory-sw.js") return { "Cache-Control": "no-store", "Service-Worker-Allowed": "/sentinelle/factory" };
   if (pathname === "/sentinelle-demo-sw.js" || pathname === "/sentinelle-sw.js") {
     return {
       "Cache-Control": "no-store, max-age=0, must-revalidate",
@@ -90,7 +91,7 @@ function proxyFactory(req, res, pathname) {
   );
 
   const headers = {};
-  for (const name of ["content-type", "content-length", "range", "accept"]) {
+  for (const name of ["content-type", "content-length", "range", "accept", "cookie", "origin"]) {
     if (req.headers[name]) headers[name] = req.headers[name];
   }
 

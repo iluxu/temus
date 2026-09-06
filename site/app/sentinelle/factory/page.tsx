@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import FactoryConsole from "./FactoryConsole";
 
 export const metadata: Metadata = {
+  manifest: "/sentinelle-factory.webmanifest",
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "Sentinelle" },
   title: "Sentinelle — Factory",
   description:
     "Un prompt. Un worker qui cherche, monte et habille. Un bouton pour publier sur TikTok.",
@@ -21,7 +23,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#080908"
+  themeColor: "#fafbf9"
 };
 
 export default function SentinelleFactoryPage() {

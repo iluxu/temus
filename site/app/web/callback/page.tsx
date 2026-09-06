@@ -40,6 +40,21 @@ export default function TikTokCallbackPage() {
     const code = params.get("code");
     const hasCode = Boolean(code);
     const state = params.get("state");
+    if (state?.startsWith("factory-")) {
+      if (params.get("error") || !code) {
+        window.location.replace("/sentinelle/factory?oauth=cancelled");
+        return;
+      }
+      setPayload((current) => ({ ...current, codePresent: true, exchangeStatus: "exchanging", exchangeMessage: "Connexion de ton compte TikTok a Sentinelle..." }));
+      fetch("/api/factory/oauth/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code, state }) })
+        .then(async (response) => {
+          const data = await response.json();
+          if (!response.ok || !data.ok) throw new Error(data.message || "Connexion impossible.");
+          window.location.replace("/sentinelle/factory?oauth=connected");
+        })
+        .catch((error) => setPayload((current) => ({ ...current, exchangeStatus: "failed", exchangeMessage: error.message })));
+      return;
+    }
     const expectedState = window.sessionStorage.getItem(TIKTOK_STATE_STORAGE);
     const codeVerifier = window.sessionStorage.getItem(TIKTOK_CODE_VERIFIER_STORAGE);
     const selectedAccountId =

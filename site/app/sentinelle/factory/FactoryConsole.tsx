@@ -1,511 +1,147 @@
 "use client";
-
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowUp, ArrowUpRight, Check, ChevronDown, Clock3, Film, Globe2, History, Link2, Loader2, LockKeyhole, Network, Plus, Send, Settings2, Sparkles, Upload, X } from "lucide-react";
 import styles from "./factory.module.css";
 
-const API = "/api/factory";
-
-/* ------------------------------------------------------------------ types */
-
-type Account = {
-  id: string;
-  connected: boolean;
-  displayName: string;
-  username?: string;
-  avatarUrl?: string;
-  followers?: number | null;
-  videos?: number | null;
-  error?: string;
-};
-
-type Clip = {
-  id: string;
-  clipId: string;
-  viralRenderId: string;
-  accountId: string;
-  role: string;
-  hook: string;
-  caption: string;
-  hashtags: string[];
-  title: string;
-  why: string;
-  radarScore: number | null;
-  chatHeat: { score: number; messages: number; chatters: number } | null;
-  transcript: string;
-  durationSec: number | null;
-  framing?: string;
-  status: string;
-  previewUrl: string;
-  posterUrl: string;
-  postUrl: string;
-  error: string;
-  renderError: string;
-};
-
-type RunEvent = {
-  at: string;
-  stage: string;
-  kind?: string;
-  message?: string;
-  clipId?: string;
-  postUrl?: string;
-};
-
-type Run = {
-  id: string;
-  prompt: string;
-  accountId: string;
-  live: boolean;
-  status: string;
-  answer: string;
-  notes: string;
-  error: string;
-  clips: Clip[];
-  events: RunEvent[];
-};
-
-const SUGGESTIONS = [
-  "Trouve 3 extraits où Bambi perturbe le live et publie-les",
-  "Trouve 3 moments où Lucia a un avis tranché",
-  "Trouve 3 extraits drôles sur l'argent et les restos"
-];
-
-/* ------------------------------------------------------------------ outils */
-
-const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
-
-/** Le score du radar est réel : on ne le convertit pas en pourcentage de viralité. */
-function scoreBadge(score: number | null) {
-  if (typeof score !== "number") return null;
-  if (score >= 76) return { label: "Fort potentiel", tone: "hot" as const };
-  if (score >= 72) return { label: "Bon candidat", tone: "warm" as const };
-  return { label: "Candidat", tone: "cool" as const };
+const API = "/api/factory", TARGET = "xaviernielreplays";
+type Account = { id: string; connected: boolean; displayName: string; privacyOptions?: string[]; commentDisabled?: boolean; duetDisabled?: boolean; stitchDisabled?: boolean };
+type Clip = { id: string; accountId: string; hook: string; title: string; why: string; radarScore: number | null; durationSec: number | null; status: string; previewUrl: string; posterUrl: string; mediaSha256: string; postUrl: string; error: string; renderError: string; receipt?: { approvedAt: string; mediaSha256: string } };
+type Run = { id: string; prompt: string; accountId: string; accountIds: string[]; status: string; answer: string; error: string; createdAt: string; clips: Clip[]; events: { at: string; message?: string; stage: string }[] };
+type Source = { id: string; name: string; duration: number };
+type Settings = { privacyLevel: string; allowComments: boolean; allowDuet: boolean; allowStitch: boolean; commercialDisclosure: boolean; brandOrganic: boolean; brandContent: boolean; isAigc: boolean; musicUsageConfirmed: boolean; expressConsent: boolean };
+const defaults: Settings = { privacyLevel: "", allowComments: false, allowDuet: false, allowStitch: false, commercialDisclosure: false, brandOrganic: false, brandContent: false, isAigc: false, musicUsageConfirmed: false, expressConsent: false };
+const labels: Record<string, string> = { PUBLIC_TO_EVERYONE: "Public", MUTUAL_FOLLOW_FRIENDS: "Amis", FOLLOWER_OF_CREATOR: "Abonnés", SELF_ONLY: "Moi uniquement" };
+const stages: Record<string, string> = { worker: "Sélection des moments", montage: "Montage en cours", ready: "La sélection est prête", publishing: "Envoi vers TikTok", validating: "Vérification", done: "Traitement terminé", failed: "À reprendre", interrupted: "Traitement interrompu" };
+const playable = (c: Clip) => c.status === "prêt" && !c.renderError && Boolean(c.mediaSha256);
+async function request(path: string, init?: RequestInit) {
+  const response = await fetch(`${API}${path}`, { ...init, cache: "no-store" });
+  const data = await response.json();
+  if (!response.ok || data.ok === false) throw new Error(data.message || data.error || "Requête impossible.");
+  return data;
 }
-
-const ROLE_LABEL: Record<string, string> = {
-  accroche: "Accroche",
-  substance: "Substance",
-  partage: "Partage"
-};
-
-/* -------------------------------------------------------------- composant */
+const post = (path: string, body: unknown = {}) => request(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 export default function FactoryConsole() {
-  const [prompt, setPrompt] = useState(SUGGESTIONS[0]);
+  const [tab, setTab] = useState<"studio" | "network" | "history">("studio");
+  const [auth, setAuth] = useState<"loading" | "ready" | "locked">("loading");
+  const [key, setKey] = useState("");
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [accountId, setAccountId] = useState("");
+  const [destinations, setDestinations] = useState<string[]>([TARGET]);
+  const [sources, setSources] = useState<Source[]>([]);
+  const [sourceId, setSourceId] = useState("");
+  const [history, setHistory] = useState<Run[]>([]);
   const [run, setRun] = useState<Run | null>(null);
-  const [events, setEvents] = useState<RunEvent[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [publishing, setPublishing] = useState(false);
-  const [backend, setBackend] = useState<"unknown" | "up" | "down">("unknown");
+  const [prompt, setPrompt] = useState("Trouve 3 extraits punchy de Xavier Niel sur l'entrepreneuriat.");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [titles, setTitles] = useState<Record<string, string>>({});
+  const [settings, setSettings] = useState<Settings>({ ...defaults });
+  const [error, setError] = useState("");
+  const [working, setWorking] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [live, setLive] = useState(false);
-  const [fatal, setFatal] = useState("");
-
-  const streamRef = useRef<EventSource | null>(null);
-  const feedRef = useRef<HTMLDivElement | null>(null);
-  const startedAt = useRef<number>(0);
-  const [elapsed, setElapsed] = useState(0);
-
-  /* ------------------------------------------------------------- amorçage */
-
+  const [online, setOnline] = useState(true);
+  const upload = useRef<HTMLInputElement>(null), action = useRef(false), known = useRef(new Set<string>());
+  const refresh = useCallback(async () => {
+    const data = await request("/accounts"); setAccounts(data.accounts || []); setLive(data.live); setAuth("ready");
+    const sources: Source[] = (await request("/sources")).sources || [];
+    setSources(sources); setSourceId((current) => current || sources.find((s) => /niel/i.test(s.name))?.id || "");
+    setHistory((await request("/runs")).runs || []);
+  }, []);
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch(`${API}/accounts`, { cache: "no-store" });
-        if (!response.ok) throw new Error(String(response.status));
-        const payload = await response.json();
-        if (cancelled) return;
-        setAccounts(payload.accounts || []);
-        setLive(Boolean(payload.live));
-        setBackend("up");
-        const first = (payload.accounts || []).find((item: Account) => item.connected);
-        if (first) setAccountId(first.id);
-      } catch {
-        if (!cancelled) setBackend("down");
-      }
+        const invitation = new URLSearchParams(location.hash.slice(1)).get("access");
+        if (invitation) { await post("/session", { key: invitation }); window.history.replaceState(null, "", location.pathname); }
+        await refresh();
+        const id = localStorage.getItem("sentinelle.factory.run");
+        if (id) { const data = await request(`/runs/${encodeURIComponent(id)}`).catch(() => null); if (!cancelled && data) setRun(data.run); }
+        if (new URLSearchParams(location.search).get("oauth") === "cancelled") setError("Connexion TikTok annulée. Tu peux réessayer.");
+      } catch (err) { if (!cancelled) { setAuth("locked"); setError((err as Error).message); } }
     })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  /* Chronomètre visible : on montre le temps réel, pas une animation décorative. */
+    const connectivity = () => setOnline(navigator.onLine);
+    window.addEventListener("online", connectivity); window.addEventListener("offline", connectivity);
+    navigator.serviceWorker?.register("/sentinelle-factory-sw.js", { scope: "/sentinelle/factory" }).catch(() => {});
+    return () => { cancelled = true; window.removeEventListener("online", connectivity); window.removeEventListener("offline", connectivity); };
+  }, [refresh]);
   useEffect(() => {
-    if (!busy && !publishing) return;
-    const timer = setInterval(() => setElapsed((Date.now() - startedAt.current) / 1000), 100);
+    if (!run || auth !== "ready") return;
+    localStorage.setItem("sentinelle.factory.run", run.id);
+    const timer = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
+      try { setRun((await request(`/runs/${run.id}`)).run); } catch (err) { setError((err as Error).message); }
+    }, 2500);
     return () => clearInterval(timer);
-  }, [busy, publishing]);
-
+  }, [run?.id, auth]);
   useEffect(() => {
-    feedRef.current?.scrollTo({ top: feedRef.current.scrollHeight, behavior: "smooth" });
-  }, [events.length]);
-
-  useEffect(() => () => streamRef.current?.close(), []);
-
-  /* --------------------------------------------------------------- actions */
-
-  const refreshRun = useCallback(async (runId: string) => {
-    const response = await fetch(`${API}/runs/${runId}`, { cache: "no-store" });
-    if (!response.ok) return null;
-    const payload = await response.json();
-    setRun(payload.run);
-    return payload.run as Run;
-  }, []);
-
-  const listen = useCallback(
-    (runId: string) => {
-      streamRef.current?.close();
-      const source = new EventSource(`${API}/runs/${runId}/events`);
-      streamRef.current = source;
-      source.onmessage = (message) => {
-        let event: RunEvent;
-        try {
-          event = JSON.parse(message.data);
-        } catch {
-          return;
-        }
-        setEvents((current) => [...current.slice(-120), event]);
-        if (["pret", "erreur", "fin", "proposition"].includes(event.stage)) {
-          refreshRun(runId).then((updated) => {
-            if (!updated) return;
-            if (updated.status === "ready" || updated.status === "failed") setBusy(false);
-            if (updated.status === "done") setPublishing(false);
-          });
-        }
-        if (event.stage === "clip" && event.postUrl) refreshRun(runId);
-      };
-      source.onerror = () => {
-        /* le flux se reconnecte seul ; l'état vient aussi du polling */
-      };
-    },
-    [refreshRun]
-  );
-
-  const launch = useCallback(async () => {
-    const text = prompt.trim();
-    if (!text || busy) return;
-    setFatal("");
-    setEvents([]);
-    setRun(null);
-    setBusy(true);
-    startedAt.current = Date.now();
-    setElapsed(0);
-
-    try {
-      const response = await fetch(`${API}/runs`, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ prompt: text, count: 3, accountId })
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload.ok) throw new Error(payload.message || payload.error || "échec");
-      setRun(payload.run);
-      listen(payload.run.id);
-    } catch (error) {
-      setBusy(false);
-      setFatal(String((error as Error)?.message || error));
-    }
-  }, [prompt, busy, accountId, listen]);
-
-  const publishAll = useCallback(async () => {
-    if (!run || publishing) return;
-    setPublishing(true);
-    startedAt.current = Date.now();
-    setElapsed(0);
-    try {
-      const response = await fetch(`${API}/runs/${run.id}/publish`, { method: "POST" });
-      const payload = await response.json();
-      if (!response.ok || !payload.ok) throw new Error(payload.message || payload.error || "échec");
-    } catch (error) {
-      setPublishing(false);
-      setFatal(String((error as Error)?.message || error));
-    }
-  }, [run, publishing]);
-
-  /* ----------------------------------------------------------------- vues */
-
-  const ready = run?.status === "ready" || run?.status === "done";
-  const clips = run?.clips || [];
-  const published = clips.filter((clip) => clip.status === "publié");
-  const account = accounts.find((item) => item.id === (run?.accountId || accountId));
-
-  const phase = useMemo(() => {
-    if (!run) return busy ? "Démarrage" : "";
-    if (run.status === "worker") return "Le worker cherche";
-    if (run.status === "montage") return "Montage vertical";
-    if (run.status === "publishing") return "Publication";
-    if (run.status === "done") return "Terminé";
-    if (run.status === "failed") return "Échec";
-    return "Prêt";
-  }, [run, busy]);
-
-  return (
-    <div className={styles.shell}>
-      <div className={styles.ambient} aria-hidden />
-
-      <header className={styles.topbar}>
-        <div className={styles.brand}>
-          <span aria-hidden>✦</span>
-          <div>
-            <strong>Sentinelle</strong>
-            <small>Factory</small>
-          </div>
-        </div>
-
-        <div className={styles.accountBar}>
-          {backend === "down" ? (
-            <span className={styles.badgeDown}>Moteur non joignable</span>
-          ) : (
-            <>
-              <span className={live ? styles.badgeLive : styles.badgeRehearsal}>
-                {live ? "Publication réelle" : "Répétition"}
-              </span>
-              <label className={styles.accountPicker}>
-                <span className={styles.srOnly}>Compte de destination</span>
-                <select
-                  value={accountId}
-                  onChange={(event) => setAccountId(event.target.value)}
-                  disabled={busy || publishing}
-                >
-                  {accounts.map((item) => (
-                    <option key={item.id} value={item.id} disabled={!item.connected}>
-                      @{item.id}
-                      {item.connected ? "" : " — non connecté"}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </>
-          )}
-        </div>
-      </header>
-
+    const fresh = (run?.clips || []).filter((c) => playable(c) && !known.current.has(c.id));
+    if (fresh.length) { fresh.forEach((c) => known.current.add(c.id)); setSelected((old) => [...new Set([...old, ...fresh.map((c) => c.id)])]); setSettings({ ...defaults }); }
+  }, [run]);
+  const update = (field: keyof Settings, value: string | boolean) => setSettings((s) => ({ ...s, [field]: value, ...(field === "musicUsageConfirmed" ? { expressConsent: value as boolean } : { musicUsageConfirmed: false, expressConsent: false }), ...(field === "commercialDisclosure" && !value ? { brandContent: false, brandOrganic: false } : {}) }));
+  const busy = working || ["worker", "montage", "publishing", "validating"].includes(run?.status || "");
+  const clips = run?.clips || [], selectedClips = clips.filter((c) => selected.includes(c.id) && playable(c));
+  const chosen = accounts.filter((a) => (run?.accountIds || destinations).includes(a.id));
+  const privacy = chosen.length ? (chosen[0].privacyOptions || []).filter((p) => chosen.every((a) => a.privacyOptions?.includes(p))) : [];
+  const canPublish = !busy && online && live && selectedClips.length > 0 && chosen.length > 0 && chosen.every((a) => a.connected) && privacy.includes(settings.privacyLevel) && settings.musicUsageConfirmed && (!settings.commercialDisclosure || settings.brandContent || settings.brandOrganic) && !(settings.brandContent && settings.privacyLevel === "SELF_ONLY");
+  async function connect() {
+    if (action.current) return; action.current = true; setWorking(true); setError("");
+    try { window.location.assign((await post("/oauth/start")).url); } catch (err) { setError((err as Error).message); } finally { action.current = false; setWorking(false); }
+  }
+  async function launch() {
+    if (busy || action.current || !prompt.trim()) return; action.current = true; setWorking(true); setError("");
+    try { const data = await post("/runs", { prompt, count: 3, accountIds: destinations, sourceId }); known.current = new Set(); setSelected([]); setTitles({}); setSettings({ ...defaults }); setRun(data.run); }
+    catch (err) { setError((err as Error).message); } finally { action.current = false; setWorking(false); }
+  }
+  async function publish() {
+    if (!canPublish || action.current || !run) return; action.current = true; setWorking(true); setError("");
+    try { const data = await post(`/runs/${run.id}/publish`, { settings, clips: selectedClips.map((c) => ({ id: c.id, title: titles[c.id] ?? c.title, mediaSha256: c.mediaSha256 })) }); setRun(data.run); setSettings({ ...defaults }); }
+    catch (err) { setError((err as Error).message); } finally { action.current = false; setWorking(false); }
+  }
+  async function importVideo(file: File) {
+    if (file.size > 80 * 1024 * 1024) { setError("La vidéo doit peser moins de 80 Mo."); return; }
+    setUploading(true); setError("");
+    try { const data = await request(`/sources?name=${encodeURIComponent(file.name)}`, { method: "POST", headers: { "Content-Type": "video/mp4" }, body: file }); setSources((items) => [...items, data.source]); setSourceId(data.source.id); }
+    catch (err) { setError((err as Error).message); } finally { setUploading(false); }
+  }
+  return <div className={styles.shell}>
+    <header className={styles.topbar}>
+      <a href="/sentinelle/factory" className={styles.brand}><img src="/sentinelle-icon-192.png" width="32" height="32" alt="" /><strong>sentinelle<span>studio</span></strong></a>
+      <div className={styles.topActions}><span className={styles.connection}><i className={online && auth === "ready" ? styles.green : ""} />{!online ? "Hors connexion" : auth === "ready" ? "Studio connecté" : "Espace privé"}</span><button type="button" className={styles.connect} onClick={connect} disabled={auth !== "ready" || working}><Link2 size={15} /><span>{accounts.find((a) => a.id === TARGET)?.connected ? "TikTok connecté" : "Connecter TikTok"}</span></button></div>
+    </header>
+    <div className={styles.workspace}>
+      <nav className={styles.rail} aria-label="Navigation du studio">{([{ id: "studio", label: "Studio", icon: Film }, { id: "network", label: "Réseau", icon: Network }, { id: "history", label: "Historique", icon: History }] as const).map(({ id, label, icon: Icon }) => <button key={id} title={label} aria-label={label} aria-current={tab === id ? "page" : undefined} className={tab === id ? styles.activeNav : ""} onClick={() => { setTab(id); if (id === "history") refresh().catch(() => {}); }}><Icon size={21} /><span>{label}</span></button>)}</nav>
       <main className={styles.main}>
-        {/* ------------------------------------------------------- prompt */}
-        <section className={styles.promptZone} aria-label="Demande">
-          {!run ? (
-            <p className={styles.lede}>
-              Dis ce que tu veux publier. Un worker cherche dans la bibliothèque, choisit,
-              écrit l&apos;accroche, monte en vertical. Tu regardes, tu publies.
-            </p>
-          ) : null}
-
-          <form
-            className={styles.promptBox}
-            onSubmit={(event) => {
-              event.preventDefault();
-              launch();
-            }}
-          >
-            <textarea
-              value={prompt}
-              onChange={(event) => setPrompt(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  launch();
-                }
-              }}
-              rows={2}
-              maxLength={400}
-              placeholder="Trouve 3 extraits…"
-              disabled={busy || backend === "down"}
-              aria-label="Ta demande"
-            />
-            <button
-              type="submit"
-              className={styles.launch}
-              disabled={busy || backend === "down" || !prompt.trim()}
-            >
-              {busy ? <i className={styles.spinner} aria-hidden /> : "Lancer"}
-            </button>
-          </form>
-
-          {!run && backend !== "down" ? (
-            <div className={styles.suggestions}>
-              {SUGGESTIONS.map((suggestion) => (
-                <button key={suggestion} type="button" onClick={() => setPrompt(suggestion)}>
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          ) : null}
-
-          {backend === "down" ? (
-            <p className={styles.downNote}>
-              Le moteur local ne répond pas. Lance-le sur la machine qui porte le pipeline :
-              <code>node src/sentinelle-factory-server.js</code> depuis
-              <code>/home/ubuntu/luciamuccia</code>, puis recharge.
-            </p>
-          ) : null}
-
-          {fatal ? <p className={styles.fatal}>{fatal}</p> : null}
-        </section>
-
-        {/* --------------------------------------------------- travail live */}
-        {run || busy ? (
-          <section className={styles.workZone} aria-label="Travail en cours">
-            <header className={styles.workHead}>
-              <span className={styles.phase}>
-                {busy || publishing ? <i className={styles.pulse} aria-hidden /> : null}
-                {phase}
-              </span>
-              {busy || publishing ? (
-                <span className={styles.timer}>{elapsed.toFixed(1)} s</span>
-              ) : null}
-            </header>
-            <div className={styles.feed} ref={feedRef}>
-              {events.map((event, index) => (
-                <p
-                  key={`${event.at}-${index}`}
-                  className={
-                    event.kind === "erreur"
-                      ? styles.feedError
-                      : event.kind === "outil"
-                        ? styles.feedTool
-                        : undefined
-                  }
-                >
-                  <span>{event.at.slice(11, 19)}</span>
-                  {event.message}
-                </p>
-              ))}
-              {!events.length ? <p className={styles.feedTool}>…</p> : null}
-            </div>
-          </section>
-        ) : null}
-
-        {/* --------------------------------------------------- proposition */}
-        {run?.answer ? (
-          <section className={styles.bubbleZone} aria-live="polite">
-            <div className={styles.bubble}>
-              <span className={styles.bubbleMark} aria-hidden>
-                ✦
-              </span>
-              <div>
-                <p>{run.answer}</p>
-                {run.notes ? <small>{run.notes}</small> : null}
-              </div>
-            </div>
-          </section>
-        ) : null}
-
-        {clips.length ? (
-          <section className={styles.clips} aria-label="Clips proposés">
-            {clips.map((clip) => {
-              const badge = scoreBadge(clip.radarScore);
-              return (
-                <article
-                  key={clip.id}
-                  className={
-                    clip.status === "publié"
-                      ? `${styles.card} ${styles.cardPublished}`
-                      : clip.renderError
-                        ? `${styles.card} ${styles.cardFailed}`
-                        : styles.card
-                  }
-                >
-                  <div className={styles.frame}>
-                    {clip.previewUrl ? (
-                      <video
-                        src={`${API}${clip.previewUrl}`}
-                        poster={clip.posterUrl ? `${API}${clip.posterUrl}` : undefined}
-                        muted
-                        loop
-                        playsInline
-                        autoPlay
-                        preload="metadata"
-                        aria-label={`Aperçu : ${clip.hook}`}
-                      />
-                    ) : (
-                      <div className={styles.framePending}>
-                        <i className={styles.spinner} aria-hidden />
-                        <span>{clip.renderError ? "Montage impossible" : "Montage…"}</span>
-                      </div>
-                    )}
-                    <span className={styles.role}>{ROLE_LABEL[clip.role] || clip.role}</span>
-                    {badge ? (
-                      <span className={`${styles.badge} ${styles[`badge_${badge.tone}`]}`}>
-                        {badge.tone === "hot" ? "🔥 " : ""}
-                        {badge.label} · {clip.radarScore}
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <div className={styles.cardBody}>
-                    <h2>{clip.hook}</h2>
-                    <p className={styles.caption}>{clip.caption}</p>
-                    <p className={styles.tags}>{clip.hashtags.join(" ")}</p>
-
-                    <dl className={styles.meta}>
-                      <div>
-                        <dt>Compte</dt>
-                        <dd>@{clip.accountId}</dd>
-                      </div>
-                      <div>
-                        <dt>Durée</dt>
-                        <dd>{clip.durationSec ? `${clip.durationSec.toFixed(0)} s` : "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Cadrage</dt>
-                        <dd>{clip.framing === "face" ? "plein cadre" : clip.framing || "—"}</dd>
-                      </div>
-                      <div>
-                        <dt>Chat</dt>
-                        <dd>{clip.chatHeat ? clip.chatHeat.score : "—"}</dd>
-                      </div>
-                    </dl>
-
-                    {clip.why ? <p className={styles.why}>{clip.why}</p> : null}
-
-                    <footer className={styles.cardFoot}>
-                      {clip.status === "publié" && clip.postUrl ? (
-                        <a href={clip.postUrl} target="_blank" rel="noopener noreferrer">
-                          Voir sur TikTok ↗
-                        </a>
-                      ) : (
-                        <span className={styles.status}>{clip.error || clip.renderError || clip.status}</span>
-                      )}
-                    </footer>
-                  </div>
-                </article>
-              );
-            })}
-          </section>
-        ) : null}
-
-        {ready && clips.length ? (
-          <section className={styles.publishZone}>
-            <button
-              type="button"
-              className={styles.publish}
-              onClick={publishAll}
-              disabled={publishing || published.length === clips.length}
-            >
-              {published.length === clips.length
-                ? `${published.length} clips en ligne`
-                : publishing
-                  ? "Envoi en cours…"
-                  : `Publier la sélection (${clips.length})`}
-            </button>
-            <p className={styles.publishNote}>
-              {live ? (
-                <>
-                  Publication directe sur <b>@{account?.id || accountId}</b>. Public, commentaires
-                  ouverts, duo et stitch fermés.
-                </>
-              ) : (
-                <>
-                  Le moteur tourne en <b>répétition</b> : le bouton parcourt toute la chaîne mais
-                  n&apos;envoie rien à TikTok. Relance-le avec <code>--live</code> pour publier.
-                </>
-              )}
-            </p>
-          </section>
-        ) : null}
+        {auth === "locked" ? <section className={styles.access}><LockKeyhole size={28} /><h1>Ton studio privé.</h1><form onSubmit={async (e) => { e.preventDefault(); try { await post("/session", { key }); setError(""); await refresh(); } catch (err) { setError((err as Error).message); } }}><label htmlFor="access">Code d’accès</label><input id="access" type="password" value={key} onChange={(e) => setKey(e.target.value)} autoComplete="off" /><button className={styles.primary}>Ouvrir le studio <ArrowUpRight size={17} /></button></form></section> : <>
+          <div className={styles.pageHead}><div><p className={styles.eyebrow}>ESPACE DE PRODUCTION</p><h1>{tab === "network" ? "Un studio. Tes comptes." : tab === "history" ? "Les dernières sessions." : "Les idées deviennent vidéos."}</h1></div><span className={styles.target}>@XavierNielReplays</span></div>
+          {tab === "studio" && <>
+            <form className={styles.composer} onSubmit={(e) => { e.preventDefault(); launch(); }}>
+              <label className={styles.promptLabel} htmlFor="prompt"><Sparkles size={16} />Qu’est-ce qu’on publie ?</label>
+              <textarea id="prompt" rows={2} maxLength={800} value={prompt} disabled={busy} onChange={(e) => setPrompt(e.target.value)} />
+              <div className={styles.composerFoot}><div className={styles.sourceTools}><label className={styles.sourcePicker}><Film size={14} /><select aria-label="Source vidéo" value={sourceId} disabled={busy || uploading} onChange={(e) => setSourceId(e.target.value)}><option value="">Bibliothèque Lucia</option>{sources.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select><ChevronDown size={12} /></label><button type="button" className={styles.iconButton} aria-label="Importer une vidéo" title="Importer une vidéo (80 Mo, 5 min maximum)" disabled={busy || uploading} onClick={() => upload.current?.click()}>{uploading ? <Loader2 size={18} className={styles.spin} /> : <Plus size={18} />}</button><input hidden ref={upload} type="file" accept="video/mp4,video/quicktime,video/webm" onChange={(e) => { if (e.target.files?.[0]) importVideo(e.target.files[0]); e.target.value = ""; }} /></div><button className={styles.primary} disabled={busy || uploading || auth !== "ready" || !online || !prompt.trim()}>{busy ? <Loader2 size={16} className={styles.spin} /> : <ArrowUp size={17} />}<span>{busy ? "En cours" : "Créer 3 clips"}</span></button></div>
+            </form>
+            <div className={styles.editorialBar}><button onClick={() => setTab("network")} className={styles.textButton}><Globe2 size={14} />{destinations.length === 1 ? `@${destinations[0]}` : `${destinations.length} comptes`}<ChevronDown size={12} /></button><span>9:16 <b>·</b> Sous-titres <b>·</b> Voix originale</span></div>
+            <section className={styles.production} aria-label="Sélection vidéo">
+              <div className={styles.sectionHead}><h2>{run ? stages[run.status] || "Sélection" : "Ta prochaine sélection"}</h2><span>{clips.length ? `${clips.filter((c) => c.status === "publié").length} publiés · ${clips.length} clips` : "01 / 03"}</span></div>
+              {run && <div className={styles.progress} aria-live="polite">{busy ? <Loader2 className={styles.spin} size={14} /> : <Check size={14} />}<span>{run.error || run.events?.at(-1)?.message || run.answer}</span></div>}
+              {clips.length ? <div className={styles.clips}>{clips.map((c, i) => <article className={styles.clip} key={c.id}>
+                <div className={styles.frame}>{c.previewUrl ? <video key={c.previewUrl} src={c.previewUrl.startsWith("/media/") ? `${API}${c.previewUrl}` : c.previewUrl} poster={c.posterUrl || undefined} controls muted playsInline loop preload="metadata" aria-label={`Aperçu : ${c.hook}`} /> : <div className={styles.rendering}><Loader2 size={26} className={styles.spin} /><span>{c.renderError || "Montage"}</span></div>}<span className={styles.clipNumber}>{String(i + 1).padStart(2, "0")}</span>{playable(c) && <label className={styles.checkClip}><input aria-label={`Sélectionner ${c.hook}`} type="checkbox" checked={selected.includes(c.id)} disabled={busy} onChange={() => { setSelected((items) => items.includes(c.id) ? items.filter((id) => id !== c.id) : [...items, c.id]); setSettings((s) => ({ ...s, musicUsageConfirmed: false, expressConsent: false })); }} /></label>}</div>
+                <div className={styles.clipHeading}><h3>{c.hook}</h3><span>{c.durationSec ? `${Math.round(c.durationSec)}s` : ""}</span></div><span className={styles.clipAccount}>@{c.accountId}</span>
+                <textarea className={styles.caption} aria-label={`Légende : ${c.hook}`} rows={3} maxLength={2200} value={titles[c.id] ?? c.title} disabled={!playable(c) || busy} onChange={(e) => { setTitles((old) => ({ ...old, [c.id]: e.target.value })); setSettings((s) => ({ ...s, musicUsageConfirmed: false, expressConsent: false })); }} />
+                <div className={styles.clipFooter}><span className={c.status === "publié" ? styles.published : ""}>{c.status === "publié" ? <Check size={13} /> : <Clock3 size={13} />}{c.status}</span>{c.postUrl && <a href={c.postUrl} target="_blank" rel="noreferrer">Voir le post <ArrowUpRight size={14} /></a>}</div>{c.error && <p className={styles.inlineError}>{c.error}</p>}
+                <details className={styles.clipDetail}><summary>Choix éditorial{c.radarScore != null ? ` · ${c.radarScore}/100` : ""}</summary><p>{c.why}</p>{c.receipt && <p>Validé le {new Date(c.receipt.approvedAt).toLocaleString("fr-FR")} · SHA256 {c.receipt.mediaSha256.slice(0, 12)}</p>}</details>
+              </article>)}</div> : <div className={styles.empty}><div className={styles.emptyVisual}><img src="/sentinelle-demo/media/poster-niel.jpg" alt="Xavier Niel dans un entretien France Inter" /><span>XAVIER NIEL / FRANCE INTER</span><div className={styles.filmMark}><Film size={26} /></div></div><div className={styles.emptyContent}><span className={styles.miniLabel}>PROCHAINE SOURCE</span><h2>Xavier Niel,<br />à l’écran.</h2><button className={styles.textButton} disabled={auth !== "ready" || uploading} onClick={() => upload.current?.click()}><Upload size={16} />Importer une vidéo <ArrowUpRight size={16} /></button><small>MP4 · 80 Mo max · 5 min max</small></div></div>}
+            </section>
+            {selectedClips.length > 0 && <section className={styles.publishZone} aria-label="Publication TikTok">
+              <div className={styles.settingsRow}><label className={styles.privacy}><Globe2 size={15} /><select aria-label="Confidentialité TikTok" value={settings.privacyLevel} disabled={busy} onChange={(e) => update("privacyLevel", e.target.value)}><option value="">Visibilité</option>{privacy.map((p) => <option key={p} value={p} disabled={p === "SELF_ONLY" && settings.brandContent}>{labels[p] || p}</option>)}</select></label><label><input type="checkbox" checked={settings.allowComments} disabled={busy || chosen.some((a) => a.commentDisabled)} onChange={(e) => update("allowComments", e.target.checked)} />Commentaires</label><details className={styles.moreSettings}><summary><Settings2 size={15} />Réglages</summary><div>{([{ key: "allowDuet", label: "Duo", disabled: chosen.some((a) => a.duetDisabled) }, { key: "allowStitch", label: "Collage", disabled: chosen.some((a) => a.stitchDisabled) }, { key: "commercialDisclosure", label: "Contenu commercial" }, { key: "isAigc", label: "Contenu généré par IA" }] as const).map((item) => <label key={item.key}><input type="checkbox" checked={settings[item.key]} disabled={busy || ("disabled" in item && item.disabled)} onChange={(e) => update(item.key, e.target.checked)} />{item.label}</label>)}{settings.commercialDisclosure && <><label><input type="checkbox" checked={settings.brandOrganic} onChange={(e) => update("brandOrganic", e.target.checked)} />Votre marque</label><label><input type="checkbox" checked={settings.brandContent} disabled={settings.privacyLevel === "SELF_ONLY"} onChange={(e) => update("brandContent", e.target.checked)} />Partenariat rémunéré</label><small>{settings.brandContent ? "Paid partnership" : settings.brandOrganic ? "Promotional content" : "Choisis au moins une catégorie."}</small></>}</div></details></div>
+              <div className={styles.publishBottom}><label className={styles.consent}><input type="checkbox" checked={settings.musicUsageConfirmed} disabled={busy} onChange={(e) => update("musicUsageConfirmed", e.target.checked)} /><span>By posting, you agree to TikTok’s {settings.brandContent && <><a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" rel="noreferrer">Branded Content Policy</a> and </>}<a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" rel="noreferrer">Music Usage Confirmation</a>.</span></label><button className={styles.primary} disabled={!canPublish} onClick={publish}><Send size={16} />Publier la sélection ({selectedClips.length})</button></div><small className={styles.processingNote}>{!live ? "Publication réelle désactivée sur ce serveur." : "TikTok peut prendre quelques minutes pour traiter et afficher les vidéos."}</small>
+            </section>}
+          </>}
+          {tab === "network" && <section className={styles.network}><div className={styles.sectionHead}><h2>Comptes de diffusion</h2><span>{accounts.filter((a) => a.connected).length} connectés</span></div>{accounts.map((a) => <div className={styles.accountRow} key={a.id}><input type="checkbox" aria-label={`Diffuser sur ${a.id}`} checked={destinations.includes(a.id)} disabled={busy || !a.connected} onChange={() => setDestinations((items) => items.includes(a.id) ? items.length > 1 ? items.filter((id) => id !== a.id) : items : [...items, a.id])} /><span className={styles.avatar}>{a.displayName.slice(0, 1).toUpperCase()}</span><span><strong>{a.displayName}</strong><small>@{a.id}</small></span><span className={a.connected ? styles.published : styles.muted}>{a.connected ? "Connecté" : "À connecter"}</span>{a.id === TARGET && !a.connected && <button className={styles.iconButton} title="Connecter XavierNielReplays" aria-label="Connecter XavierNielReplays" type="button" onClick={connect}><Link2 size={18} /></button>}</div>)}<button className={styles.primary} onClick={() => setTab("studio")}>Revenir au studio <ArrowUpRight size={17} /></button></section>}
+          {tab === "history" && <section className={styles.history}>{history.length ? history.map((item) => <button key={item.id} onClick={() => { known.current = new Set(); setSelected([]); setTitles({}); setSettings({ ...defaults }); setRun(item); setTab("studio"); }}><Film size={20} /><span><strong>{item.prompt}</strong><small>{new Date(item.createdAt).toLocaleString("fr-FR")} · @{item.accountId}</small></span><span>{item.clips.filter((c) => c.status === "publié").length}/{item.clips.length} publiés</span><ArrowUpRight size={17} /></button>) : <p>Aucune session pour le moment.</p>}</section>}
+        </>}
+        {error && <div className={styles.error} role="alert"><span>{error}</span><button aria-label="Fermer le message" onClick={() => setError("")}><X size={17} /></button></div>}
+        <footer className={styles.footer}><span>Sentinelle / Studio</span><span>Création. Validation. Publication.</span></footer>
       </main>
     </div>
-  );
+  </div>;
 }
